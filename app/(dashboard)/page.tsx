@@ -119,7 +119,13 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick actions bar */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <QuickAction
+          href="/planes/comparar"
+          title="Comparar planes"
+          description="Lado a lado por tema"
+          gradient="from-primary/20 to-rose-500/20"
+        />
         <QuickAction
           href="/quiz"
           title="Descubre tu candidato"
@@ -129,7 +135,7 @@ export default function DashboardPage() {
         <QuickAction
           href="/candidatos/comparar"
           title="Comparar candidatos"
-          description="Lado a lado"
+          description="Perfil a perfil"
           gradient="from-sky/20 to-cyan-500/20"
         />
         <QuickAction
@@ -440,7 +446,7 @@ function PlanesHighlight() {
 function WhatsAppCTA() {
   const whatsappNumber = "51999999999"; // Peru country code + number
   const message = encodeURIComponent(
-    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de AGORA."
+    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de CONDOR."
   );
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 

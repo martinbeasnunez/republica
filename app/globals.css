@@ -46,15 +46,13 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* AGORA custom colors — Peru-inspired dark theme */
+  /* CONDOR custom colors — Peru-inspired dark theme */
   --color-emerald: #10b981;
   --color-rose: #ef4444;
   --color-amber: #f59e0b;
   --color-sky: #3b82f6;
   --color-indigo: #8B1A1A;
-  --color-indigo-glow: #818cf8;
-  --color-gold: #D4A017;
-  --color-gold-light: #E8B930;
+  --color-indigo-glow: #A52525;
   --color-rojo: #8B1A1A;
   --color-rojo-light: #A52525;
   --color-surface-1: #0d0d12;
@@ -62,7 +60,7 @@
   --color-surface-3: #1a1a28;
 }
 
-/* AGORA Dark Theme — Peru-inspired, Palantir-grade */
+/* CONDOR Dark Theme — Peru-inspired, Palantir-grade */
 :root {
   --radius: 0.625rem;
   --background: #08060a;
@@ -84,7 +82,7 @@
   --input: #1e1c2e;
   --ring: #8B1A1A;
   --chart-1: #8B1A1A;
-  --chart-2: #D4A017;
+  --chart-2: #A52525;
   --chart-3: #10b981;
   --chart-4: #3b82f6;
   --chart-5: #ef4444;
@@ -123,11 +121,6 @@
                 0 0 60px rgba(139, 26, 26, 0.05);
   }
 
-  .glow-gold {
-    box-shadow: 0 0 20px rgba(212, 160, 23, 0.15),
-                0 0 60px rgba(212, 160, 23, 0.05);
-  }
-
   .glow-emerald {
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.15),
                 0 0 60px rgba(16, 185, 129, 0.05);
@@ -143,16 +136,9 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Gradient text — rojo peruano to dorado inca */
+  /* Gradient text — rojo peruano */
   .text-gradient {
-    background: linear-gradient(135deg, #8B1A1A 0%, #A52525 40%, #D4A017 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .text-gradient-gold {
-    background: linear-gradient(135deg, #D4A017 0%, #E8B930 50%, #F0D060 100%);
+    background: linear-gradient(135deg, #8B1A1A 0%, #C42B2B 50%, #E84040 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

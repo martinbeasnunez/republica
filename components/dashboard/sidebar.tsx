@@ -185,9 +185,9 @@ export function MobileNav({
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold tracking-wider text-gradient">
-                AGORA
+                CONDOR
               </span>
-              <span className="text-[10px] tracking-widest text-gold">
+              <span className="text-[10px] tracking-widest text-muted-foreground">
                 PERU 2026
               </span>
             </div>
@@ -239,9 +239,9 @@ export function Sidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold tracking-wider text-gradient">
-                AGORA
+                CONDOR
               </span>
-              <span className="text-[10px] tracking-widest text-gold">
+              <span className="text-[10px] tracking-widest text-muted-foreground">
                 PERU 2026
               </span>
             </div>

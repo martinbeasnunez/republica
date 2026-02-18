@@ -106,16 +106,26 @@ export default function PlanesPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">
-            Planes de Gobierno
-          </h1>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                Planes de Gobierno
+              </h1>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Resumenes generados por IA de los planes de gobierno oficiales
+              presentados al JNE
+            </p>
+          </div>
+          <Link href="/planes/comparar">
+            <Button className="gap-2 font-mono text-xs" size="sm">
+              <BarChart3 className="h-3.5 w-3.5" />
+              COMPARAR PLANES
+            </Button>
+          </Link>
         </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          Resumenes generados por IA de los planes de gobierno oficiales
-          presentados al JNE
-        </p>
       </motion.div>
 
       {/* AI disclaimer */}

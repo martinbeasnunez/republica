@@ -189,7 +189,7 @@ export default function SimuladorPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // AGORA INTELLIGENCE SYSTEM — SIMULADOR ELECTORAL MONTE CARLO — MODELO PREDICTIVO //
+          // CONDOR INTELLIGENCE SYSTEM — SIMULADOR ELECTORAL MONTE CARLO — MODELO PREDICTIVO //
         </div>
       </motion.div>
 

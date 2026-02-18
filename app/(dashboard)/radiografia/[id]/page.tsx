@@ -166,8 +166,8 @@ export default function RadiografiaPage({
         smooth: true,
         symbol: "circle",
         symbolSize: 6,
-        lineStyle: { width: 2, color: "#D4A017", type: "dashed" as const },
-        itemStyle: { color: "#D4A017" },
+        lineStyle: { width: 2, color: "#C42B2B", type: "dashed" as const },
+        itemStyle: { color: "#C42B2B" },
         data: radiografia.patrimonio.map((p) => p.netWorth),
       },
     ],
@@ -206,7 +206,7 @@ export default function RadiografiaPage({
           itemStyle: {
             color: d.flagged
               ? "#ef4444"
-              : ["#D4A017", "#10b981", "#8B1A1A", "#3b82f6", "#8b5cf6"][i % 5],
+              : ["#C42B2B", "#10b981", "#8B1A1A", "#3b82f6", "#8b5cf6"][i % 5],
           },
         })),
       },
@@ -305,7 +305,7 @@ export default function RadiografiaPage({
       {/* CLASSIFIED HEADER */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // AGORA INTELLIGENCE SYSTEM — CANDIDATO RADIOGRAFIA — NIVEL DE ACCESO: PUBLICO //
+          // CONDOR INTELLIGENCE SYSTEM — CANDIDATO RADIOGRAFIA — NIVEL DE ACCESO: PUBLICO //
         </div>
       </motion.div>
 
