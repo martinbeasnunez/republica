@@ -438,7 +438,8 @@ export default function SimuladorPage() {
                 <CardContent>
                   <ReactECharts
                     option={winProbChart}
-                    style={{ height: 350 }}
+                    style={{ height: 280 }}
+                    className="sm:[&>div]:!h-[350px]"
                     opts={{ renderer: "canvas" }}
                   />
                 </CardContent>
@@ -458,7 +459,8 @@ export default function SimuladorPage() {
                 <CardContent>
                   <ReactECharts
                     option={distributionChart}
-                    style={{ height: 350 }}
+                    style={{ height: 280 }}
+                    className="sm:[&>div]:!h-[350px]"
                     opts={{ renderer: "canvas" }}
                   />
                 </CardContent>

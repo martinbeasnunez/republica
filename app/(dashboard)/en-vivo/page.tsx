@@ -137,25 +137,25 @@ export default function EnVivoPage() {
                 return (
                   <>
                     <div className="text-center">
-                      <p className="font-mono text-4xl font-bold tabular-nums text-gradient">
+                      <p className="font-mono text-2xl sm:text-4xl font-bold tabular-nums text-gradient">
                         {days}
                       </p>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
                         Dias
                       </p>
                     </div>
-                    <span className="text-2xl text-muted-foreground">:</span>
+                    <span className="text-xl sm:text-2xl text-muted-foreground">:</span>
                     <div className="text-center">
-                      <p className="font-mono text-4xl font-bold tabular-nums text-gradient">
+                      <p className="font-mono text-2xl sm:text-4xl font-bold tabular-nums text-gradient">
                         {hours}
                       </p>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
                         Horas
                       </p>
                     </div>
-                    <span className="text-2xl text-muted-foreground">:</span>
+                    <span className="text-xl sm:text-2xl text-muted-foreground">:</span>
                     <div className="text-center">
-                      <p className="font-mono text-4xl font-bold tabular-nums text-gradient">
+                      <p className="font-mono text-2xl sm:text-4xl font-bold tabular-nums text-gradient">
                         {minutes}
                       </p>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">

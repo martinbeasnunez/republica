@@ -64,9 +64,9 @@ export function PollTrendChart() {
     },
     grid: {
       top: 20,
-      right: 20,
+      right: 10,
       bottom: 50,
-      left: 50,
+      left: 40,
     },
     xAxis: {
       type: "category" as const,
@@ -106,7 +106,8 @@ export function PollTrendChart() {
       </div>
       <ReactECharts
         option={option}
-        style={{ height: 300 }}
+        style={{ height: 250 }}
+        className="sm:[&>div]:!h-[300px]"
         opts={{ renderer: "canvas" }}
       />
     </div>

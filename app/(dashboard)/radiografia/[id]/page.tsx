@@ -436,26 +436,29 @@ export default function RadiografiaPage({
       </motion.div>
 
       {/* Layer Navigation */}
-      <div className="flex flex-wrap gap-2">
-        {LAYERS.map((layer) => {
-          const Icon = layer.icon;
-          const isActive = activeLayer === layer.id;
-          return (
-            <button
-              key={layer.id}
-              onClick={() => setActiveLayer(layer.id)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-mono tracking-wider transition-all",
-                isActive
-                  ? "border-primary/50 bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {layer.label}
-            </button>
-          );
-        })}
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
+          {LAYERS.map((layer) => {
+            const Icon = layer.icon;
+            const isActive = activeLayer === layer.id;
+            return (
+              <button
+                key={layer.id}
+                onClick={() => setActiveLayer(layer.id)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-mono tracking-wider transition-all whitespace-nowrap",
+                  isActive
+                    ? "border-primary/50 bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">{layer.label}</span>
+                <span className="sm:hidden">{layer.label.split(" ")[0]}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Layer Content */}
@@ -545,7 +548,8 @@ export default function RadiografiaPage({
                 <CardContent>
                   <ReactECharts
                     option={patrimonioChart}
-                    style={{ height: 300 }}
+                    style={{ height: 250 }}
+                    className="sm:[&>div]:!h-[300px]"
                     opts={{ renderer: "canvas" }}
                   />
                 </CardContent>
@@ -740,7 +744,8 @@ export default function RadiografiaPage({
                 <CardContent>
                   <ReactECharts
                     option={networkChart}
-                    style={{ height: 350 }}
+                    style={{ height: 280 }}
+                    className="sm:[&>div]:!h-[350px]"
                     opts={{ renderer: "canvas" }}
                   />
                 </CardContent>
@@ -843,7 +848,8 @@ export default function RadiografiaPage({
                   <CardContent>
                     <ReactECharts
                       option={financeChart}
-                      style={{ height: 280 }}
+                      style={{ height: 240 }}
+                      className="sm:[&>div]:!h-[280px]"
                       opts={{ renderer: "canvas" }}
                     />
                   </CardContent>

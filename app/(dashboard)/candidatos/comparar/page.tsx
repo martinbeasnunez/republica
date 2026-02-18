@@ -108,7 +108,7 @@ export default function CompararPage() {
             </button>
 
             {showPicker && (
-              <div className="absolute top-full left-0 z-50 mt-2 w-64 rounded-xl border border-border bg-card p-2 shadow-xl max-h-64 overflow-y-auto custom-scrollbar">
+              <div className="absolute top-full left-0 z-50 mt-2 w-full min-w-[200px] sm:w-64 rounded-xl border border-border bg-card p-2 shadow-xl max-h-64 overflow-y-auto custom-scrollbar">
                 {candidates
                   .filter((c) => !selected.find((s) => s.id === c.id))
                   .map((c) => (
