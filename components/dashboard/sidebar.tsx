@@ -180,7 +180,7 @@ export function MobileNav({
           <SheetTitle className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <span className="font-mono text-sm font-bold text-primary-foreground">
-                A
+                C
               </span>
             </div>
             <div className="flex flex-col">
