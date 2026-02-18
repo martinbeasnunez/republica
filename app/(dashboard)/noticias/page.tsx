@@ -38,7 +38,7 @@ const mockArticles: NewsArticle[] = [
     title: "JNE confirma 36 candidatos habilitados para las elecciones presidenciales 2026",
     summary: "El Jurado Nacional de Elecciones publico la lista definitiva de candidatos habilitados para las proximas elecciones presidenciales del 12 de abril.",
     source: "El Comercio",
-    sourceUrl: "#",
+    sourceUrl: "https://elcomercio.pe",
     time: "Hace 2 horas",
     category: "Politica",
     factCheck: "verified",
@@ -50,7 +50,7 @@ const mockArticles: NewsArticle[] = [
     title: "Lopez Aliaga presenta plan de seguridad ciudadana con pena de muerte",
     summary: "El candidato de Renovacion Popular detallo su propuesta de mano dura contra la delincuencia durante un evento en Lima.",
     source: "RPP Noticias",
-    sourceUrl: "#",
+    sourceUrl: "https://rpp.pe",
     time: "Hace 3 horas",
     category: "Seguridad",
     factCheck: "verified",
@@ -61,7 +61,7 @@ const mockArticles: NewsArticle[] = [
     title: "Keiko Fujimori promete estabilidad economica y programas sociales focalizados",
     summary: "La candidata de Fuerza Popular presento sus lineamientos economicos en conferencia de prensa.",
     source: "Gestion",
-    sourceUrl: "#",
+    sourceUrl: "https://gestion.pe",
     time: "Hace 4 horas",
     category: "Economia",
     candidates: ["K. Fujimori"],
@@ -71,7 +71,7 @@ const mockArticles: NewsArticle[] = [
     title: "FALSO: Viral desinformativo sobre candidato circula en WhatsApp",
     summary: "El JNE y Ojo Publico desmienten cadena de WhatsApp con informacion falsa sobre supuestas inhabilitaciones.",
     source: "Ojo Publico",
-    sourceUrl: "#",
+    sourceUrl: "https://ojo-publico.com",
     time: "Hace 5 horas",
     category: "Verificacion",
     factCheck: "false",
@@ -82,7 +82,7 @@ const mockArticles: NewsArticle[] = [
     title: "Carlos Alvarez sube en encuestas: efecto outsider se consolida",
     summary: "El comediante y comunicador se posiciona tercero en intencion de voto segun ultima encuesta de IEP.",
     source: "La Republica",
-    sourceUrl: "#",
+    sourceUrl: "https://larepublica.pe",
     time: "Hace 6 horas",
     category: "Encuestas",
     factCheck: "verified",
@@ -93,7 +93,7 @@ const mockArticles: NewsArticle[] = [
     title: "Debate presidencial: JNE define fecha y formato para marzo 2026",
     summary: "El primer debate presidencial se realizara el 15 de marzo en Lima, con 8 candidatos en el primer bloque.",
     source: "Andina",
-    sourceUrl: "#",
+    sourceUrl: "https://andina.pe",
     time: "Hace 7 horas",
     category: "Politica",
     factCheck: "verified",
@@ -104,7 +104,7 @@ const mockArticles: NewsArticle[] = [
     title: "Forsyth propone digitalizacion total del estado peruano",
     summary: "El candidato de Somos Peru presento su plan 'Peru Digital' que incluye gobierno electronico y emprendimiento tech.",
     source: "Infobae Peru",
-    sourceUrl: "#",
+    sourceUrl: "https://infobae.com/peru",
     time: "Hace 8 horas",
     category: "Tecnologia",
     candidates: ["Forsyth"],
@@ -114,7 +114,7 @@ const mockArticles: NewsArticle[] = [
     title: "Economia peruana crece 3.2% en 2025: contexto para las elecciones",
     summary: "El BCR reporta crecimiento del PBI pero con desafios en empleo formal y desigualdad regional.",
     source: "Semana Economica",
-    sourceUrl: "#",
+    sourceUrl: "https://semanaeconomica.com",
     time: "Hace 10 horas",
     category: "Economia",
     factCheck: "verified",
@@ -220,78 +220,85 @@ export default function NoticiasPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.03 }}
           >
-            <Card
-              className={cn(
-                "bg-card border-border transition-all duration-200 hover:border-primary/20 cursor-pointer group",
-                article.isBreaking && "border-rose/30"
-              )}
+            <a
+              href={article.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
             >
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <div className="flex-1 min-w-0">
-                    {/* Breaking badge */}
-                    {article.isBreaking && (
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <span className="h-2 w-2 rounded-full bg-rose pulse-dot" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-rose">
-                          Ultima hora
+              <Card
+                className={cn(
+                  "bg-card border-border transition-all duration-200 hover:border-primary/20 cursor-pointer group",
+                  article.isBreaking && "border-rose/30"
+                )}
+              >
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Breaking badge */}
+                      {article.isBreaking && (
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <span className="h-2 w-2 rounded-full bg-rose pulse-dot" />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-rose">
+                            Ultima hora
+                          </span>
+                        </div>
+                      )}
+
+                      <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                        {article.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
+                        {article.summary}
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <span className="text-[11px] font-medium text-primary">
+                          {article.source}
                         </span>
-                      </div>
-                    )}
-
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
-                      {article.summary}
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                      <span className="text-[11px] font-medium text-primary">
-                        {article.source}
-                      </span>
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {article.time}
-                      </span>
-                      <Badge variant="secondary" className="text-[10px] h-5">
-                        {article.category}
-                      </Badge>
-                      {article.candidates.map((c) => (
-                        <Badge
-                          key={c}
-                          variant="outline"
-                          className="text-[10px] h-5"
-                        >
-                          {c}
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {article.time}
+                        </span>
+                        <Badge variant="secondary" className="text-[10px] h-5">
+                          {article.category}
                         </Badge>
-                      ))}
+                        {article.candidates.map((c) => (
+                          <Badge
+                            key={c}
+                            variant="outline"
+                            className="text-[10px] h-5"
+                          >
+                            {c}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Fact check + link */}
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      {article.factCheck && (
+                        <div
+                          className={cn(
+                            "flex items-center gap-1 rounded-md border px-2 py-1",
+                            factCheckStyles[article.factCheck].className
+                          )}
+                        >
+                          {(() => {
+                            const Icon = factCheckStyles[article.factCheck!].icon;
+                            return <Icon className="h-3 w-3" />;
+                          })()}
+                          <span className="text-[10px] font-medium">
+                            {factCheckStyles[article.factCheck].label}
+                          </span>
+                        </div>
+                      )}
+                      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
-
-                  {/* Fact check + link */}
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    {article.factCheck && (
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 rounded-md border px-2 py-1",
-                          factCheckStyles[article.factCheck].className
-                        )}
-                      >
-                        {(() => {
-                          const Icon = factCheckStyles[article.factCheck!].icon;
-                          return <Icon className="h-3 w-3" />;
-                        })()}
-                        <span className="text-[10px] font-medium">
-                          {factCheckStyles[article.factCheck].label}
-                        </span>
-                      </div>
-                    )}
-                    <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </a>
           </motion.div>
         ))}
       </div>

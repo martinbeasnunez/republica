@@ -24,6 +24,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 2h",
     category: "politica",
     factCheck: "verified",
+    url: "https://elcomercio.pe",
   },
   {
     id: "2",
@@ -33,6 +34,7 @@ const mockNews: NewsItem[] = [
     category: "politica",
     candidateMentioned: "Lopez Aliaga",
     factCheck: "verified",
+    url: "https://rpp.pe",
   },
   {
     id: "3",
@@ -41,6 +43,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 5h",
     category: "politica",
     factCheck: "verified",
+    url: "https://larepublica.pe",
   },
   {
     id: "4",
@@ -49,6 +52,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 6h",
     category: "politica",
     candidateMentioned: "Carlos Alvarez",
+    url: "https://gestion.pe",
   },
   {
     id: "5",
@@ -57,6 +61,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 8h",
     category: "economia",
     factCheck: "verified",
+    url: "https://andina.pe",
   },
   {
     id: "6",
@@ -65,6 +70,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 10h",
     category: "social",
     factCheck: "false",
+    url: "https://ojo-publico.com",
   },
 ];
 
@@ -106,8 +112,11 @@ export function NewsTicker() {
 
       <div className="divide-y divide-border">
         {mockNews.map((news, index) => (
-          <motion.div
+          <motion.a
             key={news.id}
+            href={news.url || "/noticias"}
+            target={news.url ? "_blank" : undefined}
+            rel={news.url ? "noopener noreferrer" : undefined}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -152,7 +161,7 @@ export function NewsTicker() {
             )}
 
             <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 mt-0.5" />
-          </motion.div>
+          </motion.a>
         ))}
       </div>
     </div>

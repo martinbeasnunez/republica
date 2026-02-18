@@ -23,6 +23,8 @@ import {
   TrendingUp,
   Trophy,
   MessageCircle,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -58,6 +60,31 @@ export default function DashboardPage() {
         <p className="text-xs sm:text-sm text-muted-foreground">
           Inteligencia electoral en tiempo real — Elecciones Peru 2026
         </p>
+      </motion.div>
+
+      {/* Active development banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
+      >
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+          <Zap className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-foreground">
+            Proyecto en desarrollo activo
+          </p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">
+            Estamos aplicando mejoras continuamente — nuevas funcionalidades y datos reales cada semana.
+            Tu feedback ayuda a construir una mejor herramienta para todos los peruanos.
+          </p>
+        </div>
+        <Badge variant="outline" className="text-[9px] font-mono border-primary/30 text-primary flex-shrink-0 hidden sm:flex">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald mr-1.5 pulse-dot" />
+          ACTIVO
+        </Badge>
       </motion.div>
 
       {/* KPI Cards */}
@@ -444,31 +471,25 @@ function PlanesHighlight() {
 // ─── WHATSAPP CTA ───
 
 function WhatsAppCTA() {
-  const whatsappNumber = "51999999999"; // Peru country code + number
-  const message = encodeURIComponent(
-    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de CONDOR."
-  );
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
     >
-      <Card className="bg-card border-border overflow-hidden">
-        <div className="h-1 w-full bg-gradient-to-r from-green-500 via-green-500/50 to-transparent" />
+      <Card className="bg-card border-border overflow-hidden opacity-75">
+        <div className="h-1 w-full bg-gradient-to-r from-muted-foreground/30 via-muted-foreground/15 to-transparent" />
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
-              <MessageCircle className="h-5 w-5 text-green-500" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+              <MessageCircle className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">
-                Recibe alertas por WhatsApp
+                Alertas por WhatsApp
               </h3>
               <p className="text-[10px] text-muted-foreground">
-                Un agente te mantiene informado
+                Agente inteligente de noticias electorales
               </p>
             </div>
           </div>
@@ -480,29 +501,24 @@ function WhatsAppCTA() {
               "Recordatorios electorales",
               "Resumen semanal personalizado",
             ].map((item) => (
-              <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
-                <div className="h-1 w-1 rounded-full bg-green-500 flex-shrink-0" />
+              <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                <div className="h-1 w-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
                 {item}
               </li>
             ))}
           </ul>
 
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Button
+            className="w-full gap-2 bg-muted hover:bg-muted text-muted-foreground cursor-default border border-border"
+            size="sm"
+            disabled
           >
-            <Button
-              className="w-full gap-2 bg-green-600 hover:bg-green-700 text-white"
-              size="sm"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Conectar con WhatsApp
-            </Button>
-          </a>
+            <Clock className="h-4 w-4" />
+            Proximamente
+          </Button>
 
-          <p className="text-[10px] text-muted-foreground text-center mt-2">
-            Gratis — Sin spam — Cancela cuando quieras
+          <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+            Estamos construyendo esta funcionalidad
           </p>
         </CardContent>
       </Card>

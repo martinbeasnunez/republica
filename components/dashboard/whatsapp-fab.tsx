@@ -1,19 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle, X, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const WHATSAPP_NUMBER = "51999999999";
-
 export function WhatsAppFAB() {
   const [expanded, setExpanded] = useState(false);
-
-  const message = encodeURIComponent(
-    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de CONDOR."
-  );
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-2">
@@ -26,20 +19,15 @@ export function WhatsAppFAB() {
             className="w-64 rounded-xl border border-border bg-card p-4 shadow-xl"
           >
             <p className="text-sm font-semibold text-foreground mb-1">
-              Recibe alertas electorales
+              Alertas por WhatsApp
             </p>
             <p className="text-xs text-muted-foreground mb-3">
-              Conecta con nuestro agente de WhatsApp para mantenerte informado.
+              Estamos trabajando en un agente de WhatsApp para mantenerte informado sobre las elecciones.
             </p>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-4 transition-colors"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Abrir WhatsApp
-            </a>
+            <div className="flex items-center justify-center gap-2 w-full rounded-lg bg-muted border border-border text-muted-foreground text-sm font-medium py-2 px-4">
+              <Clock className="h-4 w-4" />
+              Proximamente
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -50,7 +38,7 @@ export function WhatsAppFAB() {
           "flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full shadow-lg transition-all duration-300",
           expanded
             ? "bg-muted text-foreground"
-            : "bg-green-600 hover:bg-green-700 text-white hover:scale-105"
+            : "bg-muted-foreground/20 hover:bg-muted-foreground/30 text-muted-foreground hover:scale-105"
         )}
       >
         {expanded ? (
