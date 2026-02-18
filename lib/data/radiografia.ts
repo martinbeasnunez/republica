@@ -179,9 +179,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
     previousCandidacies: 3,
     partySwitches: 0,
   },
-  "3": {
+  "5": {
     // Carlos Alvarez
-    candidateId: "3",
+    candidateId: "5",
     riskScore: 18,
     patrimonio: [
       { year: 2022, totalAssets: 1_200_000, totalLiabilities: 180_000, netWorth: 1_020_000, properties: 2, vehicles: 1, income: 850_000, source: "JNE-DJHV-2022" },
@@ -193,7 +193,7 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
       { caseId: "EXP-2020-08412", type: "civil", status: "archivado", year: 2020, description: "Demanda por difamacion - caso resuelto a favor", court: "Juzgado Civil Lima", severity: "bajo" },
     ],
     network: [
-      { id: "n1", name: "Fe en el Peru", type: "politico", relationship: "Candidato presidencial", entity: "Partido politico", riskLevel: "neutral" },
+      { id: "n1", name: "Pais para Todos", type: "politico", relationship: "Candidato presidencial", entity: "Partido politico", riskLevel: "neutral" },
       { id: "n2", name: "Productora Alvarez", type: "empresarial", relationship: "Fundador", entity: "Entretenimiento", riskLevel: "neutral" },
       { id: "n3", name: "Canal 4 / ATV", type: "mediatico", relationship: "Colaborador historico", entity: "Television", riskLevel: "bajo" },
     ],

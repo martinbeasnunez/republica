@@ -18,7 +18,7 @@ const mockTopics: Topic[] = [
     name: "Seguridad ciudadana",
     mentions: 15420,
     sentiment: "negative",
-    relatedCandidates: ["Lopez Aliaga", "Urresti", "Forsyth"],
+    relatedCandidates: ["Lopez Aliaga", "K. Fujimori", "Forsyth"],
   },
   {
     id: "2",
@@ -39,14 +39,14 @@ const mockTopics: Topic[] = [
     name: "Educacion publica",
     mentions: 7100,
     sentiment: "positive",
-    relatedCandidates: ["C. Alvarez", "De la Torre"],
+    relatedCandidates: ["C. Alvarez", "C. Acuna", "Luna"],
   },
   {
     id: "5",
     name: "Corrupcion",
     mentions: 6800,
     sentiment: "negative",
-    relatedCandidates: ["C. Alvarez", "A. Humala"],
+    relatedCandidates: ["C. Alvarez", "Lopez-Chau"],
   },
 ];
 
