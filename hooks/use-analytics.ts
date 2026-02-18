@@ -23,37 +23,45 @@ export function useAnalytics() {
     if (pathname.startsWith("/admin")) return; // Don't track admin pages
     tracked.current = pathname;
 
-    try {
-      const supabase = getSupabaseBrowser();
-      if (!supabase) return;
-
-      supabase.from("page_views").insert({
-        page: pathname,
-        referrer: document.referrer || null,
-        user_agent: navigator.userAgent,
-        session_id: getSessionId(),
-      });
-    } catch {
-      // Silently fail — analytics should never break the app
-    }
-  }, [pathname]);
-
-  const trackEvent = useCallback(
-    (event: string, target: string, metadata?: Record<string, unknown>) => {
+    const track = async () => {
       try {
         const supabase = getSupabaseBrowser();
         if (!supabase) return;
 
-        supabase.from("analytics_events").insert({
-          event,
+        await supabase.from("page_views").insert({
           page: pathname,
-          target,
-          metadata: metadata || null,
+          referrer: document.referrer || null,
+          user_agent: navigator.userAgent,
           session_id: getSessionId(),
         });
       } catch {
-        // Silently fail
+        // Silently fail — analytics should never break the app
       }
+    };
+
+    track();
+  }, [pathname]);
+
+  const trackEvent = useCallback(
+    (event: string, target: string, metadata?: Record<string, unknown>) => {
+      const track = async () => {
+        try {
+          const supabase = getSupabaseBrowser();
+          if (!supabase) return;
+
+          await supabase.from("analytics_events").insert({
+            event,
+            page: pathname,
+            target,
+            metadata: metadata || null,
+            session_id: getSessionId(),
+          });
+        } catch {
+          // Silently fail
+        }
+      };
+
+      track();
     },
     [pathname]
   );
