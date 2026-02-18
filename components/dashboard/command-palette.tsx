@@ -59,10 +59,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     return () => document.removeEventListener("keydown", down);
   }, [open, onOpenChange]);
 
-  // Reset mode when closing
+  // Reset to AI mode when closing (so it always opens in AI mode)
   useEffect(() => {
     if (!open) {
-      setMode("search");
+      setMode("ai");
     }
   }, [open]);
 
