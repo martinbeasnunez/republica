@@ -93,7 +93,7 @@ export function AINotificationToast() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className={`pointer-events-auto glass rounded-xl border ${typeStyles[current.type]} p-3 sm:p-4 shadow-2xl shadow-black/40`}
+            className={`pointer-events-auto rounded-xl border bg-card/95 backdrop-blur-md ${typeStyles[current.type]} p-3 sm:p-4 shadow-2xl shadow-black/50`}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-1.5">
