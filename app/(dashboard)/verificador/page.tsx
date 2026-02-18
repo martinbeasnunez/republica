@@ -13,6 +13,9 @@ import {
   XCircle,
   HelpCircle,
   Loader2,
+  ExternalLink,
+  User,
+  MapPin,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,8 +31,11 @@ interface FactCheckResult {
   verdict: Verdict;
   explanation: string;
   sources: string[];
+  sourceUrls?: string[];
   confidence: number;
   context: string;
+  claimant?: string;
+  claimOrigin?: string;
   timestamp: string;
 }
 
@@ -76,8 +82,14 @@ const seedFactChecks: FactCheckResult[] = [
     explanation:
       "Brasil tiene la economia mas grande de Sudamerica con un PBI de US$ 2.1 billones. El Peru ocupa la sexta posicion con aproximadamente US$ 240 mil millones.",
     sources: ["Banco Mundial", "FMI 2025"],
+    sourceUrls: [
+      "https://datos.bancomundial.org/indicador/NY.GDP.MKTP.CD?locations=ZJ",
+      "https://www.imf.org/en/Countries/PER",
+    ],
     confidence: 0.95,
     context: "Datos economicos de organismos internacionales",
+    claimant: "Cadena de WhatsApp viral",
+    claimOrigin: "Mensaje reenviado en grupos de WhatsApp, febrero 2026",
     timestamp: new Date(Date.now() - 7200000).toISOString(),
   },
   {
@@ -87,8 +99,14 @@ const seedFactChecks: FactCheckResult[] = [
     explanation:
       "Segun el RENIEC y el JNE, el padron electoral para las elecciones 2026 incluye 25.3 millones de electores habilitados.",
     sources: ["RENIEC", "JNE"],
+    sourceUrls: [
+      "https://www.jne.gob.pe/",
+      "https://www.reniec.gob.pe/",
+    ],
     confidence: 0.98,
     context: "Cifras oficiales del organismo electoral",
+    claimant: "JNE (Jurado Nacional de Elecciones)",
+    claimOrigin: "Conferencia de prensa oficial del JNE, enero 2026",
     timestamp: new Date(Date.now() - 14400000).toISOString(),
   },
   {
@@ -98,8 +116,14 @@ const seedFactChecks: FactCheckResult[] = [
     explanation:
       "El JNE confirmo que las elecciones generales se mantienen para el 12 de abril de 2026 segun el calendario oficial aprobado.",
     sources: ["JNE", "ONPE"],
+    sourceUrls: [
+      "https://www.jne.gob.pe/calendario-electoral-2026/",
+      "https://www.onpe.gob.pe/elecciones-generales-2026/",
+    ],
     confidence: 0.99,
     context: "Calendario electoral oficial",
+    claimant: "Post viral en X/Twitter",
+    claimOrigin: "Post en X (Twitter) con mas de 5,000 compartidos, enero 2026",
     timestamp: new Date(Date.now() - 28800000).toISOString(),
   },
 ];
@@ -145,8 +169,11 @@ export default function VerificadorPage() {
         verdict: data.data.verdict,
         explanation: data.data.explanation,
         sources: data.data.sources || [],
+        sourceUrls: data.data.source_urls || [],
         confidence: data.data.confidence || 0,
         context: data.data.context || "",
+        claimant: data.data.claimant || "Desconocido",
+        claimOrigin: data.data.claim_origin || "",
         timestamp: data.data.timestamp,
       };
 
@@ -355,20 +382,52 @@ export default function VerificadorPage() {
                             </p>
                           )}
 
+                          {/* Attribution: claimant + origin */}
+                          {(fc.claimant || fc.claimOrigin) && (
+                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                              {fc.claimant && (
+                                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                  <User className="h-3 w-3 flex-shrink-0" />
+                                  <span className="font-medium text-foreground/80">{fc.claimant}</span>
+                                </span>
+                              )}
+                              {fc.claimOrigin && (
+                                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                                  {fc.claimOrigin}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {/* Sources + meta */}
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="text-[10px] text-muted-foreground">
                               Fuentes:
                             </span>
-                            {fc.sources.map((s) => (
-                              <Badge
-                                key={s}
-                                variant="outline"
-                                className="text-[10px] h-5"
-                              >
-                                {s}
-                              </Badge>
-                            ))}
+                            {fc.sources.map((source, idx) => {
+                              const url = fc.sourceUrls?.[idx];
+                              return url ? (
+                                <a
+                                  key={source}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                                >
+                                  {source}
+                                  <ExternalLink className="h-2.5 w-2.5" />
+                                </a>
+                              ) : (
+                                <Badge
+                                  key={source}
+                                  variant="outline"
+                                  className="text-[10px] h-5"
+                                >
+                                  {source}
+                                </Badge>
+                              );
+                            })}
                             <span className="flex items-center gap-1 text-[10px] text-muted-foreground ml-auto">
                               <Clock className="h-3 w-3" />
                               {timeAgo(fc.timestamp)}

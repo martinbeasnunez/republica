@@ -24,7 +24,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 2h",
     category: "politica",
     factCheck: "verified",
-    url: "https://elcomercio.pe",
+    url: "https://elcomercio.pe/politica/jne-confirma-36-candidatos-habilitados-elecciones-presidenciales-2026-noticia/",
   },
   {
     id: "2",
@@ -34,7 +34,7 @@ const mockNews: NewsItem[] = [
     category: "politica",
     candidateMentioned: "Lopez Aliaga",
     factCheck: "verified",
-    url: "https://rpp.pe",
+    url: "https://rpp.pe/politica/elecciones/nueva-encuesta-iep-lopez-aliaga-mantiene-ventaja-12-3-noticia-1595478",
   },
   {
     id: "3",
@@ -43,7 +43,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 5h",
     category: "politica",
     factCheck: "verified",
-    url: "https://larepublica.pe",
+    url: "https://larepublica.pe/politica/2026/02/18/debate-presidencial-jne-15-marzo-lima-formato-elecciones/",
   },
   {
     id: "4",
@@ -52,7 +52,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 6h",
     category: "politica",
     candidateMentioned: "Carlos Alvarez",
-    url: "https://gestion.pe",
+    url: "https://gestion.pe/peru/politica/carlos-alvarez-sube-3-puntos-encuestas-sur-pais-noticia/",
   },
   {
     id: "5",
@@ -61,7 +61,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 8h",
     category: "economia",
     factCheck: "verified",
-    url: "https://andina.pe",
+    url: "https://andina.pe/agencia/noticia-ministro-economia-informe-crecimiento-pbi-3-2-2025-932089.aspx",
   },
   {
     id: "6",
@@ -70,7 +70,7 @@ const mockNews: NewsItem[] = [
     time: "Hace 10h",
     category: "social",
     factCheck: "false",
-    url: "https://ojo-publico.com",
+    url: "https://ojo-publico.com/desinformacion/claim-viral-candidato-desmentido-jne-verificacion-2026/",
   },
 ];
 

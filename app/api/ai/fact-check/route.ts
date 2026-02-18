@@ -35,6 +35,9 @@ export async function POST(req: NextRequest) {
       data: {
         claim,
         ...result,
+        source_urls: result.source_urls || [],
+        claimant: result.claimant || "Desconocido",
+        claim_origin: result.claim_origin || "",
         timestamp: new Date().toISOString(),
       },
     });
