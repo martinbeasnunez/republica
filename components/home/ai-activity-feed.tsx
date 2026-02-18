@@ -100,18 +100,18 @@ export function AIActivityFeed() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + index * 0.06 }}
-              className="flex items-center gap-3 px-4 py-2.5 hover:bg-accent/30 transition-colors"
+              className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 hover:bg-accent/30 transition-colors"
             >
               {/* Timestamp */}
-              <span className="terminal-text text-[11px] font-mono tabular-nums flex-shrink-0 w-10">
+              <span className="terminal-text text-[10px] sm:text-[11px] font-mono tabular-nums flex-shrink-0 w-8 sm:w-10">
                 {activity.time}
               </span>
 
-              {/* Type badge */}
+              {/* Type badge — hidden on mobile to save space */}
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-[8px] font-mono h-4 px-1.5 flex-shrink-0 border",
+                  "text-[8px] font-mono h-4 px-1.5 flex-shrink-0 border hidden sm:inline-flex",
                   config.bg,
                   config.color
                 )}
@@ -120,14 +120,14 @@ export function AIActivityFeed() {
               </Badge>
 
               {/* Summary */}
-              <span className="text-xs text-muted-foreground truncate flex-1 min-w-0">
+              <span className="text-[11px] sm:text-xs text-muted-foreground truncate flex-1 min-w-0">
                 {activity.summary}
               </span>
 
               {/* Result */}
               {activity.result && (
                 <span className={cn(
-                  "text-[10px] font-mono font-medium tabular-nums flex-shrink-0",
+                  "text-[9px] sm:text-[10px] font-mono font-medium tabular-nums flex-shrink-0 text-right",
                   activity.resultColor || "text-muted-foreground"
                 )}>
                   {activity.result}

@@ -48,15 +48,9 @@ export default function DashboardPage() {
       {/* === SECTION 3: AI Capabilities Grid === */}
       <AICapabilitiesGrid />
 
-      {/* === SECTION 4: AI Activity Feed + Election Strip === */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <AIActivityFeed />
-        </div>
-        <div className="lg:col-span-2">
-          <ElectionCountdownStrip />
-        </div>
-      </div>
+      {/* === SECTION 4: Election Strip + AI Activity Feed === */}
+      <ElectionCountdownStrip />
+      <AIActivityFeed />
 
       {/* === SECTION 5: Feature Highlights === */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">

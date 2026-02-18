@@ -35,13 +35,13 @@ export function ElectionCountdownStrip() {
       {/* Desktop: horizontal strip */}
       <div className="hidden sm:flex items-center justify-between divide-x divide-border">
         {stats.map((stat) => (
-          <div key={stat.label} className="flex-1 flex items-center justify-center gap-3 px-4 py-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+          <div key={stat.label} className="flex-1 min-w-0 flex items-center justify-center gap-2 lg:gap-3 px-2 lg:px-4 py-3">
+            <span className="text-[9px] lg:text-[10px] font-mono uppercase tracking-wider lg:tracking-widest text-muted-foreground whitespace-nowrap">
               {stat.label}
             </span>
             <span
               className={cn(
-                "font-mono text-lg font-bold tabular-nums",
+                "font-mono text-base lg:text-lg font-bold tabular-nums flex-shrink-0",
                 stat.highlight ? "text-gradient" : stat.color || "text-foreground"
               )}
             >
