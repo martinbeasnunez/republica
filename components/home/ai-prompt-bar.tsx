@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Send, Loader2, Bot, ArrowRight } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 
 interface ChatMessage {
@@ -158,7 +159,7 @@ export function AIPromptBar() {
               className="overflow-hidden"
             >
               <div className="border-t border-border px-4 py-3">
-                <div ref={responseRef} className="max-h-[200px] overflow-y-auto custom-scrollbar space-y-2">
+                <div ref={responseRef} className="max-h-[320px] overflow-y-auto custom-scrollbar space-y-2">
                   {messages.map((msg, i) => (
                     <div key={i} className={cn("flex gap-2", msg.role === "user" ? "justify-end" : "justify-start")}>
                       {msg.role === "assistant" && (
@@ -174,7 +175,13 @@ export function AIPromptBar() {
                             : "bg-muted text-foreground"
                         )}
                       >
-                        {msg.content}
+                        {msg.role === "assistant" ? (
+                          <div className="ai-prose">
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
                       </div>
                     </div>
                   ))}
@@ -186,7 +193,9 @@ export function AIPromptBar() {
                         <Bot className="h-3 w-3 text-primary" />
                       </div>
                       <div className="rounded-lg bg-muted px-3 py-1.5 text-xs leading-relaxed max-w-[85%] text-foreground">
-                        {streamingContent}
+                        <div className="ai-prose">
+                          <ReactMarkdown>{streamingContent}</ReactMarkdown>
+                        </div>
                         <span className="inline-block w-1.5 h-3 bg-primary ml-0.5 animate-pulse" />
                       </div>
                     </div>
