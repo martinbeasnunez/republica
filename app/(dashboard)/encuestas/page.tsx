@@ -75,7 +75,7 @@ export default function EncuestasPage() {
       borderColor: "#1e1c2e",
       textStyle: { color: "#f1f5f9", fontSize: 12 },
     },
-    grid: { top: 10, right: 20, bottom: 40, left: 120 },
+    grid: { top: 10, right: 20, bottom: 40, left: 80 },
     xAxis: {
       type: "value" as const,
       axisLabel: { color: "#94a3b8", fontSize: 11, formatter: "{value}%" },

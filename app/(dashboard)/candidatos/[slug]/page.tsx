@@ -140,12 +140,12 @@ export default function CandidateProfilePage({
 
             {/* Info */}
             <div className="flex-1">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+                  <h1 className="text-xl font-bold text-foreground sm:text-3xl">
                     {candidate.name}
                   </h1>
-                  <div className="mt-2 flex items-center gap-3">
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
                     <div className="flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-full"
@@ -162,11 +162,11 @@ export default function CandidateProfilePage({
                 </div>
 
                 {/* Poll position */}
-                <div className="text-right">
-                  <p className="font-mono text-3xl font-bold tabular-nums text-foreground">
+                <div className="sm:text-right">
+                  <p className="font-mono text-2xl sm:text-3xl font-bold tabular-nums text-foreground">
                     {candidate.pollAverage.toFixed(1)}%
                   </p>
-                  <div className={`flex items-center gap-1 justify-end ${trend.color}`}>
+                  <div className={`flex items-center gap-1 sm:justify-end ${trend.color}`}>
                     <TrendIcon className="h-3.5 w-3.5" />
                     <span className="text-xs font-medium">{trend.label}</span>
                   </div>

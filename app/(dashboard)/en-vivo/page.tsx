@@ -91,15 +91,15 @@ export default function EnVivoPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Radio className="h-5 w-5 text-rose" />
-            <h1 className="text-2xl font-bold text-foreground">En Vivo</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">En Vivo</h1>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-rose/10 border border-rose/20 px-3 py-1">
+          <div className="flex items-center gap-1.5 rounded-full bg-rose/10 border border-rose/20 px-2 sm:px-3 py-1">
             <span className="h-2 w-2 rounded-full bg-rose pulse-dot" />
-            <span className="text-[11px] font-bold text-rose">
-              {isElectionDay ? "TRANSMISION EN VIVO" : "PROXIMAMENTE"}
+            <span className="text-[10px] sm:text-[11px] font-bold text-rose">
+              {isElectionDay ? "EN VIVO" : "PRONTO"}
             </span>
           </div>
         </div>

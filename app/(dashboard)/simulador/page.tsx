@@ -73,7 +73,7 @@ export default function SimuladorPage() {
             return `<div style="font-family:monospace"><strong>${p.name}</strong><br/>Probabilidad: ${p.value}%</div>`;
           },
         },
-        grid: { top: 10, right: 30, bottom: 30, left: 120 },
+        grid: { top: 10, right: 30, bottom: 30, left: 80 },
         xAxis: {
           type: "value" as const,
           max: 100,
@@ -118,7 +118,7 @@ export default function SimuladorPage() {
           borderColor: "#1e1c2e",
           textStyle: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
         },
-        grid: { top: 15, right: 20, bottom: 30, left: 120 },
+        grid: { top: 15, right: 20, bottom: 30, left: 80 },
         xAxis: {
           type: "value" as const,
           axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "JetBrains Mono, monospace", formatter: "{value}%" },

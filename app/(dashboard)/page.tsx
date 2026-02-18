@@ -253,7 +253,7 @@ function RadiografiaHighlight() {
           </div>
 
           {/* Category icons */}
-          <div className="flex items-center gap-3 mb-3 text-[10px] text-muted-foreground font-mono">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-[10px] text-muted-foreground font-mono">
             <span className="flex items-center gap-1"><DollarSign className="h-3 w-3 text-emerald" /> Patrimonio</span>
             <span className="flex items-center gap-1"><Scale className="h-3 w-3 text-rose" /> Legal</span>
             <span className="flex items-center gap-1"><Network className="h-3 w-3 text-indigo-400" /> Red</span>

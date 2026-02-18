@@ -180,7 +180,7 @@ export default function RadiografiaIndexPage() {
                         <p className="text-[11px] text-muted-foreground">{candidate.party}</p>
 
                         {/* Quick indicators */}
-                        <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground font-mono">
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground font-mono">
                           <span className="flex items-center gap-1">
                             <Activity className="h-3 w-3" />
                             {radiografia.legalHistory.length} proc.

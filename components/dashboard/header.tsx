@@ -33,8 +33,8 @@ export function Header({
           className="flex min-w-0 flex-1 sm:flex-initial items-center gap-2 sm:gap-3 rounded-lg border border-border bg-card px-3 sm:px-4 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
         >
           <Sparkles className="h-4 w-4 flex-shrink-0 text-primary" />
-          <span className="truncate hidden xs:inline sm:inline">Preguntale a CONDOR AI...</span>
-          <span className="truncate xs:hidden sm:hidden">CONDOR AI...</span>
+          <span className="truncate hidden sm:inline">Preguntale a CONDOR AI...</span>
+          <span className="truncate sm:hidden">CONDOR AI...</span>
           <kbd className="ml-auto hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground md:inline-block">
             ⌘K
           </kbd>

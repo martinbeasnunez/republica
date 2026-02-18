@@ -270,7 +270,7 @@ export default function QuizPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-center gap-3 pt-4">
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
           <Button variant="outline" onClick={reset} className="gap-2">
             <RotateCcw className="h-4 w-4" />
             Repetir quiz
@@ -342,7 +342,7 @@ export default function QuizPage() {
         >
           <Card className="bg-card border-border overflow-hidden">
             <div className="h-1 w-full bg-primary" />
-            <CardContent className="p-8 text-center">
+            <CardContent className="p-4 sm:p-8 text-center">
               <Badge variant="secondary" className="mb-4 text-xs">
                 {question.topic}
               </Badge>
