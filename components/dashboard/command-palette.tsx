@@ -314,7 +314,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="font-medium">Preguntale a CONDOR AI</span>
             <span className="ml-auto text-[10px] text-muted-foreground">
-              GPT-4o
+              IA avanzada
             </span>
           </CommandItem>
         </CommandGroup>

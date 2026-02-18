@@ -214,7 +214,7 @@ export default function VerificadorPage() {
           </h1>
           <Badge variant="secondary" className="text-[10px] gap-1">
             <Sparkles className="h-3 w-3" />
-            Powered by GPT-4o
+            IA avanzada
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
@@ -263,7 +263,7 @@ export default function VerificadorPage() {
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Powered by OpenAI GPT-4o. Cruza informacion con fuentes oficiales
+              Usa modelos de IA de ultima generacion. Cruza informacion con fuentes oficiales
               (JNE, ONPE, RENIEC) y medios verificados.
             </p>
           </form>

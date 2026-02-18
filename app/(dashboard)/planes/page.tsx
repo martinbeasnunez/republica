@@ -133,7 +133,7 @@ export default function PlanesPage() {
         <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-medium text-foreground">
-            Analisis con Inteligencia Artificial (GPT-4o)
+            Analisis con Inteligencia Artificial avanzada
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             Haz clic en &ldquo;Analizar con IA&rdquo; en cualquier candidato para obtener
