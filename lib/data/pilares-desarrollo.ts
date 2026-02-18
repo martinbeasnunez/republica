@@ -514,23 +514,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "institucionalidad",
     number: 1,
-    name: "Fortaleza Institucional y Estado de Derecho",
+    name: "Instituciones que Funcionen",
     nameEn: "Institutional Strength & Rule of Law",
     icon: "Landmark",
     color: "blue",
     shortDescription:
-      "Instituciones solidas, independencia judicial, capacidad del Estado y estado de derecho predecible.",
+      "Que las leyes se cumplan, que los jueces sean independientes y que el Estado funcione para todos — no solo para los que tienen contactos.",
     whyItMatters:
-      "Segun el WEF, las instituciones son el primer pilar de la competitividad porque determinan las reglas del juego. El Banco Mundial mide 6 dimensiones de gobernanza que correlacionan directamente con desarrollo economico. Los economistas Acemoglu y Robinson demuestran que instituciones inclusivas son el factor diferenciador entre naciones prosperas y fallidas.",
+      "Sin instituciones que funcionen, nada mas funciona. Si no puedes confiar en que un juez sea justo, o en que un tramite no requiera coima, el pais no avanza. Los paises que salieron de la pobreza (Singapur, Corea, Chile) lo hicieron fortaleciendo sus instituciones primero. Peru ha tenido 6 presidentes en 5 anos — eso no pasa en paises serios.",
     dataPoints: [
-      "El WEF GCI 4.0 coloca 'Instituciones' como Pilar 1 de sus 12 pilares de competitividad",
-      "El Banco Mundial mide 6 dimensiones de gobernanza en 214 economias (WGI)",
-      "El World Justice Project evalua 47 indicadores de estado de derecho en 143 paises",
-      "Singapur paso de pais corrupto a top 3 mundial en CPI creando una agencia anticorrupcion independiente",
+      "Peru tuvo 6 presidentes en 5 anos (2016-2021) — inestabilidad record",
+      "El mundo nos pone en el puesto 127 de 180 en percepcion de corrupcion",
+      "Singapur era mas corrupto que Peru y ahora es top 3 mundial — se puede cambiar",
+      "Los paises con instituciones fuertes crecen mas y tienen menos pobreza, segun el Banco Mundial",
     ],
     peruStatus: {
       summary:
-        "Peru enfrenta una crisis institucional severa. La percepcion de corrupcion empeora anualmente, el estado de derecho se debilita y la confianza ciudadana en instituciones esta entre las mas bajas de la region.",
+        "Las instituciones peruanas estan en crisis. La corrupcion empeora cada ano, nadie confia en los jueces, y la politica es un caos. Mientras Chile y Uruguay mejoran, Peru va para atras.",
       score: "critico",
       rankings: [
         {
@@ -559,10 +559,10 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Corrupcion percibida en aumento: 31/100 en CPI 2024 (puesto 127/180)",
-        "Estado de derecho debil: puesto 93/143 en WJP Rule of Law Index 2025",
-        "Sistema judicial con baja confianza ciudadana y presion mediatica sobre jueces",
-        "Inestabilidad politica cronica: 6 presidentes en 5 anos (2016-2021)",
+        "La corrupcion empeora cada ano — sacamos 31/100 (Chile saca 63)",
+        "Nadie confia en los jueces ni en el Congreso",
+        "6 presidentes en 5 anos — inestabilidad politica record",
+        "Las reglas del juego cambian segun quien este en el poder",
       ],
     },
     benchmark: {
@@ -581,23 +581,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "anticorrupcion",
     number: 2,
-    name: "Lucha Contra la Corrupcion",
+    name: "Acabar con la Corrupcion",
     nameEn: "Anti-Corruption",
     icon: "ShieldCheck",
     color: "red",
     shortDescription:
-      "Mecanismos efectivos de prevencion, deteccion y sancion de la corrupcion en los sectores publico y privado.",
+      "Que robar al Estado tenga consecuencias reales. Que los funcionarios corruptos vayan presos, no a otro cargo.",
     whyItMatters:
-      "Transparency International, el Banco Mundial y el WEF coinciden en que la corrupcion es el principal destructor de confianza institucional y competitividad. El CPI muestra una correlacion directa entre corrupcion y pobreza. Peru pierde posiciones cada ano, alejandose de sus pares regionales.",
+      "La corrupcion es la razon #1 por la que Peru no avanza. Cada sol robado es un hospital que no se construye, una escuela sin techo. Peru saca 31 de 100 en el indice de corrupcion — Chile saca 63, mas del doble. Lo peor: cada ano empeoramos. Pero Singapur demostro que se puede pasar de pais corrupto a uno de los mas limpios del mundo en pocas decadas.",
     dataPoints: [
-      "Peru: 31/100 en CPI 2024, cayendo 2 puntos en un ano (puesto 127/180)",
-      "Chile: 63/100 en CPI 2024 (puesto 31), mas del doble del puntaje de Peru",
-      "Ausencia de Corrupcion es un factor clave tanto en el WJP Rule of Law Index como en el WGI del Banco Mundial",
-      "Singapur demostro que la corrupcion endemica puede eliminarse en pocas decadas con voluntad politica",
+      "Peru saca 31/100 en corrupcion — Chile saca 63/100, mas del doble",
+      "Cada ano Peru baja en el ranking: caimos 2 puntos mas en 2024",
+      "Caso Odebrecht: corrupcion en todos los niveles de gobierno",
+      "Singapur era corrupto como Peru y ahora es top 3 del mundo — con voluntad politica se puede",
     ],
     peruStatus: {
       summary:
-        "Peru tiene uno de los peores indices de percepcion de corrupcion de America Latina, con una tendencia decreciente. Los casos Odebrecht y la inestabilidad politica han erosionado la confianza ciudadana.",
+        "Peru es de los paises mas corruptos de America Latina y empeora cada ano. Odebrecht demostro que la corrupcion esta en todos lados. La gente ya no confia en nadie.",
       score: "critico",
       rankings: [
         {
@@ -614,10 +614,10 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Score de 31/100 en CPI: en el tercio inferior a nivel global",
-        "Tendencia descendente: Peru pierde puntos ano tras ano",
-        "Caso Odebrecht revelo corrupcion sistemica en multiples niveles de gobierno",
-        "Alta impunidad: procesos judiciales por corrupcion tardan anos sin resolverse",
+        "31/100 en corrupcion — estamos en el grupo de los peores del mundo",
+        "Cada ano sacamos peor nota — vamos para atras",
+        "Odebrecht demostro que la corrupcion esta en todos los niveles",
+        "Los juicios por corrupcion duran anos y casi nadie va preso",
       ],
     },
     benchmark: {
@@ -636,23 +636,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "educacion",
     number: 3,
-    name: "Calidad Educativa",
+    name: "Educacion de Verdad",
     nameEn: "Education Quality",
     icon: "GraduationCap",
     color: "emerald",
     shortDescription:
-      "Educacion basica de calidad, formacion tecnica alineada con el mercado laboral, e inversion en capital humano.",
+      "Que un chico que sale del colegio sepa leer bien, hacer cuentas y conseguir trabajo. Hoy 2 de cada 3 no pueden.",
     whyItMatters:
-      "El WEF identifica 'Habilidades' como uno de sus 12 pilares de competitividad. El IDH del PNUD usa educacion como 1 de sus 3 dimensiones. PISA de la OCDE mide la calidad educativa real. Corea del Sur demostro que la inversion en educacion transforma economias en una generacion.",
+      "Sin educacion no hay futuro. Punto. En las pruebas PISA, los estudiantes peruanos sacan 391 en matematicas — el promedio mundial es 472. Solo 1 de cada 3 chicos peruanos puede resolver un problema basico de matematicas. Corea del Sur estaba peor que Peru hace 60 anos y hoy es potencia tecnologica — invirtieron en educacion durante 30 anos seguidos.",
     dataPoints: [
-      "Peru PISA 2022: Matematicas 391 (OCDE: 472), Lectura 408 (OCDE: 476)",
-      "Solo 34% de estudiantes peruanos alcanzan nivel 2 en matematicas (vs 69% en la OCDE)",
-      "Solo 1% de estudiantes peruanos alcanzan nivel 5 en lectura (vs 7% OCDE)",
-      "Corea del Sur invirtio 4-5% de PIB en educacion consistentemente durante 30 anos y paso de pais pobre a economia del conocimiento",
+      "Peru saca 391 en matematicas PISA — el promedio mundial es 472 (estamos 81 puntos abajo)",
+      "Solo 1 de cada 3 estudiantes puede resolver un problema basico de matematicas",
+      "Solo 1% de nuestros estudiantes llega al nivel avanzado en lectura (en la OCDE es 7%)",
+      "Corea del Sur invirtio 5% del PIB en educacion por 30 anos y paso de pobre a potencia",
     ],
     peruStatus: {
       summary:
-        "Los resultados PISA muestran que Peru esta significativamente por debajo del promedio OCDE en todas las materias. Existe una tendencia positiva de largo plazo, pero la brecha con paises desarrollados sigue siendo enorme.",
+        "Nuestros chicos salen del colegio sin las herramientas basicas. Estamos muy por debajo del mundo en todas las materias. Algo esta mejorando, pero a paso de tortuga.",
       score: "deficiente",
       rankings: [
         {
@@ -681,10 +681,10 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Puntajes PISA muy por debajo del promedio OCDE en las tres materias",
-        "Solo 34% alcanza nivel minimo de competencia en matematicas (OCDE: 69%)",
-        "Brecha urbano-rural significativa en resultados educativos",
-        "Baja inversion en educacion relativa al PIB comparado con paises exitosos",
+        "Solo 1 de cada 3 chicos resuelve un problema basico de matematicas",
+        "Estamos 81 puntos abajo del promedio mundial en PISA",
+        "Un chico de Lima aprende mucho mas que uno del campo",
+        "Invertimos poco en educacion comparado con los paises que si crecieron",
       ],
     },
     benchmark: {
@@ -703,23 +703,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "infraestructura",
     number: 4,
-    name: "Infraestructura y Conectividad",
+    name: "Carreteras, Agua e Internet",
     nameEn: "Infrastructure & Connectivity",
     icon: "Building2",
     color: "amber",
     shortDescription:
-      "Transporte, energia, agua, saneamiento y conectividad digital como base del crecimiento economico.",
+      "Que llegue agua limpia a todos, que las carreteras conecten el pais, y que internet no sea un lujo.",
     whyItMatters:
-      "El WEF designa Infraestructura como Pilar 2 de competitividad. El Banco Mundial mide la calidad logistica a traves del LPI. La brecha de infraestructura limita la productividad, encarece el comercio y profundiza la desigualdad territorial. Peru tiene deficiencias criticas en infraestructura vial, portuaria y de saneamiento.",
+      "Sin carreteras no hay comercio. Sin agua limpia no hay salud. Sin internet no hay futuro. En Peru, solo 2 de cada 10 hogares rurales tienen internet fijo. Hay pueblos donde el agua llega turbia o no llega. Mientras tanto, los proyectos de infraestructura se atrasan anos por corrupcion en las licitaciones.",
     dataPoints: [
-      "Infraestructura es el Pilar 2 del WEF GCI 4.0 (de 12 pilares)",
-      "El Logistics Performance Index del Banco Mundial evalua la calidad de infraestructura de transporte y comercio",
-      "Peru: brecha de acceso a agua potable y saneamiento persiste en zonas rurales",
-      "Solo 21.7% de hogares rurales tiene internet fijo, vs ~88% urbano",
+      "Solo 2 de cada 10 hogares rurales tienen internet fijo (en la ciudad son 9 de 10)",
+      "Proyectos de infraestructura con anos de atraso y sobrecostos por corrupcion",
+      "Hay pueblos sin agua potable ni desague fuera de las ciudades principales",
+      "Chile tiene la mejor logistica de transporte de America Latina — Peru esta lejos",
     ],
     peruStatus: {
       summary:
-        "Peru tiene brechas significativas en infraestructura vial, portuaria, de saneamiento y digital, especialmente fuera de Lima. El gasto en infraestructura ha sido insuficiente y los proyectos sufren demoras cronicas.",
+        "Fuera de Lima, Peru es otro pais. Carreteras que no existen, pueblos sin agua, internet que no llega. Los proyectos se atrasan anos y cuestan el doble por corrupcion.",
       score: "deficiente",
       rankings: [
         {
@@ -736,10 +736,10 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Brecha critica de infraestructura rural vs urbana",
-        "Proyectos de infraestructura con demoras cronicas y sobrecostos (corrupcion en licitaciones)",
-        "Solo 21.7% de hogares rurales con internet fijo",
-        "Deficiencias en saneamiento: acceso a agua potable limitado fuera de ciudades principales",
+        "Fuera de Lima parece otro pais — sin carreteras, sin agua, sin internet",
+        "Los proyectos se atrasan anos por corrupcion en las licitaciones",
+        "Solo 2 de cada 10 hogares rurales tienen internet",
+        "Hay pueblos donde el agua no llega o llega sucia",
       ],
     },
     benchmark: {
@@ -758,23 +758,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "transformacion-digital",
     number: 5,
-    name: "Transformacion Digital y Gobierno Electronico",
+    name: "Digitalizar el Estado",
     nameEn: "Digital Transformation & E-Government",
     icon: "MonitorSmartphone",
     color: "violet",
     shortDescription:
-      "Digitalizacion de servicios publicos, conectividad universal, economia digital y competencias digitales ciudadanas.",
+      "Que puedas hacer tramites desde tu celular sin hacer cola. Que el Estado use tecnologia en vez de papel.",
     whyItMatters:
-      "El WEF incluye 'Adopcion de TIC' como Pilar 3 de competitividad. El IMD tiene un ranking especifico de competitividad digital. Estonia demostro que la digitalizacion reduce burocracia, corrupcion y costos gubernamentales, mientras mejora la transparencia y eficiencia.",
+      "En Estonia, el 100% de tramites del gobierno se hacen online — no hay colas, no hay coimas, no hay papeles. En Peru todavia hay que ir a una oficina, hacer cola y rezar. La digitalizacion reduce corrupcion (todo queda registrado), ahorra plata al Estado y le facilita la vida a la gente. Peru esta por debajo de Brasil, Mexico, Chile, Colombia y Argentina en desarrollo digital.",
     dataPoints: [
-      "Adopcion de TIC es el Pilar 3 del WEF GCI 4.0",
-      "Estonia: 100% de servicios gubernamentales en linea, sector TIC = 7% del PIB",
-      "Peru: 74.7% de penetracion de internet, pero brecha rural significativa (56.7% rural vs 83-88% urbano)",
-      "Peru tiene nivel 'medio' de desarrollo digital en la region, debajo de Brasil, Mexico, Chile, Colombia y Argentina",
+      "En Estonia puedes hacer TODO online — en Peru todavia hay colas para todo",
+      "75% de peruanos tiene internet, pero en zonas rurales solo 57%",
+      "Peru esta por debajo de Brasil, Mexico, Chile, Colombia y Argentina en lo digital",
+      "Estonia paso de pais pobre a tener el 7% de su economia en tecnologia — se puede",
     ],
     peruStatus: {
       summary:
-        "Peru ha avanzado en penetracion de internet y gobierno electronico basico (SUNAT, SIS), pero la brecha digital urbano-rural persiste. El pais tiene nivel medio de desarrollo digital en la region, por debajo de sus principales pares.",
+        "Algo hemos avanzado (SUNAT online funciona), pero estamos atrasados vs nuestros vecinos. La brecha entre Lima y el campo es enorme.",
       score: "en_progreso",
       rankings: [
         {
@@ -791,10 +791,10 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Brecha digital urbano-rural: 56.7% rural vs 83-88% urbano conectado",
-        "Solo 21.7% de hogares rurales con internet fijo",
-        "Clasificado por debajo de Brasil, Mexico, Chile, Colombia y Argentina en desarrollo digital",
-        "Debilidades en competencias digitales de la poblacion y marcos regulatorios TIC",
+        "En el campo, solo la mitad tiene internet — en la ciudad casi todos",
+        "Solo 2 de cada 10 hogares rurales con internet fijo",
+        "Estamos por debajo de Brasil, Mexico, Chile, Colombia y Argentina en lo digital",
+        "La mayoria de tramites del Estado todavia requieren ir fisicamente a una oficina",
       ],
     },
     benchmark: {
@@ -813,24 +813,24 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "diversificacion-economica",
     number: 6,
-    name: "Diversificacion Economica y Productividad",
+    name: "No Solo Mineria",
     nameEn: "Economic Diversification & Productivity",
     icon: "TrendingUp",
     color: "orange",
     shortDescription:
-      "Reduccion de la dependencia minera, formalizacion del empleo, innovacion empresarial y desarrollo de nuevos sectores productivos.",
+      "Peru vive de la mineria. Si baja el precio del cobre, nos hundimos. Necesitamos crear otras industrias y formalizar empleos.",
     whyItMatters:
-      "El WEF mide Dinamismo Empresarial (Pilar 11) y Capacidad de Innovacion (Pilar 12) como motores de productividad. Peru depende excesivamente de la mineria (64% de exportaciones) y tiene una informalidad del 71.65%. La diversificacion economica es esencial para un crecimiento resiliente y generacion de empleo de calidad.",
+      "El 64% de lo que Peru exporta son metales. Si manana baja el precio del cobre, se nos cae la economia. Ademas, 7 de cada 10 peruanos trabajan en la informalidad — sin seguro, sin jubilacion, sin derechos. Chile diversifico hacia servicios, agroindustria y tecnologia. Peru se quedo en la mineria y en el crecimiento paso de 6% a 2% anual.",
     dataPoints: [
-      "64% de las exportaciones de Peru son metales y minerales",
-      "71.65% del empleo es informal (2023)",
-      "La economia informal representa ~47% del PIB",
-      "Recaudacion tributaria: 17% del PIB vs 33.8% OCDE y 21.3% promedio LAC",
-      "Crecimiento economico desacelero: 6.2% (2005-2014) a 2.4% (2015-2024)",
+      "64% de lo que exportamos son metales — demasiado huevo en una sola canasta",
+      "7 de cada 10 peruanos trabajan sin contrato, sin seguro, sin derechos",
+      "La economia informal es casi la mitad del PIB — plata que no paga impuestos",
+      "Antes creciamos 6% al ano, ahora solo 2.4% — nos estamos frenando",
+      "Chile diversifico su economia y su PIB per capita es el doble que el nuestro",
     ],
     peruStatus: {
       summary:
-        "Peru sigue altamente dependiente de la mineria para exportaciones y crecimiento. La informalidad laboral es de las mas altas de la region, la recaudacion tributaria esta muy por debajo de la OCDE, y la productividad se ha estancado.",
+        "Vivimos de la mineria y de la informalidad. Si el cobre baja, nos hundimos. 7 de cada 10 trabajan sin derechos. El crecimiento se freno a la mitad.",
       score: "deficiente",
       rankings: [
         {
@@ -859,11 +859,11 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Dependencia minera: 64% de exportaciones son metales y minerales",
-        "Informalidad laboral: 71.65% del empleo (2023) — una de las mas altas de LAC",
-        "Economia informal ~47% del PIB, erosionando la base tributaria",
-        "Recaudacion tributaria: 17% del PIB, muy por debajo de la OCDE (33.8%) y LAC (21.3%)",
-        "Crecimiento desacelerado: de 6.2% a 2.4% promedio anual",
+        "64% de lo que exportamos son metales — si baja el cobre, nos hundimos",
+        "7 de cada 10 trabajan informal — sin contrato, sin seguro, sin futuro",
+        "Casi la mitad del PIB es informal — plata invisible para el Estado",
+        "El crecimiento se freno a la mitad: de 6% a 2.4% anual",
+        "Chile gana el doble que nosotros per capita — y eramos similares",
       ],
     },
     benchmark: {
@@ -882,23 +882,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "salud",
     number: 7,
-    name: "Salud Publica y Proteccion Social",
+    name: "Salud que Funcione",
     nameEn: "Healthcare & Social Protection",
     icon: "HeartPulse",
     color: "rose",
     shortDescription:
-      "Acceso efectivo a salud de calidad, no solo cobertura en papel. Sistema integrado que elimine brechas regionales y de genero.",
+      "El 97% tiene seguro de salud en papel, pero 7 de cada 10 no reciben atencion cuando la necesitan. Eso no es salud.",
     whyItMatters:
-      "El WEF incluye 'Salud' como Pilar 5 de competitividad. El IDH del PNUD usa esperanza de vida como dimension clave. La OCDE evalua el sistema de salud peruano y encuentra cobertura nominal alta pero acceso efectivo muy bajo. Una poblacion sana es prerequisito para productividad y desarrollo.",
+      "Tener un carnet del SIS no sirve si cuando te enfermas no hay cama, no hay doctor o te hacen esperar semanas. En Peru, 7 de cada 10 personas que necesitan atencion medica NO la reciben. En Puno es el doble de grave que en Lima. Un pais donde la gente se muere por falta de atencion no puede crecer.",
     dataPoints: [
-      "97% de peruanos tienen seguro de salud (SIS), pero 7 de cada 10 no reciben atencion cuando la necesitan (ENAHO 2022)",
-      "35% cita tiempos de espera como razon principal de no recibir atencion",
-      "En Puno, necesidades medicas no atendidas son casi el doble que en Lima (40% vs 23%)",
-      "Esperanza de vida: 72.4 anos (2022), mejora de 13 anos desde 1980",
+      "7 de cada 10 peruanos que necesitan atencion medica NO la reciben",
+      "35% no va al doctor porque los tiempos de espera son eternas",
+      "En Puno la falta de atencion es el doble que en Lima (40% vs 23%)",
+      "Vivimos 72 anos en promedio — un chileno vive 79, casi 7 anos mas",
     ],
     peruStatus: {
       summary:
-        "Peru logro una cobertura de salud nominal del 97%, pero el sistema esta fragmentado y el acceso efectivo es muy bajo. 7 de cada 10 personas que necesitan atencion no la reciben. Hay brechas enormes entre Lima y regiones.",
+        "Todos tenemos carnet del SIS, pero cuando te enfermas no hay cama ni doctor. El sistema esta roto. En provincias es mucho peor que en Lima.",
       score: "deficiente",
       rankings: [
         {
@@ -915,11 +915,11 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "7 de cada 10 personas que necesitan atencion medica no la reciben",
-        "Sistema fragmentado: multiples subsistemas publicos sin integracion",
-        "Brecha regional: necesidades no atendidas en Puno (40%) duplican a Lima (23%)",
-        "Brecha de genero: mujeres reportan mas necesidades no atendidas (33% vs 29%)",
-        "Peru esta ultimo en gasto en salud como % del PIB entre paises de la region",
+        "7 de cada 10 que necesitan doctor NO lo consiguen",
+        "El sistema esta partido en pedazos — SIS, EsSalud, clinicas, y ninguno se habla",
+        "En Puno la gente se queda sin atencion el doble que en Lima",
+        "Las mujeres sufren mas — 33% sin atencion vs 29% de hombres",
+        "Peru gasta menos en salud que cualquier otro pais de la region",
       ],
     },
     benchmark: {
@@ -938,23 +938,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "inclusion-social",
     number: 8,
-    name: "Inclusion Social y Reduccion de Desigualdad",
+    name: "Que Nadie se Quede Atras",
     nameEn: "Social Inclusion & Inequality Reduction",
     icon: "Users",
     color: "teal",
     shortDescription:
-      "Reduccion de brechas de pobreza, desigualdad territorial, genero y acceso a oportunidades para todos los peruanos.",
+      "4 de cada 10 peruanos son pobres. La mitad no come bien. Un chico en Lima tiene 3 veces mas oportunidades que uno en Huancavelica.",
     whyItMatters:
-      "El IDH del PNUD y el Better Life Index de la OCDE miden multiples dimensiones de bienestar e inclusion. La desigualdad frena el crecimiento y genera inestabilidad social. El 36.2% de peruanos vive en pobreza y mas de la mitad enfrenta inseguridad alimentaria. Ruanda demostro que politicas de inclusion de genero pueden ser parte central de una estrategia de desarrollo.",
+      "36% de peruanos vive en pobreza y mas de la mitad no come lo suficiente. Si naciste en Lima, tus oportunidades son 3 veces mayores que si naciste en los Andes o la Amazonia. La pandemia borro anos de progreso — la pobreza salto de 20% a 30% de un ano a otro. Un pais donde la mitad sufre no puede avanzar.",
     dataPoints: [
-      "36.2% de peruanos vive con menos de USD 8.30/dia (2024)",
-      "Gini de 40.1 indica desigualdad moderada-alta",
-      "La pandemia hizo retroceder anos de progreso: pobreza salto de 20.2% (2019) a 30.1% (2020)",
-      "Brechas enormes entre Lima metropolitana y regiones andinas/amazonicas en todos los indicadores",
+      "36% de peruanos son pobres — con menos de 30 soles al dia",
+      "Mas de la mitad de peruanos no come bien (inseguridad alimentaria)",
+      "La pandemia borro anos de progreso: pobreza salto de 20% a 30% en un ano",
+      "Un chico de Lima tiene 3 veces mas oportunidades que uno del campo",
     ],
     peruStatus: {
       summary:
-        "Peru hizo progresos significativos en reduccion de pobreza (2005-2019), pero la pandemia revirtio mucho del avance. La pobreza aun esta por encima de niveles prepandemicos y las brechas regionales son enormes.",
+        "Habiamos avanzado, pero la pandemia nos devolvio anos atras. La pobreza todavia esta peor que antes del COVID. Y si vives fuera de Lima, todo es peor.",
       score: "deficiente",
       rankings: [
         {
@@ -971,10 +971,10 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "36.2% vive en pobreza monetaria (2024), aun por encima de niveles prepandemicos (33.6% en 2019)",
-        "Mas de la mitad de la poblacion enfrenta inseguridad alimentaria",
-        "Gini de 40.1: desigualdad moderada-alta",
-        "Enorme brecha entre Lima y regiones en acceso a salud, educacion e internet",
+        "36% vive en pobreza — peor que antes de la pandemia",
+        "Mas de la mitad de peruanos no come lo suficiente",
+        "La desigualdad es de las mas altas de America Latina",
+        "Si naces fuera de Lima, tus chances de salir adelante son mucho menores",
       ],
     },
     benchmark: {
@@ -993,23 +993,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "capacidad-fiscal",
     number: 9,
-    name: "Capacidad Fiscal y Gestion Publica",
+    name: "El Estado No Tiene Plata",
     nameEn: "Fiscal Capacity & Public Management",
     icon: "Wallet",
     color: "cyan",
     shortDescription:
-      "Recaudacion tributaria suficiente, gasto publico eficiente, y capacidad del Estado para financiar servicios esenciales y proyectos de desarrollo.",
+      "Peru recauda la mitad de lo que necesita. Sin plata no hay hospitales, ni colegios, ni carreteras. Y la informalidad hace que casi nadie pague impuestos.",
     whyItMatters:
-      "El WEF mide la estabilidad macroeconomica (Pilar 4) y el Banco Mundial la efectividad del gobierno. Peru recauda solo 17% del PIB en impuestos, lejos del promedio OCDE (33.8%) y LAC (21.3%). Sin capacidad fiscal no hay educacion, salud ni infraestructura de calidad. Ruanda demostro que ampliar la base tributaria es fundamental para reducir dependencia de ayuda externa.",
+      "El Estado peruano recauda 17% del PIB en impuestos — los paises desarrollados recaudan 34%, el doble. Sin plata no puedes construir hospitales, pagar buenos profesores ni hacer carreteras. La razon principal: 7 de cada 10 trabajan en la informalidad y no pagan impuestos. Es un circulo vicioso: el Estado no recauda, entonces no da buenos servicios, entonces la gente no quiere pagar.",
     dataPoints: [
-      "Peru recauda ~17% del PIB en impuestos (2023), el mas bajo de la region junto con algunos paises centroamericanos",
-      "Promedio OCDE: 33.8% | Promedio LAC: 21.3%",
-      "Caida de 2.1 puntos porcentuales en la ratio impuestos/PIB entre 2022 y 2023",
-      "La informalidad (71.65% del empleo) erosiona masivamente la base tributaria",
+      "Peru recauda 17% del PIB — los paises desarrollados recaudan 34%, el doble",
+      "Somos de los que menos recaudamos en toda America Latina",
+      "En 2023 recaudamos aun MENOS que en 2022 — vamos para atras",
+      "7 de cada 10 trabajan informal y no pagan impuestos — el Estado se queda sin plata",
     ],
     peruStatus: {
       summary:
-        "Peru tiene una de las recaudaciones tributarias mas bajas de America Latina (17% del PIB), muy por debajo de la OCDE (33.8%) y el promedio regional (21.3%). La alta informalidad y la caida de precios de commodities agravan la situacion.",
+        "El Estado no tiene plata porque casi nadie paga impuestos. Recaudamos la mitad de lo que necesitamos. Y cada ano recaudamos menos, no mas.",
       score: "critico",
       rankings: [
         {
@@ -1026,11 +1026,11 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Recaudacion de 17% del PIB: casi la mitad del promedio OCDE",
-        "Caida de 2.1 pp (la mayor de la region) entre 2022 y 2023",
-        "Informalidad del 71.65% erosiona la base tributaria",
-        "Ingresos no tributarios de solo 0.4% del PIB (el mas bajo de LAC)",
-        "Alta dependencia de ingresos mineros que fluctuan con precios internacionales",
+        "Recaudamos la mitad de lo que necesitamos — 17% vs 34% de paises desarrollados",
+        "En 2023 recaudamos MENOS que en 2022 — la peor caida de la region",
+        "7 de cada 10 trabajan informal — no pagan impuestos",
+        "Dependemos de la mineria para los ingresos — y los precios suben y bajan",
+        "No hay plata para hospitales, colegios ni carreteras porque no recaudamos",
       ],
     },
     benchmark: {
@@ -1049,23 +1049,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "justicia-seguridad",
     number: 10,
-    name: "Seguridad Ciudadana y Acceso a Justicia",
+    name: "Seguridad y Justicia de Verdad",
     nameEn: "Citizen Security & Access to Justice",
     icon: "Scale",
     color: "indigo",
     shortDescription:
-      "Seguridad publica efectiva, sistema judicial eficiente e independiente, y acceso a justicia para todos los ciudadanos.",
+      "Que puedas caminar tranquilo por la calle. Que si te roban, la policia haga algo. Que los jueces no se vendan.",
     whyItMatters:
-      "El WJP Rule of Law Index mide justicia civil y penal como dos de sus 8 factores. El WEF incluye seguridad en su evaluacion institucional. El Banco Mundial mide estabilidad politica y ausencia de violencia. Sin seguridad y justicia, no hay inversion, no hay confianza institucional, y la desigualdad se perpetua.",
+      "La inseguridad es la preocupacion #1 de los peruanos. Pero no basta con mas policias — necesitas jueces que no se vendan, carceles que rehabiliten y un sistema que funcione. Peru esta en el puesto 93 de 143 en estado de derecho. Si denuncias un robo, no pasa nada. Si un politico roba, tampoco. Asi no se construye un pais.",
     dataPoints: [
-      "Peru: puesto 93/143 en el WJP Rule of Law Index 2025",
-      "El WJP evalua justicia civil y justicia penal como factores independientes del estado de derecho",
-      "El Banco Mundial mide 'Estabilidad politica y ausencia de violencia' como dimension de gobernanza",
-      "El sistema judicial peruano tiene 1,838 juzgados de paz pero baja confianza ciudadana",
+      "Peru esta en el puesto 93 de 143 paises en estado de derecho — en el tercio mas bajo",
+      "La inseguridad es la preocupacion #1 de los peruanos segun todas las encuestas",
+      "Si denuncias un robo, la probabilidad de que se resuelva es minima",
+      "En Lima la justicia funciona (mas o menos) — en provincias es casi inexistente",
     ],
     peruStatus: {
       summary:
-        "Peru enfrenta problemas graves de inseguridad ciudadana y un sistema judicial con baja confianza publica, alta carga procesal y presion mediatica sobre jueces. El acceso a justicia es desigual territorialmente.",
+        "La gente tiene miedo de salir a la calle. La policia no da abasto. Los jueces no inspiran confianza. Y si vives en provincia, la justicia casi no existe.",
       score: "critico",
       rankings: [
         {
@@ -1082,11 +1082,11 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Baja confianza ciudadana en el sistema judicial",
-        "Presion mediatica sobre jueces afecta independencia judicial",
-        "Puesto 93/143 en Rule of Law Index: en el tercio inferior global",
-        "Acceso a justicia desigual: mucho mejor en Lima que en regiones",
-        "Inseguridad ciudadana percibida entre las principales preocupaciones de los peruanos",
+        "La inseguridad es lo que mas preocupa a los peruanos",
+        "Si te roban y denuncias, casi nunca pasa nada",
+        "Los jueces no inspiran confianza — presion politica y mediatica",
+        "En provincias casi no hay acceso a justicia",
+        "Estamos en el puesto 93 de 143 paises en estado de derecho",
       ],
     },
     benchmark: {
