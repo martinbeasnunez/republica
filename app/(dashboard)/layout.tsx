@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sidebar, MobileNav } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { WhatsAppFAB } from "@/components/dashboard/whatsapp-fab";
+import { AINotificationToast } from "@/components/dashboard/ai-notification-toast";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
       <WhatsAppFAB />
+      <AINotificationToast />
     </div>
   );
 }
