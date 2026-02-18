@@ -8,7 +8,6 @@ import {
   ExternalLink,
   ShieldCheck,
   AlertTriangle,
-  Newspaper,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { articles } from "@/lib/data/news";
 import type { NewsArticle } from "@/lib/data/news";
+import { NewsHeroInsight } from "@/components/noticias/news-hero-insight";
 
 const factCheckStyles = {
   verified: {
@@ -61,24 +61,8 @@ export default function NoticiasPage() {
 
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="flex items-center gap-2">
-          <Newspaper className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Noticias</h1>
-          <div className="ml-2 flex items-center gap-1.5 rounded-full bg-emerald/10 border border-emerald/20 px-3 py-1">
-            <span className="h-2 w-2 rounded-full bg-emerald pulse-dot" />
-            <span className="text-[11px] font-medium text-emerald">
-              Tiempo real
-            </span>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          Noticias electorales verificadas de los principales medios peruanos
-        </p>
-      </motion.div>
+      {/* AI Hero Insight */}
+      <NewsHeroInsight />
 
       {/* Search + filters */}
       <div className="flex flex-col gap-4 sm:flex-row">
