@@ -159,7 +159,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold text-foreground">
-              REPUBLICA AI
+              AGORA AI
             </span>
             <span className="text-[10px] text-muted-foreground">
               — Asistente electoral
@@ -307,12 +307,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {/* AI Assistant shortcut */}
         <CommandGroup heading="Inteligencia Artificial">
           <CommandItem
-            value="REPUBLICA AI asistente electoral"
+            value="AGORA AI asistente electoral"
             onSelect={() => setMode("ai")}
             className="gap-2"
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="font-medium">Preguntale a REPUBLICA AI</span>
+            <span className="font-medium">Preguntale a AGORA AI</span>
             <span className="ml-auto text-[10px] text-muted-foreground">
               GPT-4o
             </span>

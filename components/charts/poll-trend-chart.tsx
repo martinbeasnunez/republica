@@ -33,8 +33,8 @@ export function PollTrendChart() {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "axis" as const,
-      backgroundColor: "#14142a",
-      borderColor: "#1e1e3a",
+      backgroundColor: "#14131e",
+      borderColor: "#1e1c2e",
       textStyle: {
         color: "#f1f5f9",
         fontSize: 12,
@@ -71,7 +71,7 @@ export function PollTrendChart() {
     xAxis: {
       type: "category" as const,
       data: months,
-      axisLine: { lineStyle: { color: "#1e1e3a" } },
+      axisLine: { lineStyle: { color: "#1e1c2e" } },
       axisLabel: { color: "#94a3b8", fontSize: 11 },
       axisTick: { show: false },
     },
@@ -84,7 +84,7 @@ export function PollTrendChart() {
         formatter: "{value}%",
       },
       splitLine: {
-        lineStyle: { color: "#1e1e3a", type: "dashed" as const },
+        lineStyle: { color: "#1e1c2e", type: "dashed" as const },
       },
       min: 0,
       max: 15,

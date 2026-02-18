@@ -46,52 +46,56 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* REPUBLICA custom colors */
+  /* AGORA custom colors — Peru-inspired dark theme */
   --color-emerald: #10b981;
   --color-rose: #ef4444;
   --color-amber: #f59e0b;
   --color-sky: #3b82f6;
-  --color-indigo: #6366f1;
+  --color-indigo: #8B1A1A;
   --color-indigo-glow: #818cf8;
-  --color-surface-1: #0d0d16;
-  --color-surface-2: #14142a;
-  --color-surface-3: #1a1a36;
+  --color-gold: #D4A017;
+  --color-gold-light: #E8B930;
+  --color-rojo: #8B1A1A;
+  --color-rojo-light: #A52525;
+  --color-surface-1: #0d0d12;
+  --color-surface-2: #14141e;
+  --color-surface-3: #1a1a28;
 }
 
-/* REPUBLICA Dark Theme - Always dark, Palantir-inspired */
+/* AGORA Dark Theme — Peru-inspired, Palantir-grade */
 :root {
   --radius: 0.625rem;
-  --background: #06060b;
+  --background: #08060a;
   --foreground: #f1f5f9;
-  --card: #0d0d16;
+  --card: #0d0c12;
   --card-foreground: #f1f5f9;
-  --popover: #14142a;
+  --popover: #14131e;
   --popover-foreground: #f1f5f9;
-  --primary: #6366f1;
+  --primary: #8B1A1A;
   --primary-foreground: #ffffff;
-  --secondary: #14142a;
+  --secondary: #14131e;
   --secondary-foreground: #e2e8f0;
-  --muted: #1a1a36;
+  --muted: #1a1928;
   --muted-foreground: #94a3b8;
-  --accent: #1e1e3a;
+  --accent: #1e1c2e;
   --accent-foreground: #e2e8f0;
   --destructive: #ef4444;
-  --border: #1e1e3a;
-  --input: #1e1e3a;
-  --ring: #6366f1;
-  --chart-1: #6366f1;
-  --chart-2: #10b981;
-  --chart-3: #f59e0b;
+  --border: #1e1c2e;
+  --input: #1e1c2e;
+  --ring: #8B1A1A;
+  --chart-1: #8B1A1A;
+  --chart-2: #D4A017;
+  --chart-3: #10b981;
   --chart-4: #3b82f6;
   --chart-5: #ef4444;
-  --sidebar: #0a0a14;
+  --sidebar: #0a0912;
   --sidebar-foreground: #e2e8f0;
-  --sidebar-primary: #6366f1;
+  --sidebar-primary: #8B1A1A;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #14142a;
+  --sidebar-accent: #14131e;
   --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: #1e1e3a;
-  --sidebar-ring: #6366f1;
+  --sidebar-border: #1e1c2e;
+  --sidebar-ring: #8B1A1A;
 }
 
 @layer base {
@@ -107,16 +111,21 @@
 @layer utilities {
   /* Glass morphism effect */
   .glass {
-    background: rgba(13, 13, 22, 0.8);
+    background: rgba(13, 12, 18, 0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(139, 26, 26, 0.1);
   }
 
   /* Glow effects */
   .glow-indigo {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15),
-                0 0 60px rgba(99, 102, 241, 0.05);
+    box-shadow: 0 0 20px rgba(139, 26, 26, 0.15),
+                0 0 60px rgba(139, 26, 26, 0.05);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 20px rgba(212, 160, 23, 0.15),
+                0 0 60px rgba(212, 160, 23, 0.05);
   }
 
   .glow-emerald {
@@ -134,9 +143,16 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Gradient text */
+  /* Gradient text — rojo peruano to dorado inca */
   .text-gradient {
-    background: linear-gradient(135deg, #6366f1 0%, #818cf8 50%, #a5b4fc 100%);
+    background: linear-gradient(135deg, #8B1A1A 0%, #A52525 40%, #D4A017 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #D4A017 0%, #E8B930 50%, #F0D060 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -146,9 +162,9 @@
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgba(30, 30, 58, 0) 0%,
-      rgba(30, 30, 58, 0.5) 50%,
-      rgba(30, 30, 58, 0) 100%
+      rgba(30, 28, 46, 0) 0%,
+      rgba(30, 28, 46, 0.5) 50%,
+      rgba(30, 28, 46, 0) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
@@ -182,15 +198,15 @@
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: #475569;
-    border-top: 1px solid #1e1e3a;
-    border-bottom: 1px solid #1e1e3a;
+    border-top: 1px solid #1e1c2e;
+    border-bottom: 1px solid #1e1c2e;
     padding: 4px 8px;
     background: repeating-linear-gradient(
       90deg,
       transparent 0px,
       transparent 4px,
-      rgba(30, 30, 58, 0.3) 4px,
-      rgba(30, 30, 58, 0.3) 5px
+      rgba(30, 28, 46, 0.3) 4px,
+      rgba(30, 28, 46, 0.3) 5px
     );
   }
 
@@ -223,7 +239,7 @@
   .typewriter {
     overflow: hidden;
     white-space: nowrap;
-    border-right: 2px solid #6366f1;
+    border-right: 2px solid #8B1A1A;
     animation: typewriter 2s steps(40, end), blink-caret 0.75s step-end infinite;
   }
 
@@ -234,7 +250,7 @@
 
   @keyframes blink-caret {
     from, to { border-color: transparent; }
-    50% { border-color: #6366f1; }
+    50% { border-color: #8B1A1A; }
   }
 
   /* Scan line effect for cards */
@@ -250,7 +266,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent 0%, #6366f1 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, #8B1A1A 50%, transparent 100%);
     opacity: 0.6;
     animation: scan-line-move 3s linear infinite;
   }
@@ -275,7 +291,7 @@
     background: linear-gradient(
       180deg,
       transparent 0%,
-      rgba(99, 102, 241, 0.02) 50%,
+      rgba(139, 26, 26, 0.02) 50%,
       transparent 100%
     );
     pointer-events: none;
@@ -294,14 +310,14 @@
 
   /* Neon border on hover */
   .neon-border {
-    border: 1px solid #1e1e3a;
+    border: 1px solid #1e1c2e;
     transition: all 0.3s ease;
   }
 
   .neon-border:hover {
-    border-color: rgba(99, 102, 241, 0.5);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.1),
-                inset 0 0 15px rgba(99, 102, 241, 0.05);
+    border-color: rgba(139, 26, 26, 0.5);
+    box-shadow: 0 0 15px rgba(139, 26, 26, 0.1),
+                inset 0 0 15px rgba(139, 26, 26, 0.05);
   }
 
   /* Countdown flip animation */
@@ -322,8 +338,8 @@
   /* Grid overlay for "hacking" feel */
   .grid-overlay {
     background-image:
-      linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      linear-gradient(rgba(139, 26, 26, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 26, 26, 0.03) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 
@@ -335,7 +351,7 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #1e1e3a;
+    background: #1e1c2e;
     border-radius: 3px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {

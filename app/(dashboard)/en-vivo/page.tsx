@@ -61,11 +61,11 @@ export default function EnVivoPage() {
         progress: {
           show: true,
           width: 18,
-          itemStyle: { color: "#6366f1" },
+          itemStyle: { color: "#8B1A1A" },
         },
         pointer: { show: false },
         axisLine: {
-          lineStyle: { width: 18, color: [[1, "#1e1e3a"]] },
+          lineStyle: { width: 18, color: [[1, "#1e1c2e"]] },
         },
         axisTick: { show: false },
         splitLine: { show: false },

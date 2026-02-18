@@ -11,7 +11,7 @@ export function WhatsAppFAB() {
   const [expanded, setExpanded] = useState(false);
 
   const message = encodeURIComponent(
-    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de REPUBLICA."
+    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de AGORA."
   );
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
 

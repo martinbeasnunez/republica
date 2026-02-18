@@ -32,7 +32,7 @@ export default function RadiografiaIndexPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // REPUBLICA INTELLIGENCE SYSTEM — MODULO RADIOGRAFIA — ACCESO AUTORIZADO //
+          // AGORA INTELLIGENCE SYSTEM — MODULO RADIOGRAFIA — ACCESO AUTORIZADO //
         </div>
       </motion.div>
 

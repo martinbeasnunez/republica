@@ -29,8 +29,8 @@ export default function EncuestasPage() {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "axis" as const,
-      backgroundColor: "#14142a",
-      borderColor: "#1e1e3a",
+      backgroundColor: "#14131e",
+      borderColor: "#1e1c2e",
       textStyle: { color: "#f1f5f9", fontSize: 12 },
     },
     legend: {
@@ -43,13 +43,13 @@ export default function EncuestasPage() {
     xAxis: {
       type: "category" as const,
       data: months,
-      axisLine: { lineStyle: { color: "#1e1e3a" } },
+      axisLine: { lineStyle: { color: "#1e1c2e" } },
       axisLabel: { color: "#94a3b8", fontSize: 11 },
     },
     yAxis: {
       type: "value" as const,
       axisLabel: { color: "#94a3b8", fontSize: 11, formatter: "{value}%" },
-      splitLine: { lineStyle: { color: "#1e1e3a", type: "dashed" as const } },
+      splitLine: { lineStyle: { color: "#1e1c2e", type: "dashed" as const } },
       min: 0,
       max: 16,
     },
@@ -71,21 +71,21 @@ export default function EncuestasPage() {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "axis" as const,
-      backgroundColor: "#14142a",
-      borderColor: "#1e1e3a",
+      backgroundColor: "#14131e",
+      borderColor: "#1e1c2e",
       textStyle: { color: "#f1f5f9", fontSize: 12 },
     },
     grid: { top: 10, right: 20, bottom: 40, left: 120 },
     xAxis: {
       type: "value" as const,
       axisLabel: { color: "#94a3b8", fontSize: 11, formatter: "{value}%" },
-      splitLine: { lineStyle: { color: "#1e1e3a", type: "dashed" as const } },
+      splitLine: { lineStyle: { color: "#1e1c2e", type: "dashed" as const } },
       max: 15,
     },
     yAxis: {
       type: "category" as const,
       data: [...topCandidates].reverse().map((c) => c.shortName),
-      axisLine: { lineStyle: { color: "#1e1e3a" } },
+      axisLine: { lineStyle: { color: "#1e1c2e" } },
       axisLabel: { color: "#f1f5f9", fontSize: 11 },
     },
     series: [

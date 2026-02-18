@@ -440,7 +440,7 @@ function PlanesHighlight() {
 function WhatsAppCTA() {
   const whatsappNumber = "51999999999"; // Peru country code + number
   const message = encodeURIComponent(
-    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de REPUBLICA."
+    "Hola! Quiero recibir actualizaciones sobre las elecciones Peru 2026 de AGORA."
   );
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
 

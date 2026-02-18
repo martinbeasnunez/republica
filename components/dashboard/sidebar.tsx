@@ -180,14 +180,14 @@ export function MobileNav({
           <SheetTitle className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <span className="font-mono text-sm font-bold text-primary-foreground">
-                R
+                A
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-wider text-foreground">
-                REPUBLICA
+              <span className="text-sm font-bold tracking-wider text-gradient">
+                AGORA
               </span>
-              <span className="text-[10px] tracking-widest text-muted-foreground">
+              <span className="text-[10px] tracking-widest text-gold">
                 PERU 2026
               </span>
             </div>
@@ -233,15 +233,15 @@ export function Sidebar() {
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="font-mono text-sm font-bold text-primary-foreground">
-              R
+              A
             </span>
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-wider text-foreground">
-                REPUBLICA
+              <span className="text-sm font-bold tracking-wider text-gradient">
+                AGORA
               </span>
-              <span className="text-[10px] tracking-widest text-muted-foreground">
+              <span className="text-[10px] tracking-widest text-gold">
                 PERU 2026
               </span>
             </div>

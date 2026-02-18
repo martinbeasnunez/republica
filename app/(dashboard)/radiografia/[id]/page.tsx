@@ -108,8 +108,8 @@ export default function RadiografiaPage({
     backgroundColor: "transparent",
     tooltip: {
       trigger: "axis" as const,
-      backgroundColor: "#14142a",
-      borderColor: "#1e1e3a",
+      backgroundColor: "#14131e",
+      borderColor: "#1e1c2e",
       textStyle: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
       formatter: (params: Array<{ seriesName: string; value: number; axisValue: string }>) => {
         const year = params[0]?.axisValue;
@@ -130,7 +130,7 @@ export default function RadiografiaPage({
     xAxis: {
       type: "category" as const,
       data: radiografia.patrimonio.map((p) => p.year.toString()),
-      axisLine: { lineStyle: { color: "#1e1e3a" } },
+      axisLine: { lineStyle: { color: "#1e1c2e" } },
       axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "JetBrains Mono, monospace" },
     },
     yAxis: {
@@ -141,7 +141,7 @@ export default function RadiografiaPage({
         fontFamily: "JetBrains Mono, monospace",
         formatter: (val: number) => `${(val / 1_000_000).toFixed(0)}M`,
       },
-      splitLine: { lineStyle: { color: "#1e1e3a", type: "dashed" as const } },
+      splitLine: { lineStyle: { color: "#1e1c2e", type: "dashed" as const } },
     },
     series: [
       {
@@ -166,8 +166,8 @@ export default function RadiografiaPage({
         smooth: true,
         symbol: "circle",
         symbolSize: 6,
-        lineStyle: { width: 2, color: "#818cf8", type: "dashed" as const },
-        itemStyle: { color: "#818cf8" },
+        lineStyle: { width: 2, color: "#D4A017", type: "dashed" as const },
+        itemStyle: { color: "#D4A017" },
         data: radiografia.patrimonio.map((p) => p.netWorth),
       },
     ],
@@ -178,8 +178,8 @@ export default function RadiografiaPage({
     backgroundColor: "transparent",
     tooltip: {
       trigger: "item" as const,
-      backgroundColor: "#14142a",
-      borderColor: "#1e1e3a",
+      backgroundColor: "#14131e",
+      borderColor: "#1e1c2e",
       textStyle: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
     },
     series: [
@@ -206,7 +206,7 @@ export default function RadiografiaPage({
           itemStyle: {
             color: d.flagged
               ? "#ef4444"
-              : ["#6366f1", "#10b981", "#f59e0b", "#3b82f6", "#8b5cf6"][i % 5],
+              : ["#D4A017", "#10b981", "#8B1A1A", "#3b82f6", "#8b5cf6"][i % 5],
           },
         })),
       },
@@ -217,8 +217,8 @@ export default function RadiografiaPage({
   const networkChart = {
     backgroundColor: "transparent",
     tooltip: {
-      backgroundColor: "#14142a",
-      borderColor: "#1e1e3a",
+      backgroundColor: "#14131e",
+      borderColor: "#1e1c2e",
       textStyle: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
     },
     series: [
@@ -305,7 +305,7 @@ export default function RadiografiaPage({
       {/* CLASSIFIED HEADER */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // REPUBLICA INTELLIGENCE SYSTEM — CANDIDATO RADIOGRAFIA — NIVEL DE ACCESO: PUBLICO //
+          // AGORA INTELLIGENCE SYSTEM — CANDIDATO RADIOGRAFIA — NIVEL DE ACCESO: PUBLICO //
         </div>
       </motion.div>
 

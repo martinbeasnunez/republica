@@ -65,8 +65,8 @@ export default function SimuladorPage() {
         backgroundColor: "transparent",
         tooltip: {
           trigger: "axis" as const,
-          backgroundColor: "#14142a",
-          borderColor: "#1e1e3a",
+          backgroundColor: "#14131e",
+          borderColor: "#1e1c2e",
           textStyle: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
           formatter: (params: Array<{ name: string; value: number; color: string }>) => {
             const p = params[0];
@@ -78,7 +78,7 @@ export default function SimuladorPage() {
           type: "value" as const,
           max: 100,
           axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "JetBrains Mono, monospace", formatter: "{value}%" },
-          splitLine: { lineStyle: { color: "#1e1e3a", type: "dashed" as const } },
+          splitLine: { lineStyle: { color: "#1e1c2e", type: "dashed" as const } },
         },
         yAxis: {
           type: "category" as const,
@@ -114,15 +114,15 @@ export default function SimuladorPage() {
         backgroundColor: "transparent",
         tooltip: {
           trigger: "axis" as const,
-          backgroundColor: "#14142a",
-          borderColor: "#1e1e3a",
+          backgroundColor: "#14131e",
+          borderColor: "#1e1c2e",
           textStyle: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
         },
         grid: { top: 15, right: 20, bottom: 30, left: 120 },
         xAxis: {
           type: "value" as const,
           axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "JetBrains Mono, monospace", formatter: "{value}%" },
-          splitLine: { lineStyle: { color: "#1e1e3a", type: "dashed" as const } },
+          splitLine: { lineStyle: { color: "#1e1c2e", type: "dashed" as const } },
         },
         yAxis: {
           type: "category" as const,
@@ -189,7 +189,7 @@ export default function SimuladorPage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // REPUBLICA INTELLIGENCE SYSTEM — SIMULADOR ELECTORAL MONTE CARLO — MODELO PREDICTIVO //
+          // AGORA INTELLIGENCE SYSTEM — SIMULADOR ELECTORAL MONTE CARLO — MODELO PREDICTIVO //
         </div>
       </motion.div>
 

@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "REPUBLICA | Elecciones Peru 2026",
+  title: "AGORA | Elecciones Peru 2026",
   description:
     "Plataforma de inteligencia electoral para las elecciones presidenciales del Peru 2026. Candidatos, encuestas, planes de gobierno, noticias verificadas y mas.",
   keywords: [
@@ -27,9 +27,10 @@ export const metadata: Metadata = {
     "presidente",
     "encuestas",
     "planes de gobierno",
+    "agora",
   ],
   openGraph: {
-    title: "REPUBLICA | Elecciones Peru 2026",
+    title: "AGORA | Elecciones Peru 2026",
     description: "Inteligencia electoral en tiempo real para el Peru",
     type: "website",
     locale: "es_PE",
