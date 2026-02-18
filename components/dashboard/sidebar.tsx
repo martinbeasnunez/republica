@@ -16,6 +16,7 @@ import {
   Scan,
   Dice6,
   BookOpen,
+  Target,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -75,6 +76,12 @@ const navigation = [
     name: "Simulador",
     href: "/simulador",
     icon: Dice6,
+    badge: "NEW",
+  },
+  {
+    name: "Pilares Peru",
+    href: "/pilares",
+    icon: Target,
     badge: "NEW",
   },
   {
