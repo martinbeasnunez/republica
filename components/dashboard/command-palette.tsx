@@ -41,7 +41,7 @@ interface ChatMessage {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<"search" | "ai">("search");
+  const [mode, setMode] = useState<"search" | "ai">("ai");
   const [aiQuery, setAiQuery] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);

@@ -406,7 +406,7 @@ export default function SimuladorPage() {
                       )}
                       <p className="text-xs text-muted-foreground">{c.name}</p>
                       <p
-                        className="font-mono text-3xl font-bold tabular-nums mt-1"
+                        className="font-mono text-2xl sm:text-3xl font-bold tabular-nums mt-1"
                         style={{ color: c.partyColor }}
                       >
                         {c.winProbability}%
@@ -478,7 +478,7 @@ export default function SimuladorPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[700px]">
                     <thead>
                       <tr className="border-b border-border">
                         <th className="text-left p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Candidato</th>

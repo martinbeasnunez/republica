@@ -146,7 +146,7 @@ export default function CompararPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="py-2 text-left text-xs font-medium text-muted-foreground w-32">
+                    <th className="py-2 text-left text-xs font-medium text-muted-foreground w-24 sm:w-32">
                       Dato
                     </th>
                     {selected.map((c) => (

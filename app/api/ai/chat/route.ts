@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 import { candidates } from "@/lib/data/candidates";
+import { getNewsContext } from "@/lib/data/news";
 
 // Build candidate context for the AI
 function getCandidateContext(): string {
@@ -24,13 +25,14 @@ export async function POST(req: NextRequest) {
     }
 
     const candidateContext = getCandidateContext();
+    const newsContext = getNewsContext();
 
     const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `${SYSTEM_PROMPTS.electoralAssistant}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}`,
+          content: `${SYSTEM_PROMPTS.electoralAssistant}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR (febrero 2026):\n${newsContext}`,
         },
         ...messages,
       ],
