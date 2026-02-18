@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { KPICard } from "@/components/dashboard/kpi-card";
 import { CandidateRanking } from "@/components/dashboard/candidate-ranking";
 import { PollTrendChart } from "@/components/charts/poll-trend-chart";
 import { NewsTicker } from "@/components/dashboard/news-ticker";
+import { AIHero } from "@/components/home/ai-hero";
+import { AIPromptBar } from "@/components/home/ai-prompt-bar";
+import { AICapabilitiesGrid } from "@/components/home/ai-capabilities-grid";
+import { AIActivityFeed } from "@/components/home/ai-activity-feed";
+import { ElectionCountdownStrip } from "@/components/home/election-countdown-strip";
 import {
-  Users,
-  Calendar,
-  Vote,
-  AlertTriangle,
   Scan,
   Dice6,
   FileText,
@@ -24,7 +24,7 @@ import {
   Trophy,
   MessageCircle,
   Clock,
-  Zap,
+  Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -32,108 +32,40 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { candidates, getTopCandidates } from "@/lib/data/candidates";
-import { radiografiaData, formatSoles, type CandidateRadiografia } from "@/lib/data/radiografia";
+import { radiografiaData, formatSoles } from "@/lib/data/radiografia";
 import { runSimulation, DEFAULT_CONFIG, type SimulationResult } from "@/lib/data/simulador";
 import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const electionDate = new Date("2026-04-12T08:00:00-05:00");
-  const now = new Date();
-  const daysToElection = Math.max(
-    0,
-    Math.floor(
-      (electionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    )
-  );
-
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Page header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-          Dashboard Electoral
-        </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Inteligencia electoral en tiempo real — Elecciones Peru 2026
-        </p>
-      </motion.div>
+      {/* === SECTION 1: AI Hero === */}
+      <AIHero />
 
-      {/* Active development banner */}
-      <motion.div
-        initial={{ opacity: 0, y: -5 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3"
-      >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-          <Zap className="h-4 w-4 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-foreground">
-            Proyecto en desarrollo activo
-          </p>
-          <p className="text-[10px] sm:text-xs text-muted-foreground">
-            Estamos aplicando mejoras continuamente — nuevas funcionalidades y datos reales cada semana.
-            Tu feedback ayuda a construir una mejor herramienta para todos los peruanos.
-          </p>
-        </div>
-        <Badge variant="outline" className="text-[9px] font-mono border-primary/30 text-primary flex-shrink-0 hidden sm:flex">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald mr-1.5 pulse-dot" />
-          ACTIVO
-        </Badge>
-      </motion.div>
+      {/* === SECTION 2: AI Prompt Bar === */}
+      <AIPromptBar />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <KPICard
-          title="Dias para la eleccion"
-          value={daysToElection}
-          subtitle="12 de abril, 2026"
-          icon={Calendar}
-          color="indigo"
-          delay={0}
-        />
-        <KPICard
-          title="Candidatos"
-          value={36}
-          subtitle="presidenciales habilitados"
-          icon={Users}
-          trend={{ value: 2, label: "vs mes anterior" }}
-          color="sky"
-          delay={0.1}
-        />
-        <KPICard
-          title="Padron electoral"
-          value="25.3M"
-          subtitle="electores habilitados"
-          icon={Vote}
-          trend={{ value: 3.2, label: "nuevos inscritos" }}
-          color="emerald"
-          delay={0.2}
-        />
-        <KPICard
-          title="Fake news detectadas"
-          value={287}
-          subtitle="por el JNE y aliados"
-          icon={AlertTriangle}
-          trend={{ value: 12, label: "esta semana" }}
-          color="rose"
-          delay={0.3}
-        />
+      {/* === SECTION 3: AI Capabilities Grid === */}
+      <AICapabilitiesGrid />
+
+      {/* === SECTION 4: AI Activity Feed + Election Strip === */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <AIActivityFeed />
+        </div>
+        <div className="lg:col-span-2">
+          <ElectionCountdownStrip />
+        </div>
       </div>
 
-      {/* === FEATURE HIGHLIGHTS === */}
+      {/* === SECTION 5: Feature Highlights === */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
         <SimuladorHighlight />
         <RadiografiaHighlight />
         <PlanesHighlight />
       </div>
 
-      {/* Main content grid */}
+      {/* === SECTION 6: Main Analytics Grid === */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <PollTrendChart />
@@ -145,13 +77,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick actions bar */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {/* === SECTION 7: Quick Actions === */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <QuickAction
+          href="/verificador"
+          title="Preguntale a la IA"
+          description="Chat con CONDOR AI"
+          gradient="from-primary/20 to-purple-500/20"
+        />
         <QuickAction
           href="/planes/comparar"
           title="Comparar planes"
           description="Lado a lado por tema"
-          gradient="from-primary/20 to-rose-500/20"
+          gradient="from-amber/20 to-orange-500/20"
         />
         <QuickAction
           href="/quiz"
@@ -175,7 +113,7 @@ export default function DashboardPage() {
           href="/en-vivo"
           title="Resultados en vivo"
           description="El dia de la eleccion"
-          gradient="from-amber/20 to-orange-500/20"
+          gradient="from-rose/20 to-red-500/20"
         />
       </div>
     </div>
@@ -336,7 +274,6 @@ function RadiografiaHighlight() {
               return (
                 <Link key={c.id} href={`/radiografia/${c.id}`}>
                   <div className="group flex items-center gap-3 rounded-lg border border-border p-2.5 transition-all hover:border-primary/30 hover:bg-accent/50">
-                    {/* Risk gauge */}
                     <div className={cn(
                       "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2",
                       getRiskBg(r.riskScore),
@@ -420,7 +357,6 @@ function PlanesHighlight() {
             </div>
           </div>
 
-          {/* Top proposals by category */}
           <div className="flex-1 space-y-3">
             {categories.map(({ key, label, icon: Icon, color }) => (
               <div key={key}>
