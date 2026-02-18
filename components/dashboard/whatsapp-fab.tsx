@@ -82,7 +82,10 @@ export function WhatsAppFAB() {
 
       // Save to localStorage
       localStorage.setItem(STORAGE_KEY_SUBSCRIBED, "true");
-      const newCount = subscriberCount + 1;
+      // Use real count from Supabase if available, add seed for social proof
+      const newCount = data.subscriberCount
+        ? data.subscriberCount + SEED_COUNT
+        : subscriberCount + 1;
       localStorage.setItem(STORAGE_KEY_COUNT, String(newCount));
       setSubscriberCount(newCount);
       setIsSubscribed(true);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,25 +14,55 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalize to +51XXXXXXXXX
+    const normalizedPhone = cleanPhone.startsWith("+")
+      ? cleanPhone
+      : `+51${cleanPhone.replace(/^51/, "")}`;
+
     // Validate interests
     const validInterests = ["encuestas", "noticias", "alertas", "verificacion"];
     const filteredInterests = (interests || []).filter((i: string) =>
       validInterests.includes(i)
     );
 
-    // Log subscription (for now — later connect to Twilio/DB)
-    console.log("[WhatsApp Subscribe]", {
-      phone: cleanPhone,
-      interests: filteredInterests,
-      timestamp: new Date().toISOString(),
-    });
+    const supabase = getSupabase();
 
-    // TODO: Save to database
-    // TODO: Send WhatsApp confirmation via Twilio/Meta Cloud API
+    // Save to Supabase (upsert: update interests if phone already exists)
+    const { error: dbError } = await supabase
+      .from("whatsapp_subscribers")
+      .upsert(
+        {
+          phone: normalizedPhone,
+          interests: filteredInterests,
+          is_active: true,
+          subscribed_at: new Date().toISOString(),
+        },
+        { onConflict: "phone" }
+      );
+
+    if (dbError) {
+      console.error("[WhatsApp Subscribe] DB error:", dbError);
+      return NextResponse.json(
+        { error: "Error al guardar suscripcion" },
+        { status: 500 }
+      );
+    }
+
+    // Get total subscriber count
+    const { count } = await supabase
+      .from("whatsapp_subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true);
+
+    console.log("[WhatsApp Subscribe] OK:", {
+      phone: normalizedPhone,
+      interests: filteredInterests,
+    });
 
     return NextResponse.json({
       success: true,
       message: "Suscripcion confirmada",
+      subscriberCount: count || 0,
     });
   } catch (error: unknown) {
     console.error("WhatsApp subscribe error:", error);
