@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Clock, ExternalLink, ShieldCheck, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NewsItem {
@@ -16,55 +16,63 @@ interface NewsItem {
   url?: string;
 }
 
-const mockNews: NewsItem[] = [
+const newsItems: NewsItem[] = [
   {
     id: "1",
-    title: "JNE confirma 36 candidatos habilitados para elecciones presidenciales 2026",
-    source: "El Comercio",
-    time: "Hace 2h",
+    title: "Congreso destituye a Jose Jeri tras 130 dias como presidente del Peru",
+    source: "Infobae",
+    time: "17 Feb",
     category: "politica",
     factCheck: "verified",
+    url: "https://www.infobae.com/peru/2026/02/17/jose-jeri-fue-destituido-como-y-cuando-se-elegira-al-nuevo-presidente-de-peru-y-quienes-son-los-principales-candidatos/",
   },
   {
     id: "2",
-    title: "Nueva encuesta IEP: Lopez Aliaga mantiene ventaja con 12.3%",
-    source: "RPP",
-    time: "Hace 3h",
+    title: "JNE sorteara este viernes las seis fechas para el debate presidencial",
+    source: "Andina",
+    time: "17 Feb",
     category: "politica",
-    candidateMentioned: "Lopez Aliaga",
     factCheck: "verified",
+    url: "https://andina.pe/agencia/noticia-elecciones-2026-jne-sorteara-este-viernes-20-las-seis-fechas-para-debate-presidencial-1063248.aspx",
   },
   {
     id: "3",
-    title: "Debate presidencial se realizara el 15 de marzo en Lima",
-    source: "La Republica",
-    time: "Hace 5h",
+    title: "Encuesta Ipsos: Lopez Aliaga lidera con 12%, cuatro candidatos empatados en tercer lugar",
+    source: "Infobae",
+    time: "12 Feb",
     category: "politica",
+    candidateMentioned: "Lopez Aliaga",
     factCheck: "verified",
+    url: "https://www.infobae.com/peru/2026/02/12/asi-van-las-encuestas-a-solo-dos-meses-de-las-elecciones-2026-cuatro-candidatos-empatados-en-el-tercer-lugar/",
   },
   {
     id: "4",
-    title: "Carlos Alvarez sube 3 puntos en encuestas del sur del pais",
-    source: "Gestion",
-    time: "Hace 6h",
+    title: "Lopez Aliaga: las 15 controversiales propuestas para ganar votos",
+    source: "La Republica",
+    time: "8 Feb",
     category: "politica",
-    candidateMentioned: "Carlos Alvarez",
+    candidateMentioned: "Lopez Aliaga",
+    url: "https://larepublica.pe/politica/2026/02/08/lopez-aliaga-las-15-controversiales-propuestas-para-llamar-atencion-y-ganar-votos-elecciones-2026-hnews-267416",
   },
   {
     id: "5",
-    title: "Ministro de Economia presenta informe sobre crecimiento del PBI al 3.2%",
+    title: "Keiko Fujimori plantea que Fuerzas Armadas controlen carceles y fronteras",
     source: "Andina",
-    time: "Hace 8h",
-    category: "economia",
+    time: "6 Feb",
+    category: "seguridad",
+    candidateMentioned: "K. Fujimori",
     factCheck: "verified",
+    url: "https://andina.pe/agencia/noticia-elecciones-2026-keiko-fujimori-plantea-fuerzas-armadas-controlen-carceles-y-fronteras-1062965.aspx",
   },
   {
     id: "6",
-    title: "Claim viral sobre candidato desmentido por el JNE",
-    source: "Ojo Publico",
-    time: "Hace 10h",
-    category: "social",
-    factCheck: "false",
+    title: "Lopez Aliaga tendra como prioridades seguridad, alimentacion y agua",
+    source: "Andina",
+    time: "5 Feb",
+    category: "politica",
+    candidateMentioned: "Lopez Aliaga",
+    factCheck: "verified",
+    url: "https://andina.pe/agencia/noticia-elecciones-2026-lopez-aliaga-tendra-como-prioridades-seguridad-alimentacion-y-agua-1062495.aspx",
   },
 ];
 
@@ -105,7 +113,7 @@ export function NewsTicker() {
       </div>
 
       <div className="divide-y divide-border">
-        {mockNews.map((news, index) => {
+        {newsItems.map((news, index) => {
           const content = (
             <>
               <div className="flex-1 min-w-0">
@@ -144,6 +152,10 @@ export function NewsTicker() {
                   })()}
                   {factCheckConfig[news.factCheck].label}
                 </div>
+              )}
+
+              {news.url && (
+                <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 mt-0.5" />
               )}
             </>
           );
