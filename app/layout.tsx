@@ -17,9 +17,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CONDOR | Elecciones Peru 2026",
+  title: "CONDOR — La primera eleccion con inteligencia artificial | Peru 2026",
   description:
-    "Plataforma de inteligencia electoral para las elecciones presidenciales del Peru 2026. Candidatos, encuestas, planes de gobierno, noticias verificadas y mas.",
+    "CONDOR analiza candidatos, verifica hechos y monitorea noticias en tiempo real con IA. La primera plataforma de inteligencia electoral con IA para las elecciones Peru 2026.",
   keywords: [
     "Peru",
     "elecciones 2026",
@@ -28,12 +28,22 @@ export const metadata: Metadata = {
     "encuestas",
     "planes de gobierno",
     "condor",
+    "inteligencia artificial",
+    "IA",
+    "fact check",
   ],
+  metadataBase: new URL("https://condorperu.vercel.app"),
   openGraph: {
-    title: "CONDOR | Elecciones Peru 2026",
-    description: "Inteligencia electoral en tiempo real para el Peru",
+    title: "CONDOR — La primera eleccion con inteligencia artificial",
+    description: "Analiza candidatos, verifica hechos y monitorea noticias con IA. Elecciones Peru 2026.",
     type: "website",
     locale: "es_PE",
+    siteName: "CONDOR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CONDOR — La primera eleccion con inteligencia artificial",
+    description: "Analiza candidatos, verifica hechos y monitorea noticias con IA. Elecciones Peru 2026.",
   },
 };
 
