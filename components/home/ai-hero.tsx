@@ -33,7 +33,14 @@ export function AIHero() {
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
               <span className="text-gradient">
-                La primera eleccion 🇵🇪
+                La primera eleccion{" "}
+                <img
+                  src="https://flagcdn.com/w40/pe.png"
+                  alt="Bandera de Peru"
+                  className="inline-block h-7 sm:h-8 lg:h-9 align-baseline -mb-0.5 rounded-sm"
+                  width={40}
+                  height={27}
+                />
               </span>
               <br />
               <span className="text-foreground">
