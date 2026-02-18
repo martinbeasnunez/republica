@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { openai, SYSTEM_PROMPTS } from "@/lib/ai/openai";
+import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       ? `Analiza la posicion de ${candidateName} sobre el tema "${topic}" basandote en su plan de gobierno:\n\n${planText || "No se proporciono texto del plan. Genera un analisis basado en informacion publica conocida sobre este candidato."}`
       : `Analiza el plan de gobierno de ${candidateName}:\n\n${planText || "No se proporciono texto del plan. Genera un analisis basado en informacion publica conocida sobre este candidato."}`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: SYSTEM_PROMPTS.planAnalyzer },

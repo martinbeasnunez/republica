@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { openai, SYSTEM_PROMPTS } from "@/lib/ai/openai";
+import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 import { candidates } from "@/lib/data/candidates";
 
 // Build candidate context for the AI
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     const candidateContext = getCandidateContext();
 
-    const stream = await openai.chat.completions.create({
+    const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
