@@ -33,7 +33,7 @@ export function AIHero() {
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
               <span className="text-gradient">
-                La primera eleccion
+                La primera eleccion 🇵🇪
               </span>
               <br />
               <span className="text-foreground">
