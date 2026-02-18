@@ -15,6 +15,7 @@ import {
   Radio,
   Scan,
   Dice6,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -92,6 +93,11 @@ const navigation = [
     href: "/en-vivo",
     icon: Radio,
     badge: "LIVE",
+  },
+  {
+    name: "Metodologia",
+    href: "/metodologia",
+    icon: BookOpen,
   },
 ];
 
