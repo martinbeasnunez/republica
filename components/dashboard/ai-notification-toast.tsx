@@ -25,18 +25,20 @@ const typeDotColors = {
 };
 
 const messages: { message: string; type: Notification["type"] }[] = [
-  { message: "Actualizando encuestas en tiempo real...", type: "update" },
-  { message: "3 nuevas noticias verificadas por CONDOR AI", type: "verification" },
-  { message: "Fact-check completado: afirmacion sobre padron electoral", type: "verification" },
-  { message: "Analizando propuesta economica de Lopez Aliaga...", type: "analysis" },
-  { message: "Alerta: nueva encuesta Ipsos detectada", type: "alert" },
-  { message: "CONDOR AI proceso 12 noticias en la ultima hora", type: "update" },
-  { message: "Verificando declaraciones del debate presidencial...", type: "verification" },
-  { message: "Indice de desinformacion actualizado", type: "update" },
-  { message: "Monitoreando 36 candidatos en tiempo real", type: "update" },
-  { message: "Nuevo analisis de plan de gobierno disponible", type: "analysis" },
-  { message: "Escaneando redes sociales por desinformacion...", type: "verification" },
-  { message: "Base de datos electoral sincronizada con JNE", type: "update" },
+  { message: "Lopez Aliaga subio a 13.1% en nueva encuesta CPI — actualizado hace 2 min", type: "alert" },
+  { message: "FALSO: \"Las elecciones se adelantan a marzo\" — 4,200 shares en X desmentidos", type: "verification" },
+  { message: "Keiko Fujimori presento plan de seguridad con FF.AA. — analisis de viabilidad listo", type: "analysis" },
+  { message: "3 fake news sobre el debate presidencial detectadas en la ultima hora", type: "verification" },
+  { message: "Nueva encuesta Ipsos: 4 candidatos empatados en 3er lugar con 4% — ver detalle", type: "alert" },
+  { message: "Plan economico de Acuna analizado: 67/100 en viabilidad segun CONDOR AI", type: "analysis" },
+  { message: "Debate JNE confirmado: 6 fechas entre 23 mar y 1 abr — calendario actualizado", type: "update" },
+  { message: "12 declaraciones de candidatos verificadas hoy — 4 resultaron falsas", type: "verification" },
+  { message: "Congreso destituyo a Jeri — reacciones de 8 candidatos analizadas por IA", type: "update" },
+  { message: "Alerta: Forsyth cayo 2 puntos en region sur segun Datum — tendencia actualizada", type: "alert" },
+  { message: "Padron electoral actualizado: 25.3M electores habilitados confirma RENIEC", type: "update" },
+  { message: "7 propuestas de candidatos sobre seguridad comparadas — ranking disponible", type: "analysis" },
+  { message: "Viral en WhatsApp sobre inhabilitacion de candidato — verificado: FALSO", type: "verification" },
+  { message: "Simulador electoral recalculado con data de febrero — nuevas probabilidades", type: "update" },
 ];
 
 export function AINotificationToast() {
