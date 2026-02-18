@@ -1,6 +1,8 @@
 import { getSupabase } from "@/lib/supabase";
 import { AdminOverviewClient } from "./overview-client";
 
+export const dynamic = "force-dynamic";
+
 async function getAdminData() {
   const supabase = getSupabase();
   const now = new Date();

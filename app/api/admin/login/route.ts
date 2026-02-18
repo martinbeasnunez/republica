@@ -32,9 +32,10 @@ export async function POST(req: NextRequest) {
     });
 
     return response;
-  } catch {
+  } catch (error: unknown) {
+    console.error("[Admin Login] Error:", error);
     return NextResponse.json(
-      { error: "Error al procesar login" },
+      { error: "Error al procesar login", detail: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }
     );
   }

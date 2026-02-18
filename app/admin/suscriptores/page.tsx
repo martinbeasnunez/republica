@@ -1,6 +1,8 @@
 import { getSupabase } from "@/lib/supabase";
 import { SubscriptoresClient } from "./suscriptores-client";
 
+export const dynamic = "force-dynamic";
+
 async function getSubscribers() {
   const supabase = getSupabase();
 

@@ -1,6 +1,8 @@
 import { getSupabase } from "@/lib/supabase";
 import { AnalyticsClient } from "./analytics-client";
 
+export const dynamic = "force-dynamic";
+
 async function getAnalyticsData() {
   const supabase = getSupabase();
   const now = new Date();
