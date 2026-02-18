@@ -23,7 +23,6 @@ import {
   TrendingUp,
   Trophy,
   MessageCircle,
-  Clock,
   Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -401,55 +400,135 @@ function PlanesHighlight() {
 // ─── WHATSAPP CTA ───
 
 function WhatsAppCTA() {
+  const [phone, setPhone] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check localStorage on mount
+  const [checked, setChecked] = useState(false);
+  if (!checked && typeof window !== "undefined") {
+    const sub = localStorage.getItem("condor_wa_subscribed");
+    if (sub === "true" && !isSubscribed) {
+      setIsSubscribed(true);
+    }
+    setChecked(true);
+  }
+
+  const handleSubscribe = async () => {
+    if (!phone.trim() || isSubmitting) return;
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const fullPhone = phone.startsWith("+") ? phone : `+51${phone.replace(/^0+/, "")}`;
+      const res = await fetch("/api/whatsapp/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone, interests: ["encuestas", "noticias", "alertas", "verificacion"] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error");
+      localStorage.setItem("condor_wa_subscribed", "true");
+      setIsSubscribed(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al suscribirse");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
     >
-      <Card className="bg-card border-border overflow-hidden opacity-75">
-        <div className="h-1 w-full bg-gradient-to-r from-muted-foreground/30 via-muted-foreground/15 to-transparent" />
+      <Card className="bg-card border-border overflow-hidden">
+        <div className="h-1 w-full bg-gradient-to-r from-emerald via-emerald/50 to-transparent" />
         <CardContent className="p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-              <MessageCircle className="h-5 w-5 text-muted-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald/10">
+              <MessageCircle className="h-5 w-5 text-emerald" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-foreground">
                 Alertas por WhatsApp
               </h3>
               <p className="text-[10px] text-muted-foreground">
-                Agente inteligente de noticias electorales
+                Tu agente electoral personal — gratis
               </p>
             </div>
           </div>
 
-          <ul className="space-y-1.5 mb-4">
-            {[
-              "Alertas de encuestas nuevas",
-              "Verificacion de fake news",
-              "Recordatorios electorales",
-              "Resumen semanal personalizado",
-            ].map((item) => (
-              <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground/70">
-                <div className="h-1 w-1 rounded-full bg-muted-foreground/40 flex-shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
+          {isSubscribed ? (
+            <div className="text-center py-3">
+              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald/20">
+                <Sparkles className="h-5 w-5 text-emerald" />
+              </div>
+              <p className="text-xs font-semibold text-foreground">Ya estas suscrito!</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                CONDOR AI te enviara alertas electorales
+              </p>
+            </div>
+          ) : (
+            <>
+              <ul className="space-y-1.5 mb-4">
+                {[
+                  "Encuestas al instante — antes que los medios",
+                  "Fake news detectadas por IA",
+                  "Alertas de tu candidato favorito",
+                  "Resumen semanal que nadie mas te da",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
 
-          <Button
-            className="w-full gap-2 bg-muted hover:bg-muted text-muted-foreground cursor-default border border-border"
-            size="sm"
-            disabled
-          >
-            <Clock className="h-4 w-4" />
-            Proximamente
-          </Button>
+              <div className="space-y-2">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">
+                    +51
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      setError(null);
+                      setPhone(e.target.value.replace(/[^\d\s]/g, ""));
+                    }}
+                    placeholder="999 999 999"
+                    className="w-full rounded-lg border border-border bg-background pl-11 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald font-mono tabular-nums"
+                    maxLength={12}
+                    disabled={isSubmitting}
+                    onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
+                  />
+                </div>
 
-          <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
-            Estamos construyendo esta funcionalidad
-          </p>
+                {error && <p className="text-[10px] text-rose">{error}</p>}
+
+                <Button
+                  onClick={handleSubscribe}
+                  disabled={!phone.trim() || isSubmitting}
+                  className="w-full gap-2 bg-emerald hover:bg-emerald/90 text-white"
+                  size="sm"
+                >
+                  {isSubmitting ? (
+                    <Activity className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageCircle className="h-4 w-4" />
+                  )}
+                  {isSubmitting ? "Suscribiendo..." : "Quiero recibir alertas"}
+                </Button>
+              </div>
+
+              <p className="text-[10px] text-muted-foreground/60 text-center mt-2">
+                Gratis • Sin spam • Te desuscribes cuando quieras
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </motion.div>
