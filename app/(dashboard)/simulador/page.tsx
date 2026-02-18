@@ -83,7 +83,13 @@ export default function SimuladorPage() {
         yAxis: {
           type: "category" as const,
           data: [...result.candidates].reverse().map((c) => c.shortName),
-          axisLabel: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
+          axisLabel: {
+            color: "#f1f5f9",
+            fontSize: 10,
+            fontFamily: "JetBrains Mono, monospace",
+            width: 70,
+            overflow: "truncate" as const,
+          },
           axisLine: { show: false },
           axisTick: { show: false },
         },
@@ -127,7 +133,13 @@ export default function SimuladorPage() {
         yAxis: {
           type: "category" as const,
           data: [...result.candidates].reverse().map((c) => c.shortName),
-          axisLabel: { color: "#f1f5f9", fontSize: 11, fontFamily: "JetBrains Mono, monospace" },
+          axisLabel: {
+            color: "#f1f5f9",
+            fontSize: 10,
+            fontFamily: "JetBrains Mono, monospace",
+            width: 70,
+            overflow: "truncate" as const,
+          },
           axisLine: { show: false },
           axisTick: { show: false },
         },
@@ -197,9 +209,9 @@ export default function SimuladorPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Dice6 className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
             Simulador Electoral
           </h1>
           <Badge variant="secondary" className="text-[10px] gap-1 font-mono">
@@ -207,22 +219,21 @@ export default function SimuladorPage() {
             MONTE CARLO
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          Ejecuta miles de simulaciones para proyectar probabilidades de victoria basadas en encuestas actuales
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          Ejecuta miles de simulaciones para proyectar probabilidades de victoria
         </p>
       </motion.div>
 
       {/* Controls */}
       <Card className="bg-card border-border overflow-hidden">
         <div className="h-0.5 w-full bg-gradient-to-r from-primary via-primary/50 to-transparent" />
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 onClick={handleRun}
                 disabled={isRunning}
-                className="gap-2 font-mono"
-                size="lg"
+                className="gap-2 font-mono text-xs sm:text-sm"
               >
                 {isRunning ? (
                   <>
@@ -232,13 +243,13 @@ export default function SimuladorPage() {
                 ) : (
                   <>
                     <Play className="h-4 w-4" />
-                    EJECUTAR {config.numSimulations.toLocaleString()} SIMULACIONES
+                    <span className="hidden sm:inline">EJECUTAR {config.numSimulations.toLocaleString()} SIMULACIONES</span>
+                    <span className="sm:hidden">SIMULAR</span>
                   </>
                 )}
               </Button>
               <Button
                 variant="outline"
-                size="lg"
                 onClick={handleReset}
                 className="gap-2"
               >
@@ -247,11 +258,11 @@ export default function SimuladorPage() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {runCount > 0 && (
                 <Badge variant="outline" className="font-mono text-xs gap-1">
                   <Zap className="h-3 w-3" />
-                  Run #{runCount}
+                  #{runCount}
                 </Badge>
               )}
               <Button
@@ -379,14 +390,14 @@ export default function SimuladorPage() {
             {/* Winner projection */}
             <Card className="bg-card border-border overflow-hidden scan-line glow-indigo">
               <div className="h-1.5 w-full risk-gradient" />
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
                   <Trophy className="h-5 w-5 text-amber" />
-                  <h2 className="text-sm font-mono uppercase tracking-wider text-foreground">
+                  <h2 className="text-xs sm:text-sm font-mono uppercase tracking-wider text-foreground">
                     Proyeccion del Ganador
                   </h2>
                   <Badge variant="outline" className="text-[9px] font-mono ml-auto">
-                    {result.totalSimulations.toLocaleString()} SIMULACIONES
+                    {result.totalSimulations.toLocaleString()} SIM
                   </Badge>
                 </div>
 
@@ -546,15 +557,15 @@ export default function SimuladorPage() {
                     {result.secondRoundMatchups.slice(0, 5).map((matchup, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-3 rounded-lg bg-muted/20 border border-border/50 p-3"
+                        className="flex items-center gap-2 sm:gap-3 rounded-lg bg-muted/20 border border-border/50 p-2 sm:p-3"
                       >
-                        <span className="font-mono text-xs text-muted-foreground w-6">#{i + 1}</span>
-                        <div className="flex-1 flex items-center justify-center gap-3">
-                          <span className="text-xs font-medium text-foreground">{matchup.candidate1}</span>
-                          <Badge variant="outline" className="text-[9px] font-mono">VS</Badge>
-                          <span className="text-xs font-medium text-foreground">{matchup.candidate2}</span>
+                        <span className="font-mono text-[10px] sm:text-xs text-muted-foreground w-5 sm:w-6 flex-shrink-0">#{i + 1}</span>
+                        <div className="flex-1 flex items-center justify-center gap-1.5 sm:gap-3 min-w-0">
+                          <span className="text-[11px] sm:text-xs font-medium text-foreground truncate">{matchup.candidate1}</span>
+                          <Badge variant="outline" className="text-[8px] sm:text-[9px] font-mono flex-shrink-0 px-1 sm:px-1.5">VS</Badge>
+                          <span className="text-[11px] sm:text-xs font-medium text-foreground truncate">{matchup.candidate2}</span>
                         </div>
-                        <span className="font-mono text-xs font-bold tabular-nums text-sky">
+                        <span className="font-mono text-[10px] sm:text-xs font-bold tabular-nums text-sky flex-shrink-0">
                           {matchup.probability}%
                         </span>
                       </div>
