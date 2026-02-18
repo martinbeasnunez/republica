@@ -5,6 +5,7 @@ import { Sidebar, MobileNav } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { WhatsAppFAB } from "@/components/dashboard/whatsapp-fab";
 import { AINotificationToast } from "@/components/dashboard/ai-notification-toast";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  useAnalytics(); // Track page views automatically
 
   return (
     <div className="flex min-h-screen bg-background">
