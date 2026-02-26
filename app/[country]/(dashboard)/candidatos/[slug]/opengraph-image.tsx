@@ -1,21 +1,27 @@
 import { ImageResponse } from "next/og";
 import { fetchCandidateBySlug } from "@/lib/data/candidates";
+import { getCountryConfig } from "@/lib/config/countries";
 
 export const runtime = "edge";
-export const alt = "Candidato Presidencial — CONDOR Perú 2026";
+export const alt = "Candidato Presidencial — CONDOR";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ country: string; slug: string }>;
 }) {
-  const { slug } = await params;
+  const { country, slug } = await params;
+  const config = getCountryConfig(country);
+  const primary = config?.theme.primary ?? "#8B1A1A";
+  const primaryLight = config?.theme.primaryLight ?? "#A52525";
+  const countryName = config?.name ?? "Peru";
+  const year = config?.electionDate.slice(0, 4) ?? "2026";
 
   let name = "Candidato";
-  let party = "Partido Político";
-  let partyColor = "#8B1A1A";
+  let party = "Partido Politico";
+  let partyColor = primary;
   let pollAverage = 0;
   let profession = "";
   let region = "";
@@ -34,6 +40,8 @@ export default async function Image({
     // Use defaults
   }
 
+  const detailText = [profession, region].filter(Boolean).join("  |  ");
+
   return new ImageResponse(
     (
       <div
@@ -44,8 +52,7 @@ export default async function Image({
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
-          background:
-            "linear-gradient(135deg, #08060a 0%, #1a0a0a 50%, #08060a 100%)",
+          background: "#08060a",
           position: "relative",
           overflow: "hidden",
         }}
@@ -58,8 +65,8 @@ export default async function Image({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundImage:
-              "linear-gradient(rgba(139, 26, 26, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 26, 26, 0.04) 1px, transparent 1px)",
+            display: "flex",
+            backgroundImage: `linear-gradient(${partyColor}06 1px, transparent 1px), linear-gradient(90deg, ${partyColor}06 1px, transparent 1px)`,
             backgroundSize: "40px 40px",
           }}
         />
@@ -75,16 +82,15 @@ export default async function Image({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "rgba(139, 26, 26, 0.08)",
-            borderBottom: "1px solid rgba(139, 26, 26, 0.2)",
+            background: `${partyColor}10`,
+            borderBottom: `1px solid ${partyColor}25`,
             fontSize: 11,
             letterSpacing: "0.2em",
             color: "rgba(148, 163, 184, 0.6)",
             fontFamily: "monospace",
           }}
         >
-          CONDOR &nbsp;&nbsp;// &nbsp;&nbsp;CANDIDATO PRESIDENCIAL
-          &nbsp;&nbsp;// &nbsp;&nbsp;PERU 2026
+          {`CONDOR  //  CANDIDATO PRESIDENCIAL  //  ${countryName.toUpperCase()} ${year}`}
         </div>
 
         {/* Party color accent */}
@@ -95,6 +101,7 @@ export default async function Image({
             left: 0,
             right: 0,
             height: 4,
+            display: "flex",
             background: `linear-gradient(90deg, transparent, ${partyColor}, transparent)`,
           }}
         />
@@ -109,7 +116,8 @@ export default async function Image({
             width: 500,
             height: 350,
             borderRadius: "50%",
-            background: `radial-gradient(ellipse, ${partyColor}22 0%, transparent 70%)`,
+            display: "flex",
+            background: `radial-gradient(ellipse, ${partyColor}20 0%, transparent 70%)`,
           }}
         />
 
@@ -127,7 +135,6 @@ export default async function Image({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
               padding: "6px 16px",
               borderRadius: 20,
               background: `${partyColor}20`,
@@ -156,24 +163,20 @@ export default async function Image({
           </span>
 
           {/* Details */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 24,
-              marginTop: 4,
-              fontSize: 16,
-              color: "rgba(148, 163, 184, 0.7)",
-              fontFamily: "system-ui",
-            }}
-          >
-            {profession && <span>{profession}</span>}
-            {region && (
-              <span>
-                {profession ? "•" : ""} {region}
-              </span>
-            )}
-          </div>
+          {detailText && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginTop: 4,
+                fontSize: 16,
+                color: "rgba(148, 163, 184, 0.7)",
+                fontFamily: "system-ui",
+              }}
+            >
+              {detailText}
+            </div>
+          )}
 
           {/* Poll average */}
           {pollAverage > 0 && (
@@ -207,7 +210,7 @@ export default async function Image({
                   fontFamily: "system-ui",
                 }}
               >
-                {pollAverage}%
+                {`${pollAverage}%`}
               </span>
             </div>
           )}
@@ -229,7 +232,7 @@ export default async function Image({
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: "linear-gradient(135deg, #8B1A1A, #C42B2B)",
+              background: `linear-gradient(135deg, ${primary}, ${primaryLight})`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -262,6 +265,7 @@ export default async function Image({
             left: 0,
             right: 0,
             height: 4,
+            display: "flex",
             background: `linear-gradient(90deg, transparent, ${partyColor}, transparent)`,
           }}
         />

@@ -57,22 +57,24 @@ export default async function Image() {
           CONDOR &nbsp;&nbsp;// &nbsp;&nbsp;SISTEMA DE INTELIGENCIA ELECTORAL &nbsp;&nbsp;// &nbsp;&nbsp;LATAM &nbsp;&nbsp;// &nbsp;&nbsp;AI-POWERED
         </div>
 
-        {/* Condor silhouette / Wing shape */}
+        {/* Condor silhouette — large C watermark */}
         <div
           style={{
             position: "absolute",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 500,
-            height: 500,
-            opacity: 0.04,
             display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             fontSize: 400,
+            fontWeight: 900,
             color: "#8B1A1A",
+            opacity: 0.06,
+            fontFamily: "system-ui",
           }}
         >
-          🦅
+          C
         </div>
 
         {/* Red glow */}
