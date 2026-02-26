@@ -9,7 +9,6 @@ const DASHBOARD_ROUTES = [
   "encuestas",
   "noticias",
   "actualizaciones",
-  "quiz",
   "planes",
   "verificador",
   "pilares",

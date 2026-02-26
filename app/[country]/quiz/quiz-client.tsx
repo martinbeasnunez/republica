@@ -19,11 +19,12 @@ import { type Candidate } from "@/lib/data/candidates";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
+import { useCountry } from "@/lib/config/country-context";
 
 interface QuizQuestion {
   id: string;
-  question: string;
-  description: string;
+  question: string | ((countryName: string) => string);
+  description: string | ((capital: string) => string);
   topic: string;
 }
 
@@ -42,7 +43,7 @@ const questions: QuizQuestion[] = [
   },
   {
     id: "inversion-extranjera",
-    question: "Se debe promover mas la inversion extranjera en el Peru?",
+    question: (country) => `Se debe promover mas la inversion extranjera en ${country}?`,
     description: "Con incentivos fiscales y facilidades regulatorias.",
     topic: "Economia",
   },
@@ -67,7 +68,7 @@ const questions: QuizQuestion[] = [
   {
     id: "descentralizacion",
     question: "Las regiones deben tener mas autonomia y presupuesto?",
-    description: "Reduciendo el centralismo de Lima.",
+    description: (capital) => `Reduciendo el centralismo de ${capital}.`,
     topic: "Gobernanza",
   },
   {
@@ -78,7 +79,7 @@ const questions: QuizQuestion[] = [
   },
   {
     id: "salud-universal",
-    question: "Todos los peruanos deben tener acceso a salud gratuita y de calidad?",
+    question: (country) => `Todos los ciudadanos de ${country} deben tener acceso a salud gratuita y de calidad?`,
     description: "A traves de un sistema universal de salud.",
     topic: "Salud",
   },
@@ -89,6 +90,15 @@ const questions: QuizQuestion[] = [
     topic: "Anticorrupcion",
   },
 ];
+
+function resolveQuestion(q: QuizQuestion, countryName: string, capital: string) {
+  return {
+    id: q.id,
+    question: typeof q.question === "function" ? q.question(countryName) : q.question,
+    description: typeof q.description === "function" ? q.description(capital) : q.description,
+    topic: q.topic,
+  };
+}
 
 type Answer = -2 | -1 | 0 | 1 | 2;
 
@@ -113,11 +123,21 @@ interface QuizClientProps {
 }
 
 export default function QuizClient({ candidates }: QuizClientProps) {
+  const country = useCountry();
+  const countryName = country.name;
+  const capital = country.capital;
+  const countryCode = country.code;
+
+  const resolvedQuestions = useMemo(
+    () => questions.map((q) => resolveQuestion(q, countryName, capital)),
+    [countryName, capital]
+  );
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [showResults, setShowResults] = useState(false);
 
-  const progress = (Object.keys(answers).length / questions.length) * 100;
+  const progress = (Object.keys(answers).length / resolvedQuestions.length) * 100;
 
   const results = useMemo(() => {
     if (!showResults) return [];
@@ -145,10 +165,10 @@ export default function QuizClient({ candidates }: QuizClientProps) {
   }, [showResults, answers, candidates]);
 
   const handleAnswer = (answer: Answer) => {
-    const question = questions[currentQuestion];
+    const question = resolvedQuestions[currentQuestion];
     setAnswers({ ...answers, [question.id]: answer });
 
-    if (currentQuestion < questions.length - 1) {
+    if (currentQuestion < resolvedQuestions.length - 1) {
       setTimeout(() => setCurrentQuestion(currentQuestion + 1), 200);
     } else {
       setTimeout(() => setShowResults(true), 300);
@@ -286,7 +306,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
             <Share2 className="h-4 w-4" />
             Compartir resultados
           </Button>
-          <Link href="/">
+          <Link href={`/${countryCode}`}>
             <Button variant="ghost" className="gap-2">
               Ir al dashboard
               <ChevronRight className="h-4 w-4" />
@@ -297,14 +317,14 @@ export default function QuizClient({ candidates }: QuizClientProps) {
     );
   }
 
-  const question = questions[currentQuestion];
+  const question = resolvedQuestions[currentQuestion];
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
       {/* Header */}
       <div className="text-center">
         <Link
-          href="/"
+          href={`/${countryCode}`}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -313,14 +333,14 @@ export default function QuizClient({ candidates }: QuizClientProps) {
 
         <div className="flex items-center justify-center gap-3 mb-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <span className="font-mono text-sm font-bold text-white">R</span>
+            <span className="font-mono text-sm font-bold text-white">C</span>
           </div>
           <h1 className="text-2xl font-bold text-gradient">
             Descubre Tu Candidato
           </h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Responde {questions.length} preguntas y descubre con que candidato
+          Responde {resolvedQuestions.length} preguntas y descubre con que candidato
           eres mas compatible
         </p>
       </div>
@@ -329,7 +349,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Pregunta {currentQuestion + 1} de {questions.length}
+            Pregunta {currentQuestion + 1} de {resolvedQuestions.length}
           </span>
           <span className="font-mono tabular-nums">
             {Math.round(progress)}%
@@ -400,7 +420,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
 
         {/* Question dots */}
         <div className="flex gap-1.5">
-          {questions.map((_, i) => (
+          {resolvedQuestions.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentQuestion(i)}
@@ -408,7 +428,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                 "h-2 w-2 rounded-full transition-all",
                 i === currentQuestion
                   ? "bg-primary w-6"
-                  : answers[questions[i].id] !== undefined
+                  : answers[resolvedQuestions[i].id] !== undefined
                     ? "bg-primary/50"
                     : "bg-muted"
               )}
@@ -419,16 +439,16 @@ export default function QuizClient({ candidates }: QuizClientProps) {
         <Button
           variant="ghost"
           onClick={() => {
-            if (currentQuestion < questions.length - 1) {
+            if (currentQuestion < resolvedQuestions.length - 1) {
               setCurrentQuestion(currentQuestion + 1);
-            } else if (Object.keys(answers).length === questions.length) {
+            } else if (Object.keys(answers).length === resolvedQuestions.length) {
               setShowResults(true);
             }
           }}
-          disabled={currentQuestion === questions.length - 1 && Object.keys(answers).length < questions.length}
+          disabled={currentQuestion === resolvedQuestions.length - 1 && Object.keys(answers).length < resolvedQuestions.length}
           className="gap-2"
         >
-          {currentQuestion === questions.length - 1 ? "Ver resultados" : "Siguiente"}
+          {currentQuestion === resolvedQuestions.length - 1 ? "Ver resultados" : "Siguiente"}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
