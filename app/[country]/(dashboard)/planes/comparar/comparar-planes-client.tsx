@@ -27,6 +27,9 @@ import {
   type Category,
 } from "@/lib/data/candidates";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
+
+const ELECTORAL_AUTHORITY: Record<string, string> = { pe: "JNE", co: "CNE" };
 
 const CATEGORY_ICONS: Record<Category, typeof Shield> = {
   economia: TrendingUp,
@@ -291,6 +294,8 @@ interface CompararPlanesClientProps {
 }
 
 export function CompararPlanesClient({ candidates }: CompararPlanesClientProps) {
+  const country = useCountry();
+  const authority = ELECTORAL_AUTHORITY[country.code] ?? "JNE";
   const [selected, setSelected] = useState<Candidate[]>([]);
 
   const toggleCandidate = (candidate: Candidate) => {
@@ -433,7 +438,7 @@ export function CompararPlanesClient({ candidates }: CompararPlanesClientProps) 
           {/* Hint */}
           {!isReady && (
             <p className="text-center text-[10px] text-muted-foreground/60 mt-3">
-              Toca para seleccionar · máximo 4 candidatos · datos del JNE
+              Toca para seleccionar · máximo 4 candidatos · datos del {authority}
             </p>
           )}
         </div>
@@ -503,7 +508,7 @@ export function CompararPlanesClient({ candidates }: CompararPlanesClientProps) 
           <div className="rounded-lg border border-border bg-muted/20 px-4 py-3">
             <p className="text-[10px] text-muted-foreground leading-relaxed">
               <span className="font-medium text-foreground">Nota:</span> Comparación basada en
-              las propuestas declaradas ante el JNE. Los resúmenes no representan la totalidad
+              las propuestas declaradas ante el {authority}. Los resúmenes no representan la totalidad
               de cada plan. Consulta los documentos oficiales para información completa.
             </p>
           </div>

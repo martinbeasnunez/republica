@@ -17,12 +17,15 @@ import { type Candidate } from "@/lib/data/candidates";
 import { getRadiografia, RISK_COLORS } from "@/lib/data/radiografia";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 interface RadiografiaIndexClientProps {
   candidates: Candidate[];
 }
 
 export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexClientProps) {
+  const country = useCountry();
+  const authority = country.code === "co" ? "Registraduría y CNE" : "JNE";
   const candidatesWithData = candidates
     .map((c) => ({
       candidate: c,
@@ -69,7 +72,7 @@ export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexC
           <p className="text-xs text-muted-foreground mt-1">
             La información mostrada es <span className="font-semibold text-amber">simulada con fines ilustrativos</span>.
             Los montos de patrimonio, procesos legales y puntajes de riesgo no son reales.
-            Cuando CONDOR acceda a las declaraciones juradas del JNE y registros oficiales,
+            Cuando CONDOR acceda a las declaraciones juradas del {authority} y registros oficiales,
             esta sección se actualizará con datos verificados.
           </p>
         </div>

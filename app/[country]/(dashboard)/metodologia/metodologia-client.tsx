@@ -25,6 +25,40 @@ import {
   CATEGORY_COLORS,
   type SourceCategory,
 } from "@/lib/data/sources";
+import { useCountry } from "@/lib/config/country-context";
+
+const methodologyByCountry = {
+  pe: {
+    electoralAuthority: "JNE",
+    pollSources: ["Ipsos", "CPI", "Datum", "IEP"],
+    factCheckDescription:
+      "Utilizamos modelos de IA que cruzan las afirmaciones contra bases de datos oficiales (JNE, ONPE, RENIEC, INEI) y fuentes verificadas (Ojo Público, Convoca). Cada verificación incluye nivel de confianza, fuentes consultadas y contexto. La IA no emite opinión: clasifica basándose en evidencia factual.",
+    factCheckSources: ["JNE", "ONPE", "RENIEC", "INEI", "Ojo Público", "Convoca", "BM", "FMI"],
+    radiografiaDescription:
+      "Compilamos información pública sobre patrimonio declarado, procesos legales, redes de contactos y financiamiento de campaña. Las fuentes son documentos oficiales del JNE, declaraciones juradas, registros de la Contraloría y reportajes de investigación.",
+    radiografiaSources: ["JNE", "Convoca", "Transparencia"],
+    newsDescription:
+      "Agregamos noticias de medios peruanos reconocidos con cobertura electoral. Cada noticia se etiqueta con nivel de verificación y se cruza con nuestro verificador de hechos para detectar afirmaciones sin sustento.",
+    newsSources: ["Infobae", "Andina", "El Comercio", "La República"],
+    registroOficial:
+      "Encuestadoras registradas ante el JNE. Medios miembros de asociaciones de prensa.",
+  },
+  co: {
+    electoralAuthority: "CNE",
+    pollSources: ["Invamer", "Datexco", "Cifras y Conceptos", "Guarumo"],
+    factCheckDescription:
+      "Utilizamos modelos de IA que cruzan las afirmaciones contra bases de datos oficiales (Registraduría, CNE, DANE) y fuentes verificadas (La Silla Vacía, Colombiacheck). Cada verificación incluye nivel de confianza, fuentes consultadas y contexto. La IA no emite opinión: clasifica basándose en evidencia factual.",
+    factCheckSources: ["Registraduría", "CNE", "DANE", "La Silla Vacía", "Colombiacheck", "BM", "FMI"],
+    radiografiaDescription:
+      "Compilamos información pública sobre patrimonio declarado, procesos legales, redes de contactos y financiamiento de campaña. Las fuentes son documentos oficiales del CNE, declaraciones juradas, registros de la Contraloría y reportajes de investigación.",
+    radiografiaSources: ["CNE", "Colombiacheck", "Transparencia"],
+    newsDescription:
+      "Agregamos noticias de medios colombianos reconocidos con cobertura electoral. Cada noticia se etiqueta con nivel de verificación y se cruza con nuestro verificador de hechos para detectar afirmaciones sin sustento.",
+    newsSources: ["El Tiempo", "Semana", "El Espectador", "La Silla Vacía"],
+    registroOficial:
+      "Encuestadoras autorizadas por el CNE. Medios miembros de asociaciones de prensa.",
+  },
+};
 
 const categoryIcons: Record<SourceCategory, typeof Database> = {
   encuestadora: BarChart3,
@@ -72,6 +106,8 @@ function ReliabilityBar({ value }: { value: number }) {
 }
 
 export default function MetodologiaClient() {
+  const country = useCountry();
+  const m = methodologyByCountry[country.code as keyof typeof methodologyByCountry] ?? methodologyByCountry.pe;
   const grouped = getSourcesByCategory();
 
   return (
@@ -169,50 +205,33 @@ export default function MetodologiaClient() {
                   title: "Agregador de Encuestas",
                   page: "/encuestas",
                   description:
-                    "Recopilamos encuestas de las principales encuestadoras registradas ante el JNE. Calculamos un promedio ponderado donde el peso de cada encuestadora depende de: (1) su confiabilidad histórica, (2) tamaño de muestra, (3) recencia de la encuesta y (4) metodología empleada.",
-                  sources: ["Ipsos", "CPI", "Datum", "IEP"],
+                    `Recopilamos encuestas de las principales encuestadoras registradas ante el ${m.electoralAuthority}. Calculamos un promedio ponderado donde el peso de cada encuestadora depende de: (1) su confiabilidad histórica, (2) tamaño de muestra, (3) recencia de la encuesta y (4) metodología empleada.`,
+                  sources: m.pollSources,
                 },
                 {
                   title: "Verificador de Hechos",
                   page: "/verificador",
-                  description:
-                    "Utilizamos modelos de IA que cruzan las afirmaciones contra bases de datos oficiales (JNE, ONPE, RENIEC, INEI) y fuentes verificadas (Ojo Público, Convoca). Cada verificación incluye nivel de confianza, fuentes consultadas y contexto. La IA no emite opinión: clasifica basándose en evidencia factual.",
-                  sources: [
-                    "JNE",
-                    "ONPE",
-                    "RENIEC",
-                    "INEI",
-                    "Ojo Público",
-                    "Convoca",
-                    "BM",
-                    "FMI",
-                  ],
+                  description: m.factCheckDescription,
+                  sources: m.factCheckSources,
                 },
                 {
                   title: "Radiografía de Candidatos",
                   page: "/radiografia",
-                  description:
-                    "Compilamos información pública sobre patrimonio declarado, procesos legales, redes de contactos y financiamiento de campaña. Las fuentes son documentos oficiales del JNE, declaraciones juradas, registros de la Contraloría y reportajes de investigación.",
-                  sources: ["JNE", "Convoca", "Transparencia"],
+                  description: m.radiografiaDescription,
+                  sources: m.radiografiaSources,
                 },
                 {
                   title: "Simulador Electoral",
                   page: "/simulador",
                   description:
                     "Ejecutamos simulaciones Monte Carlo (hasta 10,000 iteraciones) basadas en promedios de encuestas, volatilidad histórica, porcentaje de indecisos y variación de participación. No son predicciones: son escenarios probabilísticos.",
-                  sources: ["Ipsos", "CPI", "Datum", "IEP"],
+                  sources: m.pollSources,
                 },
                 {
                   title: "Noticias",
                   page: "/noticias",
-                  description:
-                    "Agregamos noticias de medios peruanos reconocidos con cobertura electoral. Cada noticia se etiqueta con nivel de verificación y se cruza con nuestro verificador de hechos para detectar afirmaciones sin sustento.",
-                  sources: [
-                    "Infobae",
-                    "Andina",
-                    "El Comercio",
-                    "La República",
-                  ],
+                  description: m.newsDescription,
+                  sources: m.newsSources,
                 },
               ].map((section, i) => (
                 <div
@@ -289,7 +308,7 @@ export default function MetodologiaClient() {
                   icon: ShieldCheck,
                   title: "Registro Oficial",
                   description:
-                    "Encuestadoras registradas ante el JNE. Medios miembros de asociaciones de prensa.",
+                    m.registroOficial,
                 },
                 {
                   icon: Globe,

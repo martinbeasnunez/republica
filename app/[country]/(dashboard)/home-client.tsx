@@ -162,7 +162,7 @@ function EncuestasBlock({ candidates }: { candidates: Candidate[] }) {
         ¿Quien va ganando?
       </h2>
       <p className="text-xs text-muted-foreground mb-4">
-        Promedio Ipsos, Datum, IEP, CPI
+        Promedio {country.pollsters.slice(0, 4).join(", ")}
       </p>
 
       <div className="space-y-3">
