@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  sources,
+  getSourcesForCountry,
   getSourcesByCategory,
   CATEGORY_LABELS,
   CATEGORY_COLORS,
@@ -108,7 +108,8 @@ function ReliabilityBar({ value }: { value: number }) {
 export default function MetodologiaClient() {
   const country = useCountry();
   const m = methodologyByCountry[country.code as keyof typeof methodologyByCountry] ?? methodologyByCountry.pe;
-  const grouped = getSourcesByCategory();
+  const countrySources = getSourcesForCountry(country.code);
+  const grouped = getSourcesByCategory(country.code);
 
   return (
     <div className="space-y-8">
@@ -516,10 +517,10 @@ export default function MetodologiaClient() {
       >
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Fuentes Totales", value: sources.length, color: "text-indigo" },
+            { label: "Fuentes Totales", value: countrySources.length, color: "text-indigo" },
             {
               label: "Confiabilidad Promedio",
-              value: `${Math.round(sources.reduce((a, s) => a + s.reliability, 0) / sources.length)}%`,
+              value: `${Math.round(countrySources.reduce((a, s) => a + s.reliability, 0) / countrySources.length)}%`,
               color: "text-emerald",
             },
             {

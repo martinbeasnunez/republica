@@ -21,6 +21,15 @@ const DASHBOARD_ROUTES = [
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const host = req.headers.get("host") || "";
+
+  // ── Legacy domain redirect: condorperu.vercel.app → condorlatam.com ──
+  if (host.includes("condorperu")) {
+    return NextResponse.redirect(
+      new URL(pathname, "https://condorlatam.com"),
+      301
+    );
+  }
 
   // ── Admin auth (keep existing logic) ──
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -34,10 +43,33 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── Root "/" → redirect to default country ──
+  // ── Root "/" → geo-detection + cookie-based routing ──
   if (pathname === "/") {
-    const url = new URL(`/${DEFAULT_COUNTRY}`, req.url);
-    return NextResponse.redirect(url);
+    // Allow ?select=true to force showing the country selector
+    if (req.nextUrl.searchParams.get("select") === "true") {
+      return NextResponse.next();
+    }
+
+    // 1. Check cookie preference (user already chose a country)
+    const cookieCountry = req.cookies.get("condor_country")?.value?.toLowerCase();
+    if (cookieCountry && VALID_COUNTRIES.includes(cookieCountry)) {
+      return NextResponse.redirect(new URL(`/${cookieCountry}`, req.url));
+    }
+
+    // 2. Check Vercel geo-detection header
+    const geoCountry = req.headers.get("x-vercel-ip-country")?.toLowerCase();
+    if (geoCountry && VALID_COUNTRIES.includes(geoCountry)) {
+      const response = NextResponse.redirect(new URL(`/${geoCountry}`, req.url));
+      response.cookies.set("condor_country", geoCountry, {
+        maxAge: 31536000, // 1 year
+        path: "/",
+        sameSite: "lax",
+      });
+      return response;
+    }
+
+    // 3. Unknown country → show landing page (app/page.tsx)
+    return NextResponse.next();
   }
 
   // ── Legacy routes without country prefix → redirect to /pe/... ──

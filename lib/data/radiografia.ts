@@ -51,6 +51,10 @@ export interface PositionChange {
 
 export interface CandidateRadiografia {
   candidateId: string;
+  /** Optional display info — used as fallback when candidate isn't in the DB */
+  candidateName?: string;
+  candidateParty?: string;
+  candidatePartyColor?: string;
   riskScore: number; // 0-100, higher = more risk
   patrimonio: AssetDeclaration[];
   legalHistory: LegalProceeding[];
@@ -228,6 +232,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-ivan-cepeda": {
     candidateId: "co-ivan-cepeda",
+    candidateName: "Iván Cepeda",
+    candidateParty: "Pacto Histórico",
+    candidatePartyColor: "#D4001A",
     riskScore: 35,
     patrimonio: [
       { year: 2022, totalAssets: 820_000_000, totalLiabilities: 95_000_000, netWorth: 725_000_000, properties: 1, vehicles: 1, income: 180_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -279,6 +286,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-abelardo-de-la-espriella": {
     candidateId: "co-abelardo-de-la-espriella",
+    candidateName: "Abelardo de la Espriella",
+    candidateParty: "Defensores de la Patria",
+    candidatePartyColor: "#1B3A5C",
     riskScore: 45,
     patrimonio: [
       { year: 2022, totalAssets: 4_200_000_000, totalLiabilities: 600_000_000, netWorth: 3_600_000_000, properties: 5, vehicles: 4, income: 1_800_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -334,6 +344,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-claudia-lopez": {
     candidateId: "co-claudia-lopez",
+    candidateName: "Claudia López",
+    candidateParty: "Alianza Verde",
+    candidatePartyColor: "#00A651",
     riskScore: 30,
     patrimonio: [
       { year: 2022, totalAssets: 1_600_000_000, totalLiabilities: 280_000_000, netWorth: 1_320_000_000, properties: 2, vehicles: 1, income: 280_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -385,6 +398,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-sergio-fajardo": {
     candidateId: "co-sergio-fajardo",
+    candidateName: "Sergio Fajardo",
+    candidateParty: "Dignidad y Compromiso",
+    candidatePartyColor: "#FF6B00",
     riskScore: 40,
     patrimonio: [
       { year: 2022, totalAssets: 1_900_000_000, totalLiabilities: 320_000_000, netWorth: 1_580_000_000, properties: 2, vehicles: 1, income: 240_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -688,6 +704,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-paloma-valencia": {
     candidateId: "co-paloma-valencia",
+    candidateName: "Paloma Valencia",
+    candidateParty: "Centro Democrático",
+    candidatePartyColor: "#00529B",
     riskScore: 25,
     patrimonio: [
       { year: 2022, totalAssets: 2_100_000_000, totalLiabilities: 350_000_000, netWorth: 1_750_000_000, properties: 3, vehicles: 2, income: 320_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -738,6 +757,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-vicky-davila": {
     candidateId: "co-vicky-davila",
+    candidateName: "Vicky Dávila",
+    candidateParty: "Movimiento Valientes",
+    candidatePartyColor: "#6B21A8",
     riskScore: 28,
     patrimonio: [
       { year: 2022, totalAssets: 2_800_000_000, totalLiabilities: 400_000_000, netWorth: 2_400_000_000, properties: 3, vehicles: 2, income: 850_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -787,6 +809,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-daniel-quintero": {
     candidateId: "co-daniel-quintero",
+    candidateName: "Daniel Quintero",
+    candidateParty: "AICO",
+    candidatePartyColor: "#E91E63",
     riskScore: 48,
     patrimonio: [
       { year: 2022, totalAssets: 1_400_000_000, totalLiabilities: 250_000_000, netWorth: 1_150_000_000, properties: 2, vehicles: 1, income: 220_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -843,6 +868,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 
   "co-roy-barreras": {
     candidateId: "co-roy-barreras",
+    candidateName: "Roy Barreras",
+    candidateParty: "La Fuerza de la Paz",
+    candidatePartyColor: "#2E7D32",
     riskScore: 38,
     patrimonio: [
       { year: 2022, totalAssets: 3_500_000_000, totalLiabilities: 500_000_000, netWorth: 3_000_000_000, properties: 4, vehicles: 3, income: 450_000_000, source: "SIMULADO-CNE-RNEC-2022" },
@@ -901,6 +929,15 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
 // Helper to get radiografia by candidate ID
 export function getRadiografia(candidateId: string): CandidateRadiografia | null {
   return radiografiaData[candidateId] || null;
+}
+
+/** Get all radiografia entries for a country (by ID prefix for CO, numeric for PE) */
+export function getRadiografiasForCountry(countryCode: string): CandidateRadiografia[] {
+  return Object.values(radiografiaData).filter((r) => {
+    if (countryCode === "co") return r.candidateId.startsWith("co-");
+    // PE candidates have numeric IDs
+    return !r.candidateId.startsWith("co-");
+  });
 }
 
 // Format currency by country

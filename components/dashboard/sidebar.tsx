@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, setCountryCookie } from "@/lib/utils";
 import { useCountry } from "@/lib/config/country-context";
 import { COUNTRIES, getElectionCountdown, type CountryCode } from "@/lib/config/countries";
 import {
@@ -11,7 +11,6 @@ import {
   Map,
   BarChart3,
   Newspaper,
-  Activity,
   ShieldCheck,
   FileText,
   HelpCircle,
@@ -19,6 +18,7 @@ import {
   Scan,
   Dice6,
   Target,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -45,7 +45,6 @@ const navigation = [
   { name: "Candidatos", href: "/candidatos", icon: Users },
   { name: "Encuestas", href: "/encuestas", icon: BarChart3 },
   { name: "Noticias", href: "/noticias", icon: Newspaper },
-  { name: "Actualizaciones", href: "/actualizaciones", icon: Activity },
   // ─── Herramientas ───
   { name: "Quiz Electoral", href: "/quiz", icon: HelpCircle },
   { name: "Planes de Gobierno", href: "/planes", icon: FileText },
@@ -56,6 +55,7 @@ const navigation = [
   { name: "Simulador", href: "/simulador", icon: Dice6, badge: "NEW" as const, nameByCountry: { co: "Escenarios" } as Record<string, string> },
   { name: "Mapa Electoral", href: "/mapa", icon: Map },
   // ─── Extras ───
+  { name: "Metodología", href: "/metodologia", icon: BookOpen },
   { name: "En Vivo", href: "/en-vivo", icon: Radio, badge: "LIVE" as const },
 ];
 
@@ -132,6 +132,7 @@ function CountrySwitcher({ collapsed }: { collapsed?: boolean }) {
   const router = useRouter();
 
   const switchCountry = (code: CountryCode) => {
+    setCountryCookie(code);
     // Replace current country prefix with new one
     const currentPrefix = `/${country.code}`;
     const newPrefix = `/${code}`;
@@ -188,6 +189,14 @@ function CountrySwitcher({ collapsed }: { collapsed?: boolean }) {
           <Globe className="h-3 w-3 opacity-40" />
         </button>
       ))}
+      {/* Link to country landing */}
+      <Link
+        href="/?select=true"
+        className="flex items-center justify-center gap-1.5 pt-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Globe className="h-3 w-3" />
+        Ver todos los paises
+      </Link>
     </div>
   );
 }

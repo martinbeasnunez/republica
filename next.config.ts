@@ -11,12 +11,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/resumen",
-        destination: "/",
+        destination: "/pe",
         permanent: true,
       },
       {
         source: "/dashboard",
-        destination: "/",
+        destination: "/pe",
         permanent: true,
       },
     ];

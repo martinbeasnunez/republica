@@ -226,17 +226,17 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-lg border border-amber-400/50 bg-amber-500/10 p-4 sm:p-5"
+          className="rounded-lg border border-amber/30 bg-amber/10 p-4 sm:p-5"
         >
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 shrink-0">
-              <Scale className="h-4 w-4 text-amber-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber/20 shrink-0">
+              <Scale className="h-4 w-4 text-amber" />
             </div>
-            <div className="text-sm text-amber-100/90 leading-relaxed">
-              <span className="font-bold text-amber-300">⚖️ Aviso legal:</span>{" "}
+            <div className="text-sm text-foreground/80 leading-relaxed">
+              <span className="font-bold text-amber">⚖️ Aviso legal:</span>{" "}
               Esta herramienta es un ejercicio educativo de análisis de escenarios basado en modelos estadísticos (Monte Carlo).
               No constituye encuesta ni sondeo de intención de voto bajo los términos de la{" "}
-              <span className="font-mono font-semibold text-amber-300">Ley 2494 de 2025</span>.
+              <span className="font-mono font-semibold text-amber">Ley 2494 de 2025</span>.
               Los resultados son proyecciones hipotéticas, no predicciones.
             </div>
           </div>

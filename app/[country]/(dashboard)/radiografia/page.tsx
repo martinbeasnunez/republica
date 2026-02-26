@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
 import { getCountryConfig } from "@/lib/config/countries";
+import { getRadiografiasForCountry } from "@/lib/data/radiografia";
 import RadiografiaIndexClient from "./radiografia-index-client";
 
 export async function generateMetadata({
@@ -29,6 +30,7 @@ export default async function RadiografiaIndexPage({
 }) {
   const { country } = await params;
   const candidates = await fetchCandidates(country);
+  const radiografias = getRadiografiasForCountry(country);
 
-  return <RadiografiaIndexClient candidates={candidates} />;
+  return <RadiografiaIndexClient candidates={candidates} radiografias={radiografias} />;
 }

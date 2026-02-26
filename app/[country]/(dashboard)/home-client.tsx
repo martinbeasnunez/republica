@@ -49,20 +49,21 @@ export default function HomeClient({
   const country = useCountry();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [mode, setMode] = useState<DashboardMode>("light");
+  const defaultMode: DashboardMode = country.code === "co" ? "full" : "light";
+  const [mode, setMode] = useState<DashboardMode>(defaultMode);
   const [mounted, setMounted] = useState(false);
 
   // Hydrate from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("condor-dashboard-mode") as DashboardMode | null;
+    const saved = localStorage.getItem(`condor-dashboard-mode-${country.code}`) as DashboardMode | null;
     if (saved === "light" || saved === "full") setMode(saved);
     setMounted(true);
-  }, []);
+  }, [country.code]);
 
   // Persist to localStorage
   useEffect(() => {
     if (!mounted) return;
-    localStorage.setItem("condor-dashboard-mode", mode);
+    localStorage.setItem(`condor-dashboard-mode-${country.code}`, mode);
   }, [mode, mounted]);
 
   const handleToggle = (newMode: DashboardMode) => {

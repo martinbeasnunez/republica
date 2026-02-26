@@ -14,25 +14,61 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type Candidate } from "@/lib/data/candidates";
-import { getRadiografia, RISK_COLORS } from "@/lib/data/radiografia";
+import { type CandidateRadiografia, getRadiografia } from "@/lib/data/radiografia";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useCountry } from "@/lib/config/country-context";
 
-interface RadiografiaIndexClientProps {
-  candidates: Candidate[];
+interface CandidateWithRadiografia {
+  id: string;
+  name: string;
+  party: string;
+  partyColor: string;
+  radiografia: CandidateRadiografia;
 }
 
-export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexClientProps) {
+interface RadiografiaIndexClientProps {
+  candidates: Candidate[];
+  radiografias?: CandidateRadiografia[];
+}
+
+export default function RadiografiaIndexClient({ candidates, radiografias = [] }: RadiografiaIndexClientProps) {
   const country = useCountry();
   const authority = country.code === "co" ? "Registraduría y CNE" : "JNE";
-  const candidatesWithData = candidates
-    .map((c) => ({
-      candidate: c,
-      radiografia: getRadiografia(c.id),
-    }))
-    .filter((c) => c.radiografia !== null)
-    .sort((a, b) => (b.radiografia?.riskScore || 0) - (a.radiografia?.riskScore || 0));
+
+  // Build unified list: prefer DB candidates, fall back to radiografia metadata
+  const candidatesWithData: CandidateWithRadiografia[] = [];
+
+  if (candidates.length > 0) {
+    // DB candidates available — match with radiografia
+    for (const c of candidates) {
+      const rad = getRadiografia(c.id);
+      if (rad) {
+        candidatesWithData.push({
+          id: c.id,
+          name: c.name,
+          party: c.party,
+          partyColor: c.partyColor,
+          radiografia: rad,
+        });
+      }
+    }
+  } else {
+    // No DB candidates — use radiografia metadata as fallback
+    for (const rad of radiografias) {
+      if (rad.candidateName) {
+        candidatesWithData.push({
+          id: rad.candidateId,
+          name: rad.candidateName,
+          party: rad.candidateParty ?? "",
+          partyColor: rad.candidatePartyColor ?? "#6366f1",
+          radiografia: rad,
+        });
+      }
+    }
+  }
+
+  candidatesWithData.sort((a, b) => b.radiografia.riskScore - a.radiografia.riskScore);
 
   return (
     <div className="space-y-6">
@@ -102,8 +138,8 @@ export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexC
 
       {/* Candidates grid */}
       <div className="space-y-3">
-        {candidatesWithData.map(({ candidate, radiografia }, index) => {
-          if (!radiografia) return null;
+        {candidatesWithData.map((entry, index) => {
+          const { radiografia } = entry;
 
           const riskColor =
             radiografia.riskScore >= 60
@@ -132,16 +168,16 @@ export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexC
 
           return (
             <motion.div
-              key={candidate.id}
+              key={entry.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link href={`/radiografia/${candidate.id}`}>
+              <Link href={`/${country.code}/radiografia/${entry.id}`}>
                 <Card className="bg-card border-border hover:border-primary/30 transition-all cursor-pointer group overflow-hidden">
                   <div
                     className="h-1 w-full"
-                    style={{ backgroundColor: candidate.partyColor }}
+                    style={{ backgroundColor: entry.partyColor }}
                   />
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
@@ -170,7 +206,7 @@ export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexC
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <h3 className="text-sm font-bold text-foreground truncate">
-                            {candidate.name}
+                            {entry.name}
                           </h3>
                           <Badge
                             variant="outline"
@@ -185,7 +221,7 @@ export default function RadiografiaIndexClient({ candidates }: RadiografiaIndexC
                             {riskLabel}
                           </Badge>
                         </div>
-                        <p className="text-[11px] text-muted-foreground">{candidate.party}</p>
+                        <p className="text-[11px] text-muted-foreground">{entry.party}</p>
 
                         {/* Quick indicators */}
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground font-mono">

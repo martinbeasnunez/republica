@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { ChevronDown, ChevronUp, Zap, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { useCountry } from "@/lib/config/country-context";
 
 interface ChangelogEntry {
   date: string;
@@ -65,6 +67,7 @@ const CHANGELOG: ChangelogEntry[] = [
 
 export function Changelog() {
   const [isOpen, setIsOpen] = useState(false);
+  const country = useCountry();
 
   return (
     <div className="border-t border-border/50 pt-4 mt-2">
@@ -111,6 +114,13 @@ export function Changelog() {
                   </ul>
                 </div>
               ))}
+              <Link
+                href={`/${country.code}/actualizaciones`}
+                className="flex items-center gap-1 pt-1 text-[10px] font-medium text-primary/60 hover:text-primary transition-colors"
+              >
+                Ver todas
+                <ArrowRight className="h-3 w-3" />
+              </Link>
             </div>
           </motion.div>
         )}
