@@ -201,8 +201,13 @@ function getTopicBreakdown(
   });
 }
 
-function countAgreements(breakdown: TopicBreakdown[]): number {
-  return breakdown.filter((t) => t.match === "agree").length;
+// ── Qualitative compatibility label (coherent with %) ──
+function getCompatibilityLabel(pct: number): string {
+  if (pct >= 80) return "Afinidad muy alta";
+  if (pct >= 65) return "Alta afinidad";
+  if (pct >= 50) return "Afinidad moderada";
+  if (pct >= 35) return "Afinidad baja";
+  return "Poca afinidad";
 }
 
 // ── Animated count-up number ──
@@ -383,7 +388,6 @@ export default function QuizClient({ candidates }: QuizClientProps) {
     const runners = results.slice(1, 3);
     const rest = results.slice(3, 8);
     const topBreakdown = top ? getTopicBreakdown(answers, top.candidate, resolvedQuestions) : [];
-    const topAgrees = countAgreements(topBreakdown);
 
     // Ring gauge math
     const ringSize = 180;
@@ -548,7 +552,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Coinciden en <span className="font-semibold text-foreground">{topAgrees} de {resolvedQuestions.length}</span> temas
+                    <span className="font-semibold text-foreground">{getCompatibilityLabel(top.compatibility)}</span> · {resolvedQuestions.length} temas analizados
                   </p>
                 </motion.div>
               </div>
@@ -562,9 +566,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                 transition={{ duration: 0.4 }}
                 className="grid grid-cols-2 gap-2 sm:gap-3 mt-6"
               >
-                {runners.map((r, i) => {
-                  const rAgrees = countAgreements(getTopicBreakdown(answers, r.candidate, resolvedQuestions));
-                  return (
+                {runners.map((r, i) => (
                     <div
                       key={r.candidate.id}
                       className="rounded-xl border border-border bg-card/50 p-3"
@@ -609,7 +611,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                         {r.candidate.shortName}
                       </p>
                       <p className="text-[10px] text-muted-foreground truncate">
-                        {r.candidate.party} · {rAgrees}/{resolvedQuestions.length} temas
+                        {r.candidate.party} · {getCompatibilityLabel(r.compatibility)}
                       </p>
                       {/* Mini progress bar */}
                       <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
@@ -622,8 +624,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                         />
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
               </motion.div>
             )}
 
@@ -735,7 +736,6 @@ export default function QuizClient({ candidates }: QuizClientProps) {
             <p className="text-xs font-medium text-muted-foreground px-1">Otros candidatos</p>
             {rest.map((result, index) => {
               const breakdown = getTopicBreakdown(answers, result.candidate, resolvedQuestions);
-              const agrees = countAgreements(breakdown);
               const isExpanded = expandedId === result.candidate.id;
 
               return (
@@ -769,7 +769,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                           {result.candidate.shortName}
                         </p>
                         <p className="text-[10px] text-muted-foreground truncate">
-                          {result.candidate.party} · {agrees}/{resolvedQuestions.length} temas
+                          {result.candidate.party} · {getCompatibilityLabel(result.compatibility)}
                         </p>
                       </div>
                       <span
