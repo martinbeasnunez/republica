@@ -30,6 +30,7 @@ import type { Candidate } from "@/lib/data/candidates";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
 import { useCountry } from "@/lib/config/country-context";
+import ReactMarkdown from "react-markdown";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -258,7 +259,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       : "bg-muted text-foreground"
                   )}
                 >
-                  {msg.content}
+                  {msg.role === "assistant" ? (
+                    <div className="ai-prose">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
                 {msg.role === "user" && (
                   <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-muted">
@@ -275,7 +282,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Bot className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div className="rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed max-w-[85%] text-foreground">
-                  {streamingContent}
+                  <div className="ai-prose">
+                    <ReactMarkdown>{streamingContent}</ReactMarkdown>
+                  </div>
                   <span className="inline-block w-1.5 h-3.5 bg-primary ml-0.5 animate-pulse" />
                 </div>
               </div>
