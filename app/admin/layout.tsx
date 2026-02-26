@@ -8,12 +8,14 @@ import {
   Users,
   LogOut,
   Shield,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COUNTRIES, type CountryCode } from "@/lib/config/countries";
 
 const adminNav = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Quiz", href: "/admin/quiz", icon: ClipboardList },
   { name: "Suscriptores", href: "/admin/suscriptores", icon: Users },
 ];
 

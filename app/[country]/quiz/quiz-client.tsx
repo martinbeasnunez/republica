@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -39,31 +39,31 @@ interface QuizQuestion {
 const questions: QuizQuestion[] = [
   {
     id: "pena-muerte",
-    question: "Estas a favor de la pena de muerte para delitos graves?",
+    question: "¿Estás a favor de la pena de muerte para delitos graves?",
     description: ({ code }) =>
       code === "co"
-        ? "La Constitucion colombiana la prohibe. Requeriria reforma constitucional."
-        : "Como violacion, sicariato y terrorismo.",
+        ? "La Constitución colombiana la prohíbe. Requeriría reforma constitucional."
+        : "Como violación, sicariato y terrorismo.",
     topic: "Seguridad",
   },
   {
     id: "estado-empresario",
-    question: "El Estado debe tener un rol mas activo en la economia?",
-    description: "Incluyendo empresas publicas y regulacion de precios.",
-    topic: "Economia",
+    question: "¿El Estado debe tener un rol más activo en la economía?",
+    description: "Incluyendo empresas públicas y regulación de precios.",
+    topic: "Economía",
   },
   {
     id: "inversion-extranjera",
-    question: ({ name }) => `Se debe promover mas la inversion extranjera en ${name}?`,
+    question: ({ name }) => `¿Se debe promover más la inversión extranjera en ${name}?`,
     description: "Con incentivos fiscales y facilidades regulatorias.",
-    topic: "Economia",
+    topic: "Economía",
   },
   {
     id: "mineria",
     question: ({ code }) =>
       code === "co"
-        ? "La mineria y la extraccion de petroleo deben expandirse para impulsar la economia?"
-        : "La mineria debe expandirse para impulsar la economia?",
+        ? "¿La minería y la extracción de petróleo deben expandirse para impulsar la economía?"
+        : "¿La minería debe expandirse para impulsar la economía?",
     description: "Incluso en zonas sensibles ambientalmente.",
     topic: "Medio Ambiente",
   },
@@ -71,11 +71,11 @@ const questions: QuizQuestion[] = [
     id: "aborto",
     question: ({ code }) =>
       code === "co"
-        ? "Estas a favor de mantener el derecho al aborto como esta actualmente?"
-        : "Estas a favor de despenalizar el aborto en mas causales?",
+        ? "¿Estás a favor de mantener el derecho al aborto como está actualmente?"
+        : "¿Estás a favor de despenalizar el aborto en más causales?",
     description: ({ code }) =>
       code === "co"
-        ? "Desde 2022, el aborto es legal hasta la semana 24 de gestacion por fallo de la Corte Constitucional."
+        ? "Desde 2022, el aborto es legal hasta la semana 24 de gestación por fallo de la Corte Constitucional."
         : "Actualmente solo es legal por riesgo de vida de la madre.",
     topic: "Derechos",
   },
@@ -83,11 +83,11 @@ const questions: QuizQuestion[] = [
     id: "matrimonio-igualitario",
     question: ({ code }) =>
       code === "co"
-        ? "Estas a favor de ampliar los derechos de las parejas del mismo sexo?"
-        : "Estas a favor del matrimonio entre personas del mismo sexo?",
+        ? "¿Estás a favor de ampliar los derechos de las parejas del mismo sexo?"
+        : "¿Estás a favor del matrimonio entre personas del mismo sexo?",
     description: ({ code }) =>
       code === "co"
-        ? "El matrimonio igualitario es legal desde 2016. Incluye derechos de adopcion y herencia."
+        ? "El matrimonio igualitario es legal desde 2016. Incluye derechos de adopción y herencia."
         : "Con los mismos derechos civiles que el matrimonio tradicional.",
     topic: "Derechos",
   },
@@ -95,34 +95,34 @@ const questions: QuizQuestion[] = [
     id: "descentralizacion",
     question: ({ code }) =>
       code === "co"
-        ? "Los departamentos deben tener mas autonomia y presupuesto?"
-        : "Las regiones deben tener mas autonomia y presupuesto?",
+        ? "¿Los departamentos deben tener más autonomía y presupuesto?"
+        : "¿Las regiones deben tener más autonomía y presupuesto?",
     description: ({ capital }) => `Reduciendo el centralismo de ${capital}.`,
     topic: "Gobernanza",
   },
   {
     id: "educacion-publica",
-    question: "Se debe aumentar significativamente el presupuesto en educacion?",
+    question: "¿Se debe aumentar significativamente el presupuesto en educación?",
     description: ({ code }) =>
       code === "co"
-        ? "Hasta alcanzar el 6% del PIB como minimo."
-        : "Hasta alcanzar el 6% del PBI como minimo.",
-    topic: "Educacion",
+        ? "Hasta alcanzar el 6% del PIB como mínimo."
+        : "Hasta alcanzar el 6% del PBI como mínimo.",
+    topic: "Educación",
   },
   {
     id: "salud-universal",
-    question: ({ name }) => `Todos los ciudadanos de ${name} deben tener acceso a salud gratuita y de calidad?`,
+    question: ({ name }) => `¿Todos los ciudadanos de ${name} deben tener acceso a salud gratuita y de calidad?`,
     description: ({ code }) =>
       code === "co"
         ? "Reformando el sistema de EPS hacia un modelo de salud universal."
-        : "A traves de un sistema universal de salud.",
+        : "A través de un sistema universal de salud.",
     topic: "Salud",
   },
   {
     id: "corrupcion",
-    question: "Se necesitan penas mas severas para los funcionarios corruptos?",
-    description: "Incluyendo inhabilitacion perpetua y confiscacion de bienes.",
-    topic: "Anticorrupcion",
+    question: "¿Se necesitan penas más severas para los funcionarios corruptos?",
+    description: "Incluyendo inhabilitación perpetua y confiscación de bienes.",
+    topic: "Anticorrupción",
   },
 ];
 
@@ -215,7 +215,48 @@ export default function QuizClient({ candidates }: QuizClientProps) {
     setCurrentQuestion(0);
     setAnswers({});
     setShowResults(false);
+    submittedRef.current = false;
   };
+
+  // ── Submit quiz results to backend ──
+  const submittedRef = useRef(false);
+  useEffect(() => {
+    if (!showResults || results.length === 0 || submittedRef.current) return;
+    submittedRef.current = true;
+
+    const top = results[0];
+    const sessionId =
+      typeof sessionStorage !== "undefined"
+        ? sessionStorage.getItem("condor_sid") || ""
+        : "";
+    const visitorId =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("condor_vid") || ""
+        : "";
+    const fullSessionId = visitorId
+      ? `v:${visitorId}|s:${sessionId}`
+      : sessionId;
+
+    fetch("/api/quiz/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        country_code: countryCode,
+        answers,
+        results: results.map((r) => ({
+          candidate_id: r.candidate.id,
+          candidate_name: r.candidate.shortName,
+          compatibility: r.compatibility,
+        })),
+        top_candidate_id: top.candidate.id,
+        top_candidate_name: top.candidate.shortName,
+        top_compatibility: top.compatibility,
+        session_id: fullSessionId,
+      }),
+    }).catch(() => {
+      // Silently fail — never break the user experience
+    });
+  }, [showResults, results, answers, countryCode]);
 
   if (showResults) {
     return (
@@ -230,7 +271,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
             Tus Resultados
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
-            Basado en tus respuestas, estos son los candidatos mas compatibles
+            Basado en tus respuestas, estos son los candidatos más compatibles
             contigo
           </p>
         </motion.div>
@@ -376,8 +417,8 @@ export default function QuizClient({ candidates }: QuizClientProps) {
           </h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Responde {resolvedQuestions.length} preguntas y descubre con que candidato
-          eres mas compatible
+          Responde {resolvedQuestions.length} preguntas y descubre con qué candidato
+          eres más compatible
         </p>
       </div>
 

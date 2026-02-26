@@ -146,7 +146,7 @@ export default function HomeClient({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLOQUE 1: ¿QUIEN VA GANANDO?
+   BLOQUE 1: ¿QUIÉN VA GANANDO?
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function EncuestasBlock({ candidates }: { candidates: Candidate[] }) {
@@ -160,7 +160,7 @@ function EncuestasBlock({ candidates }: { candidates: Candidate[] }) {
       transition={{ duration: 0.4 }}
     >
       <h2 className="text-lg font-bold text-foreground mb-1">
-        ¿Quien va ganando?
+        ¿Quién va ganando?
       </h2>
       <p className="text-xs text-muted-foreground mb-4">
         Promedio {country.pollsters.slice(0, 4).join(", ")}
@@ -249,7 +249,7 @@ function EncuestasBlock({ candidates }: { candidates: Candidate[] }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLOQUE 2: CONOCELOS EN 30 SEGUNDOS
+   BLOQUE 2: CONÓCELOS EN 30 SEGUNDOS
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function ConocelosBlock({
@@ -269,7 +269,7 @@ function ConocelosBlock({
   return (
     <section>
       <h2 className="text-lg font-bold text-foreground mb-1">
-        Conocelos en 30 segundos
+        Conócelos en 30 segundos
       </h2>
       <p className="text-xs text-muted-foreground mb-4">
         Desliza para ver a los candidatos →
@@ -362,7 +362,7 @@ function ConocelosBlock({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLOQUE 3: ¿NO SABES POR QUIEN VOTAR?
+   BLOQUE 3: ¿NO SABES POR QUIÉN VOTAR?
    ═══════════════════════════════════════════════════════════════════════════ */
 
 function QuizCTABlock({
@@ -389,10 +389,10 @@ function QuizCTABlock({
         <div className="rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6 text-center transition-all hover:border-primary/40 hover:shadow-lg active:scale-[0.99]">
           <div className="text-4xl mb-3">🗳️</div>
           <h2 className="text-lg font-bold text-foreground mb-2">
-            ¿No sabes por quien votar?
+            ¿No sabes por quién votar?
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Responde 10 preguntas y descubre con quien coincides
+            Responde 10 preguntas y descubre con quién coincides
           </p>
           <Button size="lg" className="w-full text-base font-semibold">
             Hacer el quiz
@@ -405,7 +405,7 @@ function QuizCTABlock({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLOQUE 4: ¿QUE PASO HOY?
+   BLOQUE 4: ¿QUÉ PASÓ HOY?
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const factCheckConfig: Record<
@@ -434,7 +434,7 @@ function NoticiasBlock({ articles }: { articles: NewsArticle[] }) {
     <section>
       <div className="flex items-center gap-2 mb-4">
         <span className="h-2 w-2 rounded-full bg-rose-500 pulse-dot" />
-        <h2 className="text-lg font-bold text-foreground">¿Que paso hoy?</h2>
+        <h2 className="text-lg font-bold text-foreground">¿Qué pasó hoy?</h2>
       </div>
 
       <div className="space-y-3">
