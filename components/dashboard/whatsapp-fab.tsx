@@ -7,56 +7,30 @@ import {
   Send,
   Loader2,
   Check,
-  Users,
-  Bell,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY_SUBSCRIBED = "condor_wa_subscribed";
-const STORAGE_KEY_COUNT = "condor_wa_count";
-const SEED_COUNT = 847;
-
-const INTEREST_OPTIONS = [
-  { id: "encuestas", label: "Encuestas y sondeos", emoji: "📊" },
-  { id: "noticias", label: "Noticias de ultima hora", emoji: "🔴" },
-  { id: "alertas", label: "Alertas de candidatos", emoji: "👤" },
-  { id: "verificacion", label: "Verificaciones de hechos", emoji: "✅" },
-];
+const STORAGE_KEY = "condor_wa_subscribed";
 
 export function WhatsAppFAB() {
   const [expanded, setExpanded] = useState(false);
   const [phone, setPhone] = useState("");
-  const [interests, setInterests] = useState<string[]>([
-    "encuestas",
-    "noticias",
-  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriberCount, setSubscriberCount] = useState(SEED_COUNT);
   const [error, setError] = useState<string | null>(null);
   const [showPulse, setShowPulse] = useState(true);
 
-  // Load subscription state from localStorage
   useEffect(() => {
-    const subscribed = localStorage.getItem(STORAGE_KEY_SUBSCRIBED);
-    if (subscribed === "true") {
+    if (localStorage.getItem(STORAGE_KEY) === "true") {
       setIsSubscribed(true);
+      setShowPulse(false);
     }
-    const count = localStorage.getItem(STORAGE_KEY_COUNT);
-    setSubscriberCount(count ? parseInt(count) : SEED_COUNT);
   }, []);
 
-  // Hide pulse after first expand
   useEffect(() => {
     if (expanded) setShowPulse(false);
   }, [expanded]);
-
-  const toggleInterest = (id: string) => {
-    setInterests((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,32 +41,21 @@ export function WhatsAppFAB() {
 
     try {
       const fullPhone = phone.startsWith("+") ? phone : `+51${phone.replace(/^0+/, "")}`;
-
       const res = await fetch("/api/whatsapp/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullPhone, interests }),
+        body: JSON.stringify({ phone: fullPhone, interests: ["encuestas", "noticias", "alertas", "verificacion"] }),
       });
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al suscribirse");
 
-      if (!res.ok) {
-        throw new Error(data.error || "Error al suscribirse");
-      }
-
-      // Save to localStorage
-      localStorage.setItem(STORAGE_KEY_SUBSCRIBED, "true");
-      // Use real count from Supabase if available, add seed for social proof
-      const newCount = data.subscriberCount
-        ? data.subscriberCount + SEED_COUNT
-        : subscriberCount + 1;
-      localStorage.setItem(STORAGE_KEY_COUNT, String(newCount));
-      setSubscriberCount(newCount);
+      localStorage.setItem(STORAGE_KEY, "true");
       setIsSubscribed(true);
+
+      // Auto-close after success
+      setTimeout(() => setExpanded(false), 2500);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al procesar suscripcion"
-      );
+      setError(err instanceof Error ? err.message : "Error al procesar");
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +72,6 @@ export function WhatsAppFAB() {
             className="w-72 sm:w-80 rounded-xl border border-border bg-card/95 backdrop-blur-md p-4 shadow-2xl shadow-black/40"
           >
             {isSubscribed ? (
-              /* ─── Success State ─── */
               <div className="text-center py-2">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -120,113 +82,78 @@ export function WhatsAppFAB() {
                   <Check className="h-6 w-6 text-emerald" />
                 </motion.div>
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  Ya estas suscrito!
+                  Listo!
                 </p>
-                <p className="text-xs text-muted-foreground mb-3">
-                  CONDOR AI te mantendra informado por WhatsApp sobre las
-                  elecciones Peru 2026.
+                <p className="text-xs text-muted-foreground">
+                  Te avisaremos por WhatsApp cuando haya novedades electorales.
                 </p>
-                <div className="flex items-center justify-center gap-1.5 text-[11px] font-mono text-muted-foreground">
-                  <Users className="h-3 w-3" />
-                  <span className="tabular-nums">
-                    {subscriberCount.toLocaleString()}
-                  </span>
-                  <span>suscritos</span>
-                </div>
               </div>
             ) : (
-              /* ─── Subscription Form ─── */
               <form onSubmit={handleSubmit} className="space-y-3">
-                {/* Header */}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Bell className="h-4 w-4 text-emerald" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-emerald" />
                     <p className="text-sm font-semibold text-foreground">
-                      Alertas por WhatsApp
+                      Alertas electorales
                     </p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Recibe actualizaciones electorales directo a tu celular.
-                    Gratis.
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(false)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* Phone input */}
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">
-                    +51
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => {
-                      setError(null);
-                      setPhone(e.target.value.replace(/[^\d\s]/g, ""));
-                    }}
-                    placeholder="999 999 999"
-                    className="w-full rounded-lg border border-border bg-background pl-11 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary font-mono tabular-nums"
-                    maxLength={12}
-                    disabled={isSubmitting}
-                  />
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Encuestas, fake news y alertas directo a tu WhatsApp. Gratis.
+                </p>
 
-                {/* Interest checkboxes */}
-                <div className="space-y-1.5">
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                    Que quieres recibir?
-                  </p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {INTEREST_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => toggleInterest(opt.id)}
-                        className={cn(
-                          "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] transition-all text-left",
-                          interests.includes(opt.id)
-                            ? "border-primary/40 bg-primary/10 text-foreground"
-                            : "border-border bg-background/50 text-muted-foreground hover:border-border hover:bg-muted/50"
-                        )}
-                      >
-                        <span className="text-xs">{opt.emoji}</span>
-                        <span className="leading-tight">{opt.label}</span>
-                      </button>
-                    ))}
+                {/* Phone input — single field, minimal */}
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">
+                      +51
+                    </span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => {
+                        setError(null);
+                        setPhone(e.target.value.replace(/[^\d\s]/g, ""));
+                      }}
+                      placeholder="999 999 999"
+                      className="w-full rounded-lg border border-border bg-background pl-11 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald font-mono tabular-nums"
+                      maxLength={12}
+                      disabled={isSubmitting}
+                      autoFocus
+                    />
                   </div>
+                  <button
+                    type="submit"
+                    disabled={!phone.trim() || isSubmitting}
+                    className={cn(
+                      "flex items-center justify-center rounded-lg px-3 text-white transition-all",
+                      "bg-emerald hover:bg-emerald/90 active:scale-95",
+                      "disabled:opacity-40 disabled:cursor-not-allowed"
+                    )}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
 
-                {/* Error */}
                 {error && (
                   <p className="text-[11px] text-rose">{error}</p>
                 )}
 
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={!phone.trim() || interests.length === 0 || isSubmitting}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald py-2.5 text-sm font-semibold text-white transition-all hover:bg-emerald/90 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Suscribiendo...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-3.5 w-3.5" />
-                      Suscribirme gratis
-                    </>
-                  )}
-                </button>
-
-                {/* Social proof */}
-                <div className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground/70">
-                  <Users className="h-3 w-3" />
-                  <span className="font-mono tabular-nums">
-                    {subscriberCount.toLocaleString()}
-                  </span>
-                  <span>personas ya se unieron</span>
-                </div>
+                <p className="text-[10px] text-muted-foreground/50 text-center">
+                  Sin spam · Cancela cuando quieras
+                </p>
               </form>
             )}
           </motion.div>

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Sidebar, MobileNav } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { WhatsAppFAB } from "@/components/dashboard/whatsapp-fab";
-import { WhatsAppCaptureModal } from "@/components/dashboard/whatsapp-capture-modal";
 import { AINotificationToast } from "@/components/dashboard/ai-notification-toast";
 import { useAnalytics } from "@/hooks/use-analytics";
 
@@ -20,12 +19,11 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
-      <div className="flex flex-1 flex-col lg:pl-[240px]">
+      <div className="flex flex-1 flex-col lg:pl-[240px] overflow-x-hidden">
         <Header onMobileMenuClick={() => setMobileNavOpen(true)} />
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
       <WhatsAppFAB />
-      <WhatsAppCaptureModal />
       <AINotificationToast />
     </div>
   );

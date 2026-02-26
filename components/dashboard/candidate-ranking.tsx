@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
-import { getTopCandidates } from "@/lib/data/candidates";
+import type { Candidate } from "@/lib/data/candidates";
 import Link from "next/link";
 import {
   Tooltip,
@@ -11,8 +11,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export function CandidateRanking() {
-  const topCandidates = getTopCandidates(8);
+export function CandidateRanking({ candidates }: { candidates: Candidate[] }) {
+  // Show only top 8 candidates sorted by poll average
+  const topCandidates = [...candidates]
+    .sort((a, b) => b.pollAverage - a.pollAverage)
+    .slice(0, 8);
 
   return (
     <div className="rounded-xl border border-border bg-card">

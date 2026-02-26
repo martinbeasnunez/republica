@@ -25,7 +25,7 @@ const interestLabels: Record<string, { label: string; emoji: string }> = {
   encuestas: { label: "Encuestas", emoji: "📊" },
   noticias: { label: "Noticias", emoji: "🔴" },
   alertas: { label: "Alertas", emoji: "👤" },
-  verificacion: { label: "Verificacion", emoji: "✅" },
+  verificacion: { label: "Verificación", emoji: "✅" },
 };
 
 export function SubscriptoresClient({

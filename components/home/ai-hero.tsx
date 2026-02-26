@@ -33,10 +33,10 @@ export function AIHero() {
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
               <span className="text-gradient">
-                La primera eleccion{" "}
+                La primera elección{" "}
                 <img
                   src="https://flagcdn.com/w40/pe.png"
-                  alt="Bandera de Peru"
+                  alt="Bandera de Perú"
                   className="inline-block h-7 sm:h-8 lg:h-9 align-baseline -mb-0.5 rounded-sm"
                   width={40}
                   height={27}
@@ -58,10 +58,10 @@ export function AIHero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2"
+            className="mt-6 flex flex-wrap items-center gap-x-3 sm:gap-x-6 gap-y-2"
           >
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald pulse-dot" />
+              <span className="h-2 w-2 rounded-full bg-emerald" />
               <span className="text-[11px] font-mono text-emerald font-medium">
                 CONDOR AI ONLINE
               </span>
@@ -69,17 +69,17 @@ export function AIHero() {
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <ShieldCheck className="h-3 w-3 text-emerald" />
-              <span>287 verificaciones</span>
+              <span>36 candidatos monitoreados</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Cpu className="h-3 w-3 text-primary" />
-              <span>4 motores activos</span>
+              <span>5 fuentes RSS activas</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Activity className="h-3 w-3 text-sky" />
-              <span>Ultima actualizacion: hace 2m</span>
+              <span>Actualización cada 4h</span>
             </div>
           </motion.div>
         </div>

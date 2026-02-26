@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/scrape-news",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/auto-verify",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/update-polls",
+      "schedule": "0 13 * * 1,4"
+    }
+  ]
+}

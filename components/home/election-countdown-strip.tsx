@@ -19,10 +19,10 @@ export function ElectionCountdownStrip() {
   );
 
   const stats: StatItem[] = [
-    { label: "Dias para la eleccion", value: daysToElection, highlight: true },
+    { label: "Días para la elección", value: daysToElection, highlight: true },
     { label: "Candidatos", value: 36 },
-    { label: "Padron electoral", value: "25.3M" },
-    { label: "Fake news detectadas", value: 287, color: "text-rose" },
+    { label: "Padrón electoral", value: "25.3M" },
+    { label: "Fuentes monitoreadas", value: 5, color: "text-sky" },
   ];
 
   return (
@@ -55,7 +55,7 @@ export function ElectionCountdownStrip() {
       <div className="grid grid-cols-2 gap-px bg-border sm:hidden">
         {stats.map((stat) => (
           <div key={stat.label} className="bg-card px-3 py-3 text-center">
-            <span className="block text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+            <span className="block text-[8px] font-mono uppercase tracking-wider text-muted-foreground">
               {stat.label}
             </span>
             <span

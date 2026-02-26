@@ -7,80 +7,154 @@ import {
   Loader2,
   Bot,
   Newspaper,
-  Users,
-  BarChart3,
-  ShieldCheck,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Eye,
   ExternalLink,
   ChevronRight,
+  AlertTriangle,
+  CheckCircle,
+  Vote,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { articles, type NewsArticle } from "@/lib/data/news";
-import { candidates } from "@/lib/data/candidates";
-import { cn } from "@/lib/utils";
+import type { NewsArticle } from "@/lib/data/news";
+import type { Candidate } from "@/lib/data/candidates";
 
-// ─── Compute Insights from article data ───
+// ─── Election date ───
+const ELECTION_DATE = new Date("2026-04-12T08:00:00-05:00");
+
+// ─── Compute Insights ───
 
 interface NewsInsights {
-  breakingArticle: NewsArticle | null;
-  topCandidates: { name: string; count: number; partyColor?: string }[];
-  categoryDistribution: { category: string; count: number }[];
-  verifiedCount: number;
-  totalCount: number;
-  uniqueSources: string[];
+  // Context strip
+  daysToElection: number;
+  maxPollAverage: number;
+  totalArticles: number;
+  uniqueSourceCount: number;
+
+  // Card 1: Featured story
+  featuredArticle: NewsArticle | null;
+  todayArticleCount: number;
+
+  // Card 2: Race snapshot
+  topCandidates: {
+    shortName: string;
+    pollAverage: number;
+    pollTrend: "up" | "down" | "stable";
+    partyColor: string;
+  }[];
+
+  // Card 3: Radar
+  questionableCount: number;
+  breakingTodayCount: number;
+  topCategories: { name: string; count: number }[];
 }
 
-function computeInsights(): NewsInsights {
-  const breaking = articles.find((a) => a.isBreaking) || articles[0];
+const CATEGORY_LABELS: Record<string, string> = {
+  politica: "Politica",
+  economia: "Economia",
+  seguridad: "Seguridad",
+  encuestas: "Encuestas",
+  corrupcion: "Corrupcion",
+  opinion: "Opinion",
+};
 
-  // Count candidate mentions
-  const candidateMap = new Map<string, number>();
-  articles.forEach((a) => {
-    a.candidates.forEach((c) => {
-      candidateMap.set(c, (candidateMap.get(c) || 0) + 1);
-    });
+function computeInsights(
+  articles: NewsArticle[],
+  candidates?: Candidate[]
+): NewsInsights {
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+  const daysToElection = Math.max(
+    0,
+    Math.floor((ELECTION_DATE.getTime() - now.getTime()) / 86400000)
+  );
+
+  // Today's articles
+  const todayArticles = articles.filter((a) => {
+    try {
+      return new Date(a.time).toISOString().split("T")[0] === todayStr;
+    } catch {
+      return false;
+    }
   });
-  const topCandidates = [...candidateMap.entries()]
-    .sort((a, b) => b[1] - a[1])
+
+  // Featured article: breaking today > latest today > breaking any > latest any
+  const featuredArticle =
+    todayArticles.find((a) => a.isBreaking) ||
+    todayArticles[0] ||
+    articles.find((a) => a.isBreaking) ||
+    articles[0] ||
+    null;
+
+  // Top candidates by poll average
+  const topCandidates = (candidates || [])
+    .filter((c) => c.pollAverage > 0)
+    .sort((a, b) => b.pollAverage - a.pollAverage)
     .slice(0, 4)
-    .map(([name, count]) => {
-      const candidate = candidates.find(
-        (c) => c.shortName === name || c.name.includes(name.replace("K. ", ""))
-      );
-      return { name, count, partyColor: candidate?.partyColor };
-    });
+    .map((c) => ({
+      shortName: c.shortName,
+      pollAverage: c.pollAverage,
+      pollTrend: (c.pollTrend || "stable") as "up" | "down" | "stable",
+      partyColor: c.partyColor || "#6b7280",
+    }));
 
-  // Category distribution
-  const catMap = new Map<string, number>();
-  articles.forEach((a) => {
-    catMap.set(a.category, (catMap.get(a.category) || 0) + 1);
-  });
-  const categoryDistribution = [...catMap.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([category, count]) => ({ category, count }));
+  const maxPollAverage = topCandidates.length > 0 ? topCandidates[0].pollAverage : 0;
 
-  const verifiedCount = articles.filter(
-    (a) => a.factCheck === "verified"
+  // Radar: fact-check + breaking + categories
+  const questionableCount = articles.filter(
+    (a) => a.factCheck === "questionable" || a.factCheck === "false"
   ).length;
-  const uniqueSources = [...new Set(articles.map((a) => a.source))];
+
+  const breakingTodayCount = todayArticles.filter((a) => a.isBreaking).length;
+
+  const catMap = new Map<string, number>();
+  todayArticles.forEach((a) => {
+    const cat = a.category.toLowerCase();
+    catMap.set(cat, (catMap.get(cat) || 0) + 1);
+  });
+  // Fallback to all articles if no today articles
+  if (catMap.size === 0) {
+    articles.forEach((a) => {
+      const cat = a.category.toLowerCase();
+      catMap.set(cat, (catMap.get(cat) || 0) + 1);
+    });
+  }
+  const topCategories = [...catMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name, count]) => ({ name, count }));
+
+  const uniqueSourceCount = new Set(articles.map((a) => a.source)).size;
 
   return {
-    breakingArticle: breaking,
+    daysToElection,
+    maxPollAverage,
+    totalArticles: articles.length,
+    uniqueSourceCount,
+    featuredArticle,
+    todayArticleCount: todayArticles.length,
     topCandidates,
-    categoryDistribution,
-    verifiedCount,
-    totalCount: articles.length,
-    uniqueSources,
+    questionableCount,
+    breakingTodayCount,
+    topCategories,
   };
 }
 
 // ─── Component ───
 
-export function NewsHeroInsight() {
+interface NewsHeroInsightProps {
+  articles: NewsArticle[];
+  candidates?: Candidate[];
+}
+
+export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) {
   const [briefing, setBriefing] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [showBriefing, setShowBriefing] = useState(false);
 
-  const insights = computeInsights();
+  const insights = computeInsights(articles, candidates);
 
   const requestBriefing = async () => {
     if (isStreaming) return;
@@ -141,6 +215,12 @@ export function NewsHeroInsight() {
     }
   };
 
+  const TrendIcon = ({ trend }: { trend: "up" | "down" | "stable" }) => {
+    if (trend === "up") return <TrendingUp className="h-3 w-3 text-emerald" />;
+    if (trend === "down") return <TrendingDown className="h-3 w-3 text-rose" />;
+    return <Minus className="h-3 w-3 text-muted-foreground" />;
+  };
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
       {/* Background effects */}
@@ -161,7 +241,7 @@ export function NewsHeroInsight() {
             animate={{ opacity: 1, y: 0 }}
           >
             {/* Title + status */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
                   <Sparkles className="h-4 w-4 text-primary" />
@@ -172,9 +252,6 @@ export function NewsHeroInsight() {
                 <h2 className="text-xl sm:text-2xl font-bold">
                   <span className="text-gradient">Briefing del Dia</span>
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Lo que CONDOR detecta en las noticias electorales de hoy
-                </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="h-2 w-2 rounded-full bg-emerald pulse-dot" />
@@ -184,19 +261,47 @@ export function NewsHeroInsight() {
               </div>
             </div>
 
-            {/* Insight Grid — 4 cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Card 1: Breaking / Top Story */}
+            {/* Context strip */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 px-1">
+              <div className="flex items-center gap-1.5">
+                <Vote className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[11px] text-muted-foreground">
+                  Faltan <span className="font-bold text-foreground font-mono tabular-nums">{insights.daysToElection}</span> dias
+                </span>
+              </div>
+              <span className="text-border">|</span>
+              <span className="text-[11px] text-muted-foreground">
+                {insights.maxPollAverage > 0 ? (
+                  <>
+                    Nadie supera el{" "}
+                    <span className="font-bold text-foreground font-mono tabular-nums">
+                      {insights.maxPollAverage}%
+                    </span>
+                  </>
+                ) : (
+                  "Sin datos de encuestas"
+                )}
+              </span>
+              <span className="text-border">|</span>
+              <span className="text-[11px] text-muted-foreground">
+                <span className="font-bold text-foreground font-mono tabular-nums">{insights.totalArticles}</span> noticias
+                de <span className="font-bold text-foreground font-mono tabular-nums">{insights.uniqueSourceCount}</span> fuentes
+              </span>
+            </div>
+
+            {/* 3-card insight grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Card 1: Lo que paso hoy */}
               <div className="rounded-xl border border-border bg-background/50 p-3 sm:p-4 space-y-2">
                 <div className="flex items-center gap-1.5">
                   <Newspaper className="h-3.5 w-3.5 text-rose" />
                   <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-                    Noticia principal
+                    Lo que paso hoy
                   </span>
                 </div>
-                {insights.breakingArticle && (
+                {insights.featuredArticle ? (
                   <>
-                    {insights.breakingArticle.isBreaking && (
+                    {insights.featuredArticle.isBreaking && (
                       <div className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-rose pulse-dot" />
                         <span className="text-[9px] font-bold uppercase tracking-wider text-rose">
@@ -205,114 +310,139 @@ export function NewsHeroInsight() {
                       </div>
                     )}
                     <p className="text-xs font-semibold text-foreground line-clamp-2 leading-snug">
-                      {insights.breakingArticle.title}
+                      {insights.featuredArticle.title}
                     </p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-primary font-medium">
-                        {insights.breakingArticle.source}
-                      </span>
-                      {insights.breakingArticle.sourceUrl && (
-                        <a
-                          href={insights.breakingArticle.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Card 2: Candidates in focus */}
-              <div className="rounded-xl border border-border bg-background/50 p-3 sm:p-4 space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-sky" />
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-                    Candidatos en foco
-                  </span>
-                </div>
-                {insights.topCandidates.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {insights.topCandidates.map((c) => (
-                      <div
-                        key={c.name}
-                        className="flex items-center gap-2"
-                      >
-                        <div
-                          className="h-2 w-2 rounded-full flex-shrink-0"
-                          style={{
-                            backgroundColor: c.partyColor || "#6b7280",
-                          }}
-                        />
-                        <span className="text-xs text-foreground truncate flex-1">
-                          {c.name}
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                      {insights.featuredArticle.summary}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-primary font-medium">
+                          {insights.featuredArticle.source}
                         </span>
-                        <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
-                          {c.count}x
-                        </span>
+                        {insights.featuredArticle.sourceUrl && (
+                          <a
+                            href={insights.featuredArticle.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                      <Badge variant="secondary" className="text-[8px] px-1.5 py-0">
+                        {CATEGORY_LABELS[insights.featuredArticle.category.toLowerCase()] ||
+                          insights.featuredArticle.category}
+                      </Badge>
+                    </div>
+                    {insights.todayArticleCount > 1 && (
+                      <p className="text-[10px] text-muted-foreground/60 pt-1 border-t border-border/50">
+                        y {insights.todayArticleCount - 1} noticia{insights.todayArticleCount - 1 > 1 ? "s" : ""} mas hoy
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="text-[11px] text-muted-foreground/60 italic">
-                    Sin candidatos destacados hoy
+                    Sin noticias recientes
                   </p>
                 )}
               </div>
 
-              {/* Card 3: Topics of the day */}
+              {/* Card 2: Carrera electoral */}
               <div className="rounded-xl border border-border bg-background/50 p-3 sm:p-4 space-y-2">
                 <div className="flex items-center gap-1.5">
-                  <BarChart3 className="h-3.5 w-3.5 text-amber" />
+                  <TrendingUp className="h-3.5 w-3.5 text-sky" />
                   <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-                    Temas del dia
+                    Carrera electoral
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {insights.categoryDistribution.map((c) => (
+                {insights.topCandidates.length > 0 ? (
+                  <>
+                    <div className="space-y-1.5">
+                      {insights.topCandidates.map((c, i) => (
+                        <div
+                          key={c.shortName}
+                          className="flex items-center gap-2"
+                        >
+                          <div
+                            className="h-2 w-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: c.partyColor }}
+                          />
+                          <span className="text-xs text-foreground truncate flex-1">
+                            {i === 0 && (
+                              <span className="text-[9px] text-primary font-bold mr-1">1.</span>
+                            )}
+                            {c.shortName}
+                          </span>
+                          <span className="text-[11px] font-mono tabular-nums font-bold text-foreground">
+                            {c.pollAverage.toFixed(1)}%
+                          </span>
+                          <TrendIcon trend={c.pollTrend} />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border/50">
+                      {insights.maxPollAverage < 15
+                        ? "Eleccion abierta — ningun candidato supera el 15%"
+                        : `${insights.topCandidates[0].shortName} lidera con ${insights.maxPollAverage.toFixed(1)}%`}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground/60 italic">
+                    Sin datos de encuestas disponibles
+                  </p>
+                )}
+              </div>
+
+              {/* Card 3: Radar CONDOR */}
+              <div className="rounded-xl border border-border bg-background/50 p-3 sm:p-4 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5 text-amber" />
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
+                    Radar CONDOR
+                  </span>
+                </div>
+
+                {/* Fact-check signal */}
+                {insights.questionableCount > 0 ? (
+                  <div className="flex items-center gap-1.5 rounded-lg bg-amber/10 border border-amber/20 px-2.5 py-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber flex-shrink-0" />
+                    <span className="text-[11px] text-amber font-medium">
+                      {insights.questionableCount} noticia{insights.questionableCount > 1 ? "s" : ""} cuestionable{insights.questionableCount > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 rounded-lg bg-emerald/10 border border-emerald/20 px-2.5 py-1.5">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald flex-shrink-0" />
+                    <span className="text-[11px] text-emerald font-medium">
+                      Sin alertas de desinformacion
+                    </span>
+                  </div>
+                )}
+
+                {/* Breaking signal */}
+                {insights.breakingTodayCount > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose pulse-dot" />
+                    <span className="text-[10px] text-rose font-medium">
+                      {insights.breakingTodayCount} de ultima hora hoy
+                    </span>
+                  </div>
+                )}
+
+                {/* Top categories */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {insights.topCategories.map((c) => (
                     <Badge
-                      key={c.category}
+                      key={c.name}
                       variant="secondary"
                       className="text-[9px] h-5 gap-1 font-mono"
                     >
-                      {c.category}
-                      <span className="text-primary font-bold">
-                        {c.count}
-                      </span>
+                      {CATEGORY_LABELS[c.name] || c.name}
+                      <span className="text-primary font-bold">{c.count}</span>
                     </Badge>
                   ))}
-                </div>
-              </div>
-
-              {/* Card 4: Coverage / verification */}
-              <div className="rounded-xl border border-border bg-background/50 p-3 sm:p-4 space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald" />
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-                    Cobertura
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-mono text-lg font-bold tabular-nums text-emerald">
-                      {insights.verifiedCount}/{insights.totalCount}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      verificadas
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-mono text-sm font-bold tabular-nums text-foreground">
-                      {insights.uniqueSources.length}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      fuentes:{" "}
-                      {insights.uniqueSources.join(", ")}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>

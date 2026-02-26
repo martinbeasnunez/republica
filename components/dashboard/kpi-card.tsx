@@ -79,7 +79,7 @@ export function KPICard({
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             {title}
           </p>
-          <p className="mt-2 font-mono text-3xl font-bold tabular-nums text-foreground">
+          <p className="mt-2 font-mono text-2xl sm:text-3xl font-bold tabular-nums text-foreground">
             {value}
           </p>
           {subtitle && (

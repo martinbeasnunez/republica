@@ -27,14 +27,14 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Error de autenticacion");
+        throw new Error(data.error || "Error de autenticación");
       }
 
       // Redirect to admin dashboard
       window.location.href = "/admin";
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error al iniciar sesion"
+        err instanceof Error ? err.message : "Error al iniciar sesión"
       );
     } finally {
       setIsLoading(false);
@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="text-xl font-bold text-foreground">CONDOR Admin</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Panel de administracion
+            Panel de administración
           </p>
         </div>
 

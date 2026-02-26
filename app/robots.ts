@@ -5,8 +5,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        disallow: ["/admin/", "/api/admin/"],
+        allow: "/",
+        disallow: ["/admin/", "/api/admin/", "/api/cron/", "/api/setup/"],
       },
     ],
+    sitemap: "https://condorperu.vercel.app/sitemap.xml",
   };
 }

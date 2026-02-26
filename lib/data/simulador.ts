@@ -1,7 +1,7 @@
 // SIMULADOR ELECTORAL — Monte Carlo Election Simulation Engine
 // Runs thousands of simulated elections based on polling data + uncertainty
 
-import { candidates } from "./candidates";
+import type { Candidate } from "./candidates";
 
 export interface SimulationConfig {
   numSimulations: number;
@@ -50,7 +50,7 @@ function randomNormal(mean: number, stdDev: number): number {
 }
 
 // Run Monte Carlo simulation
-export function runSimulation(config: SimulationConfig): SimulationResult {
+export function runSimulation(config: SimulationConfig, candidates: Candidate[]): SimulationResult {
   const { numSimulations, volatility, undecidedPercent, turnoutVariation } = config;
 
   // Initialize tracking arrays

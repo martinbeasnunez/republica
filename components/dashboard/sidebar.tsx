@@ -9,19 +9,20 @@ import {
   Map,
   BarChart3,
   Newspaper,
+  Activity,
   ShieldCheck,
   FileText,
   HelpCircle,
   Radio,
   Scan,
   Dice6,
-  BookOpen,
   Target,
   ChevronLeft,
   ChevronRight,
   Menu,
 } from "lucide-react";
 import { useState } from "react";
+import { Changelog } from "@/components/dashboard/changelog";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/sheet";
 
 const navigation = [
+  // ─── Core: lo que más importa al ciudadano ───
   {
     name: "Dashboard",
     href: "/",
@@ -45,11 +47,6 @@ const navigation = [
     name: "Candidatos",
     href: "/candidatos",
     icon: Users,
-  },
-  {
-    name: "Mapa Electoral",
-    href: "/mapa",
-    icon: Map,
   },
   {
     name: "Encuestas",
@@ -62,12 +59,34 @@ const navigation = [
     icon: Newspaper,
   },
   {
+    name: "Actualizaciones",
+    href: "/actualizaciones",
+    icon: Activity,
+  },
+  // ─── Herramientas para decidir tu voto ───
+  {
+    name: "Quiz Electoral",
+    href: "/quiz",
+    icon: HelpCircle,
+  },
+  {
+    name: "Planes de Gobierno",
+    href: "/planes",
+    icon: FileText,
+  },
+  {
     name: "Verificador",
     href: "/verificador",
     icon: ShieldCheck,
   },
+  // ─── Análisis profundo ───
   {
-    name: "Radiografia",
+    name: "Pilares Perú",
+    href: "/pilares",
+    icon: Target,
+  },
+  {
+    name: "Radiografía",
     href: "/radiografia",
     icon: Scan,
     badge: "NEW",
@@ -79,32 +98,16 @@ const navigation = [
     badge: "NEW",
   },
   {
-    name: "Pilares Peru",
-    href: "/pilares",
-    icon: Target,
-    badge: "NEW",
+    name: "Mapa Electoral",
+    href: "/mapa",
+    icon: Map,
   },
-  {
-    name: "Planes de Gobierno",
-    href: "/planes",
-    icon: FileText,
-  },
-  {
-    name: "Quiz Electoral",
-    href: "/quiz",
-    icon: HelpCircle,
-    external: true,
-  },
+  // ─── Extras ───
   {
     name: "En Vivo",
     href: "/en-vivo",
     icon: Radio,
     badge: "LIVE",
-  },
-  {
-    name: "Metodologia",
-    href: "/metodologia",
-    icon: BookOpen,
   },
 ];
 
@@ -222,8 +225,9 @@ export function MobileNav({
             );
           })}
         </nav>
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 space-y-3">
           <ElectionCountdown />
+          <Changelog />
         </div>
       </SheetContent>
     </Sheet>
@@ -266,8 +270,8 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 custom-scrollbar">
         {navigation.map((item) => {
           const isActive =
-            item.href === "/"
-              ? pathname === "/"
+            item.href === "/dashboard"
+              ? pathname === "/dashboard"
               : pathname.startsWith(item.href);
 
           if (collapsed) {
@@ -292,8 +296,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Collapse toggle */}
-      <div className="border-t border-border p-3">
+      {/* Collapse */}
+      <div className="border-t border-border p-3 space-y-1">
         <Button
           variant="ghost"
           size="sm"
@@ -311,10 +315,11 @@ export function Sidebar() {
         </Button>
       </div>
 
-      {/* Election countdown */}
+      {/* Election countdown + changelog */}
       {!collapsed && (
         <div className="border-t border-border p-4">
           <ElectionCountdown />
+          <Changelog />
         </div>
       )}
     </aside>

@@ -4,6 +4,18 @@ import { useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
+/* ── Persistent visitor ID (localStorage — survives sessions) ── */
+function getVisitorId(): string {
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem("condor_vid");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("condor_vid", id);
+  }
+  return id;
+}
+
+/* ── Session ID (sessionStorage — resets per tab) ── */
 function getSessionId(): string {
   if (typeof window === "undefined") return "";
   let id = sessionStorage.getItem("condor_sid");
@@ -11,7 +23,9 @@ function getSessionId(): string {
     id = crypto.randomUUID();
     sessionStorage.setItem("condor_sid", id);
   }
-  return id;
+  // Encode visitor_id as prefix so admin can extract unique visitors
+  // Format: "v:VISITOR_ID|s:SESSION_ID"
+  return `v:${getVisitorId()}|s:${id}`;
 }
 
 export function useAnalytics() {

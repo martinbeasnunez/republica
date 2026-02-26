@@ -45,19 +45,27 @@ export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
               </div>
             )}
 
-            {/* Avatar placeholder */}
+            {/* Avatar */}
             <div className="mb-4 flex items-center gap-4">
               <div
-                className="flex h-14 w-14 items-center justify-center rounded-full border-2"
+                className="flex h-14 w-14 items-center justify-center rounded-full border-2 overflow-hidden"
                 style={{
                   backgroundColor: candidate.partyColor + "20",
                   borderColor: candidate.partyColor,
                 }}
               >
-                <User
-                  className="h-7 w-7"
-                  style={{ color: candidate.partyColor }}
-                />
+                {candidate.photo && candidate.photo.startsWith("http") ? (
+                  <img
+                    src={candidate.photo}
+                    alt={candidate.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User
+                    className="h-7 w-7"
+                    style={{ color: candidate.partyColor }}
+                  />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors truncate">

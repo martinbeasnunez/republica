@@ -26,7 +26,8 @@ import {
   Bot,
   User,
 } from "lucide-react";
-import { candidates } from "@/lib/data/candidates";
+import type { Candidate } from "@/lib/data/candidates";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
 
 interface CommandPaletteProps {
@@ -47,6 +48,31 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+
+  // Fetch candidates client-side (uses anon key with public read RLS)
+  useEffect(() => {
+    const supabase = getSupabaseBrowser();
+    supabase
+      .from("candidates")
+      .select("id, slug, name, short_name, party, party_color")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          setCandidates(
+            data.map((r) => ({
+              id: r.id,
+              slug: r.slug,
+              name: r.name,
+              shortName: r.short_name,
+              party: r.party,
+              partyColor: r.party_color,
+            })) as Candidate[]
+          );
+        }
+      });
+  }, []);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -100,7 +126,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error de conexion");
+      if (!res.ok) throw new Error("Error de conexión");
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -171,7 +197,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               }}
               className="ml-auto text-xs text-muted-foreground hover:text-foreground"
             >
-              Volver a busqueda
+              Volver a búsqueda
             </button>
           </div>
 
@@ -184,14 +210,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <div className="text-center py-8">
                 <Bot className="h-10 w-10 text-primary/40 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  Preguntame sobre candidatos, propuestas, encuestas o el
-                  proceso electoral Peru 2026
+                  Pregúntame sobre candidatos, propuestas, encuestas o el
+                  proceso electoral Perú 2026
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   {[
-                    "Quien lidera las encuestas?",
-                    "Que propone Lopez Aliaga?",
-                    "Cuando son las elecciones?",
+                    "Quién lidera las encuestas?",
+                    "Qué propone Lopez Aliaga?",
+                    "Cuándo son las elecciones?",
                   ].map((q) => (
                     <button
                       key={q}
@@ -312,7 +338,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             className="gap-2"
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="font-medium">Preguntale a CONDOR AI</span>
+            <span className="font-medium">Pregúntale a CONDOR AI</span>
             <span className="ml-auto text-[10px] text-muted-foreground">
               IA avanzada
             </span>

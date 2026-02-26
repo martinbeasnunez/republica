@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
     }
 
     const userMessage = topic
-      ? `Analiza la posicion de ${candidateName} sobre el tema "${topic}" basandote en su plan de gobierno:\n\n${planText || "No se proporciono texto del plan. Genera un analisis basado en informacion publica conocida sobre este candidato."}`
-      : `Analiza el plan de gobierno de ${candidateName}:\n\n${planText || "No se proporciono texto del plan. Genera un analisis basado en informacion publica conocida sobre este candidato."}`;
+      ? `Analiza la posición de ${candidateName} sobre el tema "${topic}" basándote en su plan de gobierno:\n\n${planText || "No se proporcionó texto del plan. Genera un análisis basado en información pública conocida sobre este candidato."}`
+      : `Analiza el plan de gobierno de ${candidateName}:\n\n${planText || "No se proporcionó texto del plan. Genera un análisis basado en información pública conocida sobre este candidato."}`;
 
     const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",

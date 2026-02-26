@@ -5,16 +5,14 @@ import Link from "next/link";
 import {
   LayoutDashboard,
   Users,
-  BarChart3,
   LogOut,
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const adminNav = [
-  { name: "Overview", href: "/admin", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Suscriptores", href: "/admin/suscriptores", icon: Users },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
 ];
 
 export default function AdminLayout({

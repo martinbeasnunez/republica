@@ -1,17 +1,7 @@
 import { NextRequest } from "next/server";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
-import { candidates } from "@/lib/data/candidates";
-import { getNewsContext } from "@/lib/data/news";
-
-// Build candidate context for the AI
-function getCandidateContext(): string {
-  return candidates
-    .map(
-      (c) =>
-        `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} anos, region ${c.region}. Encuesta: ${c.pollAverage}%. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`
-    )
-    .join("\n");
-}
+import { fetchCandidates } from "@/lib/data/candidates";
+import { fetchNewsContext } from "@/lib/data/news";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,15 +14,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const candidateContext = getCandidateContext();
-    const newsContext = getNewsContext();
+    const [candidates, newsContext] = await Promise.all([
+      fetchCandidates(),
+      fetchNewsContext(),
+    ]);
+
+    const candidateContext = candidates
+      .map(
+        (c) =>
+          `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años, región ${c.region}. Encuesta: ${c.pollAverage}%. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`
+      )
+      .join("\n");
 
     const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `${SYSTEM_PROMPTS.electoralAssistant}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR (febrero 2026):\n${newsContext}`,
+          content: `${SYSTEM_PROMPTS.electoralAssistant}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`,
         },
         ...messages,
       ],

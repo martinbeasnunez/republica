@@ -132,7 +132,7 @@ export function AIPromptBar() {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Preguntale algo a CONDOR AI sobre las elecciones..."
+            placeholder="Pregúntale algo a CONDOR AI sobre las elecciones..."
             className="flex-1 bg-transparent text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
             disabled={isStreaming}
           />

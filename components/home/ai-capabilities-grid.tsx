@@ -138,7 +138,7 @@ const capabilities: AICapability[] = [
     label: "CONDOR AI",
     preview: <MiniChat />,
     cta: "Iniciar conversacion",
-    href: "#",
+    href: "/verificador",
   },
   {
     id: "factcheck",

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "CONDOR — La primera eleccion con inteligencia artificial | Peru 2026";
+export const alt = "CONDOR — La primera elección con inteligencia artificial | Perú 2026";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -162,7 +162,7 @@ export default async function Image() {
               lineHeight: 1.2,
             }}
           >
-            La primera eleccion
+            La primera elección
           </span>
           <span
             style={{

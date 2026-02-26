@@ -1,4 +1,4 @@
-// PILARES DE DESARROLLO — Framework de pilares clave para el crecimiento del Peru
+// PILARES DE DESARROLLO — Framework de pilares clave para el crecimiento del Perú
 // Basado en: WEF Global Competitiveness Index, World Bank Worldwide Governance Indicators,
 // UNDP Human Development Index, OECD Better Life Index, World Justice Project Rule of Law Index,
 // Transparency International CPI, PISA (OECD), IMD World Competitiveness Ranking
@@ -75,59 +75,59 @@ export const internationalFrameworks: InternationalFramework[] = [
     name: "Global Competitiveness Index 4.0",
     organization: "World Economic Forum (WEF)",
     description:
-      "Indice que evalua 103 indicadores organizados en 12 pilares que determinan la productividad y competitividad de 141 economias. Escala de 0 a 100, donde 100 representa la frontera ideal.",
+      "Índice que evalúa 103 indicadores organizados en 12 pilares que determinan la productividad y competitividad de 141 economías. Escala de 0 a 100, donde 100 representa la frontera ideal.",
     url: "https://www.weforum.org/publications/global-competitiveness-report-2019/",
     dimensions: [
       "Instituciones",
       "Infraestructura",
-      "Adopcion de TIC",
-      "Estabilidad macroeconomica",
+      "Adopción de TIC",
+      "Estabilidad macroeconómica",
       "Salud",
-      "Habilidades/Educacion",
+      "Habilidades/Educación",
       "Mercado de productos",
       "Mercado laboral",
       "Sistema financiero",
-      "Tamano del mercado",
+      "Tamaño del mercado",
       "Dinamismo empresarial",
-      "Capacidad de innovacion",
+      "Capacidad de innovación",
     ],
     methodology:
-      "Combina datos de la Encuesta de Opinion Ejecutiva (2/3) con fuentes publicas como Naciones Unidas (1/3). Aproximadamente 15,000 ejecutivos encuestados a nivel global.",
-    lastUpdated: "2019 (ultima edicion publicada; suspendido desde 2020)",
+      "Combina datos de la Encuesta de Opinión Ejecutiva (2/3) con fuentes públicas como Naciones Unidas (1/3). Aproximadamente 15,000 ejecutivos encuestados a nivel global.",
+    lastUpdated: "2019 (última edición publicada; suspendido desde 2020)",
   },
   {
     id: "wb-wgi",
     name: "Worldwide Governance Indicators (WGI)",
     organization: "Banco Mundial",
     description:
-      "Indicadores compuestos de gobernanza que combinan 35 fuentes de datos incluyendo encuestas a hogares, empresas y evaluaciones de expertos en 214 economias desde 1996.",
+      "Indicadores compuestos de gobernanza que combinan 35 fuentes de datos incluyendo encuestas a hogares, empresas y evaluaciones de expertos en 214 economías desde 1996.",
     url: "https://www.worldbank.org/en/publication/worldwide-governance-indicators",
     dimensions: [
-      "Voz y rendicion de cuentas",
-      "Estabilidad politica y ausencia de violencia",
+      "Voz y rendición de cuentas",
+      "Estabilidad política y ausencia de violencia",
       "Efectividad del gobierno",
       "Calidad regulatoria",
       "Estado de derecho",
-      "Control de la corrupcion",
+      "Control de la corrupción",
     ],
     methodology:
-      "Modelo de Componentes No Observados (UCM) que combina 35 fuentes de datos en una escala de 0 a 100. Incluye margenes de error explicitos.",
+      "Modelo de Componentes No Observados (UCM) que combina 35 fuentes de datos en una escala de 0 a 100. Incluye márgenes de error explícitos.",
     lastUpdated: "2024 (datos hasta 2023)",
   },
   {
     id: "undp-hdi",
-    name: "Indice de Desarrollo Humano (IDH)",
+    name: "Índice de Desarrollo Humano (IDH)",
     organization: "Programa de las Naciones Unidas para el Desarrollo (PNUD)",
     description:
       "Medida resumen del logro promedio en dimensiones clave del desarrollo humano: vida larga y saludable, conocimiento y nivel de vida digno.",
     url: "https://hdr.undp.org/data-center/human-development-index",
     dimensions: [
       "Salud (esperanza de vida al nacer)",
-      "Educacion (anos promedio y esperados de escolaridad)",
+      "Educación (años promedio y esperados de escolaridad)",
       "Ingreso (INB per capita PPP)",
     ],
     methodology:
-      "Media geometrica de indices normalizados para cada una de las tres dimensiones. Publicado en el Informe de Desarrollo Humano anual.",
+      "Media geométrica de índices normalizados para cada una de las tres dimensiones. Publicado en el Informe de Desarrollo Humano anual.",
     lastUpdated: "2025 (datos de 2023)",
   },
   {
@@ -135,23 +135,23 @@ export const internationalFrameworks: InternationalFramework[] = [
     name: "Better Life Index",
     organization: "OECD",
     description:
-      "Compara el bienestar de las personas en paises de la OCDE basado en 11 dimensiones esenciales con 24 indicadores subyacentes.",
+      "Compara el bienestar de las personas en países de la OCDE basado en 11 dimensiones esenciales con 24 indicadores subyacentes.",
     url: "https://www.oecdbetterlifeindex.org/",
     dimensions: [
       "Vivienda",
       "Ingreso y riqueza",
       "Empleo y salarios",
       "Comunidad",
-      "Educacion",
+      "Educación",
       "Medio ambiente",
-      "Compromiso civico",
+      "Compromiso cívico",
       "Salud",
-      "Satisfaccion con la vida",
+      "Satisfacción con la vida",
       "Seguridad",
       "Balance trabajo-vida",
     ],
     methodology:
-      "Indicadores normalizados agregados con pesos iguales dentro de cada dimension. Los usuarios pueden personalizar pesos de 0 a 10 por dimension.",
+      "Indicadores normalizados agregados con pesos iguales dentro de cada dimensión. Los usuarios pueden personalizar pesos de 0 a 10 por dimensión.",
     lastUpdated: "2024",
   },
   {
@@ -159,11 +159,11 @@ export const internationalFrameworks: InternationalFramework[] = [
     name: "Rule of Law Index",
     organization: "World Justice Project (WJP)",
     description:
-      "Evalua el cumplimiento del estado de derecho en 143 paises utilizando 47 indicadores organizados en 8 factores, basado en encuestas a hogares y evaluaciones de expertos.",
+      "Evalúa el cumplimiento del estado de derecho en 143 países utilizando 47 indicadores organizados en 8 factores, basado en encuestas a hogares y evaluaciones de expertos.",
     url: "https://worldjusticeproject.org/rule-of-law-index/",
     dimensions: [
-      "Limites al poder gubernamental",
-      "Ausencia de corrupcion",
+      "Límites al poder gubernamental",
+      "Ausencia de corrupción",
       "Gobierno abierto",
       "Derechos fundamentales",
       "Orden y seguridad",
@@ -172,7 +172,7 @@ export const internationalFrameworks: InternationalFramework[] = [
       "Justicia penal",
     ],
     methodology:
-      "Encuestas a mas de 154,000 hogares y 3,600 expertos legales a nivel global. Escala de 0 a 1 donde 1 representa la maxima adherencia al estado de derecho.",
+      "Encuestas a más de 154,000 hogares y 3,600 expertos legales a nivel global. Escala de 0 a 1 donde 1 representa la máxima adherencia al estado de derecho.",
     lastUpdated: "2025",
   },
   {
@@ -180,19 +180,19 @@ export const internationalFrameworks: InternationalFramework[] = [
     name: "Corruption Perceptions Index (CPI)",
     organization: "Transparency International",
     description:
-      "Clasifica 180 paises por sus niveles percibidos de corrupcion en el sector publico, segun evaluaciones de expertos y encuestas empresariales.",
+      "Clasifica 180 países por sus niveles percibidos de corrupción en el sector público, según evaluaciones de expertos y encuestas empresariales.",
     url: "https://www.transparency.org/en/cpi/2024",
     dimensions: [
-      "Corrupcion en el sector publico",
+      "Corrupción en el sector público",
       "Soborno",
-      "Desvio de fondos publicos",
-      "Capacidad de los gobiernos para contener la corrupcion",
+      "Desvío de fondos públicos",
+      "Capacidad de los gobiernos para contener la corrupción",
       "Burocracia excesiva",
       "Nepotismo en nombramientos",
-      "Capacidad de investigacion y sancion",
+      "Capacidad de investigación y sanción",
     ],
     methodology:
-      "Agregacion de al menos 3 fuentes de datos de 13 posibles (encuestas a expertos y ejecutivos). Escala de 0 (altamente corrupto) a 100 (muy limpio).",
+      "Agregación de al menos 3 fuentes de datos de 13 posibles (encuestas a expertos y ejecutivos). Escala de 0 (altamente corrupto) a 100 (muy limpio).",
     lastUpdated: "2024",
   },
   {
@@ -200,15 +200,15 @@ export const internationalFrameworks: InternationalFramework[] = [
     name: "Programme for International Student Assessment (PISA)",
     organization: "OECD",
     description:
-      "Evaluacion internacional que mide la capacidad de estudiantes de 15 anos para usar sus conocimientos en lectura, matematicas y ciencias en situaciones de la vida real.",
+      "Evaluación internacional que mide la capacidad de estudiantes de 15 años para usar sus conocimientos en lectura, matemáticas y ciencias en situaciones de la vida real.",
     url: "https://www.oecd.org/en/about/programmes/pisa.html",
     dimensions: [
-      "Matematicas",
+      "Matemáticas",
       "Lectura",
       "Ciencias",
     ],
     methodology:
-      "Evaluacion estandarizada aplicada cada 3 anos a muestras representativas de estudiantes de 15 anos. Puntaje promedio OCDE: ~475 puntos.",
+      "Evaluación estandarizada aplicada cada 3 años a muestras representativas de estudiantes de 15 años. Puntaje promedio OCDE: ~475 puntos.",
     lastUpdated: "2022 (resultados publicados en diciembre 2023)",
   },
   {
@@ -216,16 +216,16 @@ export const internationalFrameworks: InternationalFramework[] = [
     name: "World Competitiveness Ranking",
     organization: "IMD Business School",
     description:
-      "Clasifica la competitividad de 67 economias basandose en su capacidad para crear y mantener un entorno favorable para la competitividad empresarial.",
+      "Clasifica la competitividad de 67 economías basándose en su capacidad para crear y mantener un entorno favorable para la competitividad empresarial.",
     url: "https://www.imd.org/centers/wcc/world-competitiveness-center/rankings/world-competitiveness-ranking/",
     dimensions: [
-      "Desempeno economico",
+      "Desempeño económico",
       "Eficiencia del gobierno",
       "Eficiencia empresarial",
       "Infraestructura",
     ],
     methodology:
-      "Combina 164 criterios de competitividad con datos estadisticos duros (2/3) y resultados de encuestas de percepcion (1/3).",
+      "Combina 164 criterios de competitividad con datos estadísticos duros (2/3) y resultados de encuestas de percepción (1/3).",
     lastUpdated: "2025",
   },
 ];
@@ -239,13 +239,13 @@ export const benchmarkCountries: BenchmarkCountry[] = [
     country: "Chile",
     region: "America Latina",
     relevance:
-      "Pais vecino con contexto cultural similar. Lider regional en desarrollo humano (IDH #44), control de corrupcion (CPI: 63/100), y competitividad. Demuestra que el progreso es posible en la region.",
+      "País vecino con contexto cultural similar. Líder regional en desarrollo humano (IDH #44), control de corrupción (CPI: 63/100), y competitividad. Demuestra que el progreso es posible en la región.",
     keyReforms: [
       "Autonomia del Banco Central (1989)",
-      "Agencia de Calidad y Superintendencia de Educacion",
-      "Fortalecimiento de derechos de propiedad y seguridad juridica",
+      "Agencia de Calidad y Superintendencia de Educación",
+      "Fortalecimiento de derechos de propiedad y seguridad jurídica",
       "Apertura comercial con tratados de libre comercio",
-      "Sistema de evaluacion docente basado en merito",
+      "Sistema de evaluación docente basado en mérito",
     ],
     gdpPerCapita: 17200,
     yearsOfTransformation: "1985-2010",
@@ -254,13 +254,13 @@ export const benchmarkCountries: BenchmarkCountry[] = [
     country: "Corea del Sur",
     region: "Asia Oriental",
     relevance:
-      "Modelo de transformacion de pais pobre a economia avanzada en 30 anos, impulsado por inversion masiva en educacion y tecnologia. PIB per capita paso de ~100 USD (1960) a +34,000 USD.",
+      "Modelo de transformación de país pobre a economía avanzada en 30 años, impulsado por inversión masiva en educación y tecnología. PIB per capita pasó de ~100 USD (1960) a +34,000 USD.",
     keyReforms: [
-      "Planes Quinquenales de Desarrollo Economico (1962-1996)",
-      "Inversion del 4-5% del PIB en educacion",
-      "Estrategia de industrializacion orientada a exportaciones",
-      "Politica de ciencia y tecnologia con apoyo estatal a I+D",
-      "Digitalizacion del sistema educativo y gobierno electronico",
+      "Planes Quinquenales de Desarrollo Económico (1962-1996)",
+      "Inversión del 4-5% del PIB en educación",
+      "Estrategia de industrialización orientada a exportaciones",
+      "Política de ciencia y tecnología con apoyo estatal a I+D",
+      "Digitalización del sistema educativo y gobierno electrónico",
     ],
     gdpPerCapita: 34000,
     yearsOfTransformation: "1962-1996",
@@ -269,12 +269,12 @@ export const benchmarkCountries: BenchmarkCountry[] = [
     country: "Estonia",
     region: "Europa del Este",
     relevance:
-      "Pais pequeno que se transformo de estado post-sovietico a lider mundial en gobierno digital. 100% de servicios gubernamentales digitalizados. PIB per capita paso de 3,435 USD (1991) a 32,460 USD (2023).",
+      "País pequeño que se transformó de estado post-soviético a líder mundial en gobierno digital. 100% de servicios gubernamentales digitalizados. PIB per capita pasó de 3,435 USD (1991) a 32,460 USD (2023).",
     keyReforms: [
       "Identidad digital (e-ID) para el 99% de la poblacion",
       "Plataforma X-Road para intercambio seguro de datos gubernamentales",
-      "Principio de recoleccion unica de datos del ciudadano",
-      "Digitalizacion completa de servicios publicos",
+      "Principio de recolección única de datos del ciudadano",
+      "Digitalización completa de servicios públicos",
       "Sector TIC contribuye ~7% del PIB",
     ],
     gdpPerCapita: 32460,
@@ -284,13 +284,13 @@ export const benchmarkCountries: BenchmarkCountry[] = [
     country: "Singapur",
     region: "Sudeste Asiatico",
     relevance:
-      "Modelo ejemplar de combate a la corrupcion como estrategia de desarrollo. Paso de pais corrupto a uno de los mas limpios del mundo (#3 en CPI). Demuestra que la voluntad politica puede transformar instituciones.",
+      "Modelo ejemplar de combate a la corrupción como estrategia de desarrollo. Pasó de país corrupto a uno de los más limpios del mundo (#3 en CPI). Demuestra que la voluntad política puede transformar instituciones.",
     keyReforms: [
-      "Creacion del CPIB (agencia anticorrupcion independiente, 1952)",
-      "Prevention of Corruption Act con alcance publico y privado",
-      "Tolerancia cero con la corrupcion desde el nivel mas alto",
-      "Salarios competitivos para funcionarios publicos",
-      "Confiscacion de ganancias ilicitas como elemento disuasorio",
+      "Creación del CPIB (agencia anticorrupción independiente, 1952)",
+      "Prevention of Corruption Act con alcance público y privado",
+      "Tolerancia cero con la corrupción desde el nivel más alto",
+      "Salarios competitivos para funcionarios públicos",
+      "Confiscación de ganancias ilícitas como elemento disuasorio",
     ],
     gdpPerCapita: 87900,
     yearsOfTransformation: "1965-2000",
@@ -299,13 +299,13 @@ export const benchmarkCountries: BenchmarkCountry[] = [
     country: "Ruanda",
     region: "Africa Oriental",
     relevance:
-      "Ejemplo de reconstruccion institucional post-conflicto con enfoque en gobernanza, rendicion de cuentas e inclusion de genero. Crecimiento del PIB promedio de 7.4% anual (2000-2023).",
+      "Ejemplo de reconstrucción institucional post-conflicto con enfoque en gobernanza, rendición de cuentas e inclusión de género. Crecimiento del PIB promedio de 7.4% anual (2000-2023).",
     keyReforms: [
-      "Vision 2050 con metas claras de transformacion socioeconomica",
-      "Reconstruccion de instituciones con enfasis en gobernanza y rendicion de cuentas",
-      "Ampliacion de base tributaria domestica",
-      "Politicas de inclusion de genero en todos los niveles de gobierno",
-      "Descentralizacion para acercar servicios a los ciudadanos",
+      "Visión 2050 con metas claras de transformación socioeconómica",
+      "Reconstrucción de instituciones con énfasis en gobernanza y rendición de cuentas",
+      "Ampliación de base tributaria doméstica",
+      "Políticas de inclusión de género en todos los niveles de gobierno",
+      "Descentralización para acercar servicios a los ciudadanos",
     ],
     gdpPerCapita: 1000,
     yearsOfTransformation: "1994-presente",
@@ -327,7 +327,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "estable",
     sourceUrl: "https://www.weforum.org/publications/global-competitiveness-report-2019/",
-    notes: "Ultima edicion publicada. El indice fue suspendido desde 2020. Peru se ubica en la mitad inferior a nivel global.",
+    notes: "Última edición publicada. El índice fue suspendido desde 2020. Perú se ubica en la mitad inferior a nivel global.",
   },
   {
     indexName: "Corruption Perceptions Index",
@@ -339,7 +339,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "empeorando",
     sourceUrl: "https://www.transparency.org/en/cpi/2024/index/per",
-    notes: "Descenso de 2 puntos respecto al ano anterior. Muy por debajo de Chile (63/100, puesto 31). Uno de los paises peor evaluados en la region.",
+    notes: "Descenso de 2 puntos respecto al año anterior. Muy por debajo de Chile (63/100, puesto 31). Uno de los países peor evaluados en la región.",
   },
   {
     indexName: "Human Development Index",
@@ -351,7 +351,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 1.0,
     trend: "estable",
     sourceUrl: "https://hdr.undp.org/data-center/human-development-index",
-    notes: "Categoria 'desarrollo humano alto'. Chile lidera la region con 0.860 (puesto 44). Peru esta por debajo del promedio de America Latina.",
+    notes: "Categoría 'desarrollo humano alto'. Chile lidera la región con 0.860 (puesto 44). Perú está por debajo del promedio de America Latina.",
   },
   {
     indexName: "Rule of Law Index",
@@ -363,7 +363,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 1.0,
     trend: "empeorando",
     sourceUrl: "https://worldjusticeproject.org/rule-of-law-index/country/Peru",
-    notes: "Peru se ubica en el puesto 93 de 143 paises. Puesto 29 de 41 entre paises de ingreso medio-alto. Evalua 8 factores incluyendo corrupcion, justicia civil y penal.",
+    notes: "Perú se ubica en el puesto 93 de 143 países. Puesto 29 de 41 entre países de ingreso medio-alto. Evalúa 8 factores incluyendo corrupción, justicia civil y penal.",
   },
   {
     indexName: "Ease of Doing Business",
@@ -375,7 +375,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "estable",
     sourceUrl: "https://archive.doingbusiness.org/en/rankings",
-    notes: "Ultima edicion publicada (indice descontinuado en 2021). Peru se ubicaba en la mitad superior pero con debilidades en permisos de construccion y registro de propiedad.",
+    notes: "Última edición publicada (índice descontinuado en 2021). Perú se ubicaba en la mitad superior pero con debilidades en permisos de construcción y registro de propiedad.",
   },
   {
     indexName: "PISA 2022 (Matematicas)",
@@ -387,7 +387,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 600,
     trend: "mejorando",
     sourceUrl: "https://www.oecd.org/en/publications/pisa-2022-results-volume-i-and-ii-country-notes_ed6fbcc5-en/peru_3e71791c-en.html",
-    notes: "Promedio OCDE: 472 puntos. Chile lidera la region con 412 puntos. Solo 34% de estudiantes peruanos alcanzan nivel 2 de competencia (vs 69% OCDE). Tendencia positiva de largo plazo.",
+    notes: "Promedio OCDE: 472 puntos. Chile lidera la región con 412 puntos. Solo 34% de estudiantes peruanos alcanzan nivel 2 de competencia (vs 69% OCDE). Tendencia positiva de largo plazo.",
   },
   {
     indexName: "PISA 2022 (Lectura)",
@@ -411,7 +411,7 @@ export const peruRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "empeorando",
     sourceUrl: "https://www.imd.org/centers/wcc/world-competitiveness-center/rankings/world-competitiveness-ranking/",
-    notes: "Quinto en America Latina despues de Chile (44), Mexico (56), Colombia (57) y Brasil (62). Cerca del final del ranking global.",
+    notes: "Quinto en America Latina después de Chile (44), México (56), Colombia (57) y Brasil (62). Cerca del final del ranking global.",
   },
 ];
 
@@ -441,7 +441,7 @@ export const peruEconomicIndicators: EconomicIndicator[] = [
     name: "Crecimiento del PIB (promedio reciente)",
     value: "2.4% anual (2015-2024)",
     year: 2024,
-    comparison: "Periodo 2005-2014: 6.2% anual. Desaceleracion significativa.",
+    comparison: "Periodo 2005-2014: 6.2% anual. Desaceleración significativa.",
     source: "Banco Mundial",
     sourceUrl: "https://www.worldbank.org/en/country/peru/overview",
   },
@@ -449,15 +449,15 @@ export const peruEconomicIndicators: EconomicIndicator[] = [
     name: "Informalidad laboral",
     value: "71.65% del empleo total",
     year: 2023,
-    comparison: "Chile: ~27% | OCDE: ~15% | Economia informal: ~47% del PIB",
+    comparison: "Chile: ~27% | OCDE: ~15% | Economía informal: ~47% del PIB",
     source: "INEI / WIEGO",
     sourceUrl: "https://www.statista.com/statistics/1039975/informal-employment-share-peru/",
   },
   {
-    name: "Recaudacion tributaria (% del PIB)",
+    name: "Recaudación tributaria (% del PIB)",
     value: "~17%",
     year: 2023,
-    comparison: "Promedio LAC: 21.3% | OCDE: 33.8%. Caida de 2.1 pp entre 2022-2023.",
+    comparison: "Promedio LAC: 21.3% | OCDE: 33.8%. Caída de 2.1 pp entre 2022-2023.",
     source: "OECD Revenue Statistics LAC 2025",
     sourceUrl: "https://www.oecd.org/en/publications/2025/05/revenue-statistics-in-latin-america-and-the-caribbean-2025_2922daa3.html",
   },
@@ -465,7 +465,7 @@ export const peruEconomicIndicators: EconomicIndicator[] = [
     name: "Pobreza monetaria",
     value: "36.2% (< USD 8.30/dia PPP)",
     year: 2024,
-    comparison: "Pre-pandemia (2019): 33.6%. Aun por encima de niveles prepandemicos.",
+    comparison: "Pre-pandemia (2019): 33.6%. Aún por encima de niveles prepandémicos.",
     source: "Banco Mundial",
     sourceUrl: "https://thedocs.worldbank.org/en/doc/e408a7e21ba62d843bdd90dc37e61b57-0500032021/related/mpo-per.pdf",
   },
@@ -478,18 +478,18 @@ export const peruEconomicIndicators: EconomicIndicator[] = [
     sourceUrl: "https://data.worldbank.org/indicator/SI.POV.GINI?locations=PE",
   },
   {
-    name: "Dependencia minera (% exportaciones)",
+    name: "Dependencia minera (% de exportaciones)",
     value: "64% de exportaciones",
     year: 2024,
-    comparison: "Mineria: ~20% del PIB. Cobre y oro dominan exportaciones.",
+    comparison: "Minería: ~20% del PIB. Cobre y oro dominan exportaciones.",
     source: "Allianz Trade / EITI",
     sourceUrl: "https://eiti.org/countries/peru",
   },
   {
-    name: "Penetracion de internet",
+    name: "Penetración de internet",
     value: "74.7% de la poblacion",
     year: 2024,
-    comparison: "Chile: ~90% | Brecha rural: solo 56.7% conectado vs 83-88% urbano.",
+    comparison: "Chile: ~90% | Brecha rural: solo 56.7% conectados vs 83-88% urbano.",
     source: "DataReportal Digital 2024",
     sourceUrl: "https://datareportal.com/reports/digital-2024-peru",
   },
@@ -497,7 +497,7 @@ export const peruEconomicIndicators: EconomicIndicator[] = [
     name: "Cobertura de salud",
     value: "97% asegurados (SIS)",
     year: 2023,
-    comparison: "Pero 7 de cada 10 personas que necesitan atencion no la reciben (ENAHO 2022).",
+    comparison: "Pero 7 de cada 10 personas que necesitan atención no la reciben (ENAHO 2022).",
     source: "OECD Reviews of Health Systems: Peru 2025",
     sourceUrl: "https://www.oecd.org/en/publications/2025/04/oecd-reviews-of-health-systems-peru-2025_3f7c00aa.html",
   },
@@ -521,16 +521,16 @@ export const developmentPillars: DevelopmentPillar[] = [
     shortDescription:
       "Que las leyes se cumplan, que los jueces sean independientes y que el Estado funcione para todos — no solo para los que tienen contactos.",
     whyItMatters:
-      "Sin instituciones que funcionen, nada mas funciona. Si no puedes confiar en que un juez sea justo, o en que un tramite no requiera coima, el pais no avanza. Los paises que salieron de la pobreza (Singapur, Corea, Chile) lo hicieron fortaleciendo sus instituciones primero. Peru ha tenido 6 presidentes en 5 anos — eso no pasa en paises serios.",
+      "Sin instituciones que funcionen, nada más funciona. Si no puedes confiar en que un juez sea justo, o en que un trámite no requiera coima, el país no avanza. Los países que salieron de la pobreza (Singapur, Corea, Chile) lo hicieron fortaleciendo sus instituciones primero. Perú ha tenido 6 presidentes en 5 años — eso no pasa en países serios.",
     dataPoints: [
-      "Peru tuvo 6 presidentes en 5 anos (2016-2021) — inestabilidad record",
-      "El mundo nos pone en el puesto 127 de 180 en percepcion de corrupcion",
-      "Singapur era mas corrupto que Peru y ahora es top 3 mundial — se puede cambiar",
-      "Los paises con instituciones fuertes crecen mas y tienen menos pobreza, segun el Banco Mundial",
+      "Perú tuvo 6 presidentes en 5 años (2016-2021) — inestabilidad récord",
+      "El mundo nos pone en el puesto 127 de 180 en percepción de corrupción",
+      "Singapur era más corrupto que Perú y ahora es top 3 mundial — se puede cambiar",
+      "Los países con instituciones fuertes crecen más y tienen menos pobreza, según el Banco Mundial",
     ],
     peruStatus: {
       summary:
-        "Las instituciones peruanas estan en crisis. La corrupcion empeora cada ano, nadie confia en los jueces, y la politica es un caos. Mientras Chile y Uruguay mejoran, Peru va para atras.",
+        "Las instituciones peruanas están en crisis. La corrupción empeora cada año, nadie confía en los jueces, y la política es un caos. Mientras Chile y Uruguay mejoran, Perú va para atrás.",
       score: "critico",
       rankings: [
         {
@@ -543,7 +543,7 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "empeorando",
           sourceUrl: "https://www.transparency.org/en/cpi/2024/index/per",
-          notes: "Caida de 2 puntos respecto a 2023. Chile: 63/100 (puesto 31).",
+          notes: "Caída de 2 puntos respecto a 2023. Chile: 63/100 (puesto 31).",
         },
         {
           indexName: "Rule of Law Index",
@@ -555,20 +555,20 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 1.0,
           trend: "empeorando",
           sourceUrl: "https://worldjusticeproject.org/rule-of-law-index/country/Peru",
-          notes: "Puesto 29 de 41 entre paises de ingreso medio-alto.",
+          notes: "Puesto 29 de 41 entre países de ingreso medio-alto.",
         },
       ],
       keyProblems: [
-        "La corrupcion empeora cada ano — sacamos 31/100 (Chile saca 63)",
-        "Nadie confia en los jueces ni en el Congreso",
-        "6 presidentes en 5 anos — inestabilidad politica record",
-        "Las reglas del juego cambian segun quien este en el poder",
+        "La corrupción empeora cada año — sacamos 31/100 (Chile saca 63)",
+        "Nadie confía en los jueces ni en el Congreso",
+        "6 presidentes en 5 años — inestabilidad política récord",
+        "Las reglas del juego cambian según quién esté en el poder",
       ],
     },
     benchmark: {
       country: "Singapur",
       description:
-        "Singapur creo el CPIB (agencia anticorrupcion independiente bajo jurisdiccion del Primer Ministro) y aplico tolerancia cero. Combinado con la Prevention of Corruption Act, hizo de la corrupcion una actividad de alto riesgo y baja recompensa.",
+        "Singapur creó el CPIB (agencia anticorrupción independiente bajo jurisdicción del Primer Ministro) y aplicó tolerancia cero. Combinado con la Prevention of Corruption Act, hizo de la corrupción una actividad de alto riesgo y baja recompensa.",
       keyMetric: "CPI: 83/100 (puesto 3 mundial)",
     },
     frameworks: ["wef-gci", "wb-wgi", "wjp-roli", "ti-cpi"],
@@ -581,23 +581,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "anticorrupcion",
     number: 2,
-    name: "Acabar con la Corrupcion",
+    name: "Acabar con la Corrupción",
     nameEn: "Anti-Corruption",
     icon: "ShieldCheck",
     color: "red",
     shortDescription:
       "Que robar al Estado tenga consecuencias reales. Que los funcionarios corruptos vayan presos, no a otro cargo.",
     whyItMatters:
-      "La corrupcion es la razon #1 por la que Peru no avanza. Cada sol robado es un hospital que no se construye, una escuela sin techo. Peru saca 31 de 100 en el indice de corrupcion — Chile saca 63, mas del doble. Lo peor: cada ano empeoramos. Pero Singapur demostro que se puede pasar de pais corrupto a uno de los mas limpios del mundo en pocas decadas.",
+      "La corrupción es la razón #1 por la que Perú no avanza. Cada sol robado es un hospital que no se construye, una escuela sin techo. Perú saca 31 de 100 en el índice de corrupción — Chile saca 63, más del doble. Lo peor: cada año empeoramos. Pero Singapur demostró que se puede pasar de país corrupto a uno de los más limpios del mundo en pocas décadas.",
     dataPoints: [
-      "Peru saca 31/100 en corrupcion — Chile saca 63/100, mas del doble",
-      "Cada ano Peru baja en el ranking: caimos 2 puntos mas en 2024",
-      "Caso Odebrecht: corrupcion en todos los niveles de gobierno",
-      "Singapur era corrupto como Peru y ahora es top 3 del mundo — con voluntad politica se puede",
+      "Perú saca 31/100 en corrupción — Chile saca 63/100, más del doble",
+      "Cada año Perú baja en el ranking: caímos 2 puntos más en 2024",
+      "Caso Odebrecht: corrupción en todos los niveles de gobierno",
+      "Singapur era corrupto como Perú y ahora es top 3 del mundo — con voluntad política se puede",
     ],
     peruStatus: {
       summary:
-        "Peru es de los paises mas corruptos de America Latina y empeora cada ano. Odebrecht demostro que la corrupcion esta en todos lados. La gente ya no confia en nadie.",
+        "Perú es de los países más corruptos de América Latina y empeora cada año. Odebrecht demostró que la corrupción está en todos lados. La gente ya no confía en nadie.",
       score: "critico",
       rankings: [
         {
@@ -610,21 +610,21 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "empeorando",
           sourceUrl: "https://www.transparency.org/en/cpi/2024/index/per",
-          notes: "Tendencia negativa sostenida. Uruguay lidera la region con 72/100.",
+          notes: "Tendencia negativa sostenida. Uruguay lidera la región con 72/100.",
         },
       ],
       keyProblems: [
-        "31/100 en corrupcion — estamos en el grupo de los peores del mundo",
-        "Cada ano sacamos peor nota — vamos para atras",
-        "Odebrecht demostro que la corrupcion esta en todos los niveles",
-        "Los juicios por corrupcion duran anos y casi nadie va preso",
+        "31/100 en corrupción — estamos en el grupo de los peores del mundo",
+        "Cada año sacamos peor nota — vamos para atrás",
+        "Odebrecht demostró que la corrupción está en todos los niveles",
+        "Los juicios por corrupción duran años y casi nadie va preso",
       ],
     },
     benchmark: {
       country: "Singapur",
       description:
-        "Singapur implemento cuatro pilares: leyes fuertes, adjudicacion efectiva, enforcement independiente (CPIB), y administracion publica profesional. Confisca ganancias ilicitas y paga salarios competitivos a funcionarios.",
-      keyMetric: "CPI: 83/100 — de pais con corrupcion endemica a top 3 mundial",
+        "Singapur implementó cuatro pilares: leyes fuertes, adjudicación efectiva, enforcement independiente (CPIB), y administración pública profesional. Confisca ganancias ilícitas y paga salarios competitivos a funcionarios.",
+      keyMetric: "CPI: 83/100 — de país con corrupción endémica a top 3 mundial",
     },
     frameworks: ["ti-cpi", "wb-wgi", "wjp-roli", "wef-gci"],
     relatedPillars: ["institucionalidad", "justicia-seguridad"],
@@ -636,23 +636,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "educacion",
     number: 3,
-    name: "Educacion de Verdad",
+    name: "Educación de Verdad",
     nameEn: "Education Quality",
     icon: "GraduationCap",
     color: "emerald",
     shortDescription:
       "Que un chico que sale del colegio sepa leer bien, hacer cuentas y conseguir trabajo. Hoy 2 de cada 3 no pueden.",
     whyItMatters:
-      "Sin educacion no hay futuro. Punto. En las pruebas PISA, los estudiantes peruanos sacan 391 en matematicas — el promedio mundial es 472. Solo 1 de cada 3 chicos peruanos puede resolver un problema basico de matematicas. Corea del Sur estaba peor que Peru hace 60 anos y hoy es potencia tecnologica — invirtieron en educacion durante 30 anos seguidos.",
+      "Sin educación no hay futuro. Punto. En las pruebas PISA, los estudiantes peruanos sacan 391 en matemáticas — el promedio mundial es 472. Solo 1 de cada 3 chicos peruanos puede resolver un problema básico de matemáticas. Corea del Sur estaba peor que Perú hace 60 años y hoy es potencia tecnológica — invirtieron en educación durante 30 años seguidos.",
     dataPoints: [
-      "Peru saca 391 en matematicas PISA — el promedio mundial es 472 (estamos 81 puntos abajo)",
-      "Solo 1 de cada 3 estudiantes puede resolver un problema basico de matematicas",
+      "Perú saca 391 en matemáticas PISA — el promedio mundial es 472 (estamos 81 puntos abajo)",
+      "Solo 1 de cada 3 estudiantes puede resolver un problema básico de matemáticas",
       "Solo 1% de nuestros estudiantes llega al nivel avanzado en lectura (en la OCDE es 7%)",
-      "Corea del Sur invirtio 5% del PIB en educacion por 30 anos y paso de pobre a potencia",
+      "Corea del Sur invirtió 5% del PIB en educación por 30 años y pasó de pobre a potencia",
     ],
     peruStatus: {
       summary:
-        "Nuestros chicos salen del colegio sin las herramientas basicas. Estamos muy por debajo del mundo en todas las materias. Algo esta mejorando, pero a paso de tortuga.",
+        "Nuestros chicos salen del colegio sin las herramientas básicas. Estamos muy por debajo del mundo en todas las materias. Algo está mejorando, pero a paso de tortuga.",
       score: "deficiente",
       rankings: [
         {
@@ -681,17 +681,17 @@ export const developmentPillars: DevelopmentPillar[] = [
         },
       ],
       keyProblems: [
-        "Solo 1 de cada 3 chicos resuelve un problema basico de matematicas",
+        "Solo 1 de cada 3 chicos resuelve un problema básico de matemáticas",
         "Estamos 81 puntos abajo del promedio mundial en PISA",
-        "Un chico de Lima aprende mucho mas que uno del campo",
-        "Invertimos poco en educacion comparado con los paises que si crecieron",
+        "Un chico de Lima aprende mucho más que uno del campo",
+        "Invertimos poco en educación comparado con los países que sí crecieron",
       ],
     },
     benchmark: {
       country: "Corea del Sur",
       description:
-        "Corea del Sur invirtio consistentemente 4-5% de su PIB en educacion durante 30+ anos, creo planes de educacion alineados con sus planes de desarrollo economico, y uso tecnologia educativa desde etapas tempranas. PISA 2022: Matematicas 527, Lectura 515.",
-      keyMetric: "PISA Matematicas: 527 puntos (Peru: 391)",
+        "Corea del Sur invirtió consistentemente 4-5% de su PIB en educación durante 30+ años, creó planes de educación alineados con sus planes de desarrollo económico, y usó tecnología educativa desde etapas tempranas. PISA 2022: Matemáticas 527, Lectura 515.",
+      keyMetric: "PISA Matemáticas: 527 puntos (Perú: 391)",
     },
     frameworks: ["oecd-pisa", "wef-gci", "undp-hdi", "oecd-bli"],
     relatedPillars: ["transformacion-digital", "diversificacion-economica"],
@@ -708,18 +708,18 @@ export const developmentPillars: DevelopmentPillar[] = [
     icon: "Building2",
     color: "amber",
     shortDescription:
-      "Que llegue agua limpia a todos, que las carreteras conecten el pais, y que internet no sea un lujo.",
+      "Que llegue agua limpia a todos, que las carreteras conecten el país, y que internet no sea un lujo.",
     whyItMatters:
-      "Sin carreteras no hay comercio. Sin agua limpia no hay salud. Sin internet no hay futuro. En Peru, solo 2 de cada 10 hogares rurales tienen internet fijo. Hay pueblos donde el agua llega turbia o no llega. Mientras tanto, los proyectos de infraestructura se atrasan anos por corrupcion en las licitaciones.",
+      "Sin carreteras no hay comercio. Sin agua limpia no hay salud. Sin internet no hay futuro. En Perú, solo 2 de cada 10 hogares rurales tienen internet fijo. Hay pueblos donde el agua llega turbia o no llega. Mientras tanto, los proyectos de infraestructura se atrasan años por corrupción en las licitaciones.",
     dataPoints: [
       "Solo 2 de cada 10 hogares rurales tienen internet fijo (en la ciudad son 9 de 10)",
-      "Proyectos de infraestructura con anos de atraso y sobrecostos por corrupcion",
-      "Hay pueblos sin agua potable ni desague fuera de las ciudades principales",
-      "Chile tiene la mejor logistica de transporte de America Latina — Peru esta lejos",
+      "Proyectos de infraestructura con años de atraso y sobrecostos por corrupción",
+      "Hay pueblos sin agua potable ni desagüe fuera de las ciudades principales",
+      "Chile tiene la mejor logística de transporte de America Latina — Perú está lejos",
     ],
     peruStatus: {
       summary:
-        "Fuera de Lima, Peru es otro pais. Carreteras que no existen, pueblos sin agua, internet que no llega. Los proyectos se atrasan anos y cuestan el doble por corrupcion.",
+        "Fuera de Lima, Perú es otro país. Carreteras que no existen, pueblos sin agua, internet que no llega. Los proyectos se atrasan años y cuestan el doble por corrupción.",
       score: "deficiente",
       rankings: [
         {
@@ -732,12 +732,12 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.weforum.org/publications/global-competitiveness-report-2019/",
-          notes: "Infraestructura es una de las areas mas debiles de Peru en el GCI. Score general 61.7/100.",
+          notes: "Infraestructura es una de las áreas más débiles de Perú en el GCI. Score general 61.7/100.",
         },
       ],
       keyProblems: [
-        "Fuera de Lima parece otro pais — sin carreteras, sin agua, sin internet",
-        "Los proyectos se atrasan anos por corrupcion en las licitaciones",
+        "Fuera de Lima parece otro país — sin carreteras, sin agua, sin internet",
+        "Los proyectos se atrasan años por corrupción en las licitaciones",
         "Solo 2 de cada 10 hogares rurales tienen internet",
         "Hay pueblos donde el agua no llega o llega sucia",
       ],
@@ -745,7 +745,7 @@ export const developmentPillars: DevelopmentPillar[] = [
     benchmark: {
       country: "Chile",
       description:
-        "Chile invirtio en infraestructura de transporte y concesiones publico-privadas de manera consistente. Tiene la mejor infraestructura logistica de America Latina segun el LPI del Banco Mundial.",
+        "Chile invirtió en infraestructura de transporte y concesiones público-privadas de manera consistente. Tiene la mejor infraestructura logística de America Latina según el LPI del Banco Mundial.",
       keyMetric: "LPI Chile entre los mejores de America Latina",
     },
     frameworks: ["wef-gci", "imd-wcr", "oecd-bli"],
@@ -763,14 +763,14 @@ export const developmentPillars: DevelopmentPillar[] = [
     icon: "MonitorSmartphone",
     color: "violet",
     shortDescription:
-      "Que puedas hacer tramites desde tu celular sin hacer cola. Que el Estado use tecnologia en vez de papel.",
+      "Que puedas hacer trámites desde tu celular sin hacer cola. Que el Estado use tecnología en vez de papel.",
     whyItMatters:
-      "En Estonia, el 100% de tramites del gobierno se hacen online — no hay colas, no hay coimas, no hay papeles. En Peru todavia hay que ir a una oficina, hacer cola y rezar. La digitalizacion reduce corrupcion (todo queda registrado), ahorra plata al Estado y le facilita la vida a la gente. Peru esta por debajo de Brasil, Mexico, Chile, Colombia y Argentina en desarrollo digital.",
+      "En Estonia, el 100% de trámites del gobierno se hacen online — no hay colas, no hay coimas, no hay papeles. En Perú todavía hay que ir a una oficina, hacer cola y rezar. La digitalización reduce corrupción (todo queda registrado), ahorra plata al Estado y le facilita la vida a la gente. Perú está por debajo de Brasil, México, Chile, Colombia y Argentina en desarrollo digital.",
     dataPoints: [
-      "En Estonia puedes hacer TODO online — en Peru todavia hay colas para todo",
+      "En Estonia puedes hacer TODO online — en Perú todavía hay colas para todo",
       "75% de peruanos tiene internet, pero en zonas rurales solo 57%",
-      "Peru esta por debajo de Brasil, Mexico, Chile, Colombia y Argentina en lo digital",
-      "Estonia paso de pais pobre a tener el 7% de su economia en tecnologia — se puede",
+      "Perú está por debajo de Brasil, México, Chile, Colombia y Argentina en lo digital",
+      "Estonia pasó de país pobre a tener el 7% de su economía en tecnología — se puede",
     ],
     peruStatus: {
       summary:
@@ -787,20 +787,20 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "mejorando",
           sourceUrl: "https://networkreadinessindex.org/network-readiness-in-latin-america-lessons-from-the-network-readiness-index-nri-2024/",
-          notes: "Peru clasificado con nivel medio de desarrollo digital en America Latina. Debilidades en competencias TIC y marcos regulatorios.",
+          notes: "Perú clasificado con nivel medio de desarrollo digital en America Latina. Debilidades en competencias TIC y marcos regulatorios.",
         },
       ],
       keyProblems: [
         "En el campo, solo la mitad tiene internet — en la ciudad casi todos",
         "Solo 2 de cada 10 hogares rurales con internet fijo",
-        "Estamos por debajo de Brasil, Mexico, Chile, Colombia y Argentina en lo digital",
-        "La mayoria de tramites del Estado todavia requieren ir fisicamente a una oficina",
+        "Estamos por debajo de Brasil, México, Chile, Colombia y Argentina en lo digital",
+        "La mayoría de trámites del Estado todavía requieren ir físicamente a una oficina",
       ],
     },
     benchmark: {
       country: "Estonia",
       description:
-        "Estonia digitalizo el 100% de sus servicios gubernamentales, creo identidad digital para el 99% de la poblacion, e implemento X-Road para intercambio seguro de datos. Su PIB per capita paso de USD 3,435 a USD 32,460 entre 1991 y 2023.",
+        "Estonia digitalizó el 100% de sus servicios gubernamentales, creó identidad digital para el 99% de la población, e implementó X-Road para intercambio seguro de datos. Su PIB per capita pasó de USD 3,435 a USD 32,460 entre 1991 y 2023.",
       keyMetric: "100% servicios gubernamentales digitales / TIC = 7% del PIB",
     },
     frameworks: ["wef-gci", "imd-wcr"],
@@ -813,24 +813,24 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "diversificacion-economica",
     number: 6,
-    name: "No Solo Mineria",
+    name: "No Solo Minería",
     nameEn: "Economic Diversification & Productivity",
     icon: "TrendingUp",
     color: "orange",
     shortDescription:
-      "Peru vive de la mineria. Si baja el precio del cobre, nos hundimos. Necesitamos crear otras industrias y formalizar empleos.",
+      "Perú vive de la minería. Si baja el precio del cobre, nos hundimos. Necesitamos crear otras industrias y formalizar empleos.",
     whyItMatters:
-      "El 64% de lo que Peru exporta son metales. Si manana baja el precio del cobre, se nos cae la economia. Ademas, 7 de cada 10 peruanos trabajan en la informalidad — sin seguro, sin jubilacion, sin derechos. Chile diversifico hacia servicios, agroindustria y tecnologia. Peru se quedo en la mineria y en el crecimiento paso de 6% a 2% anual.",
+      "El 64% de lo que Perú exporta son metales. Si mañana baja el precio del cobre, se nos cae la economía. Además, 7 de cada 10 peruanos trabajan en la informalidad — sin seguro, sin jubilación, sin derechos. Chile diversificó hacia servicios, agroindustria y tecnología. Perú se quedó en la minería y en el crecimiento pasó de 6% a 2% anual.",
     dataPoints: [
       "64% de lo que exportamos son metales — demasiado huevo en una sola canasta",
       "7 de cada 10 peruanos trabajan sin contrato, sin seguro, sin derechos",
-      "La economia informal es casi la mitad del PIB — plata que no paga impuestos",
-      "Antes creciamos 6% al ano, ahora solo 2.4% — nos estamos frenando",
-      "Chile diversifico su economia y su PIB per capita es el doble que el nuestro",
+      "La economía informal es casi la mitad del PIB — plata que no paga impuestos",
+      "Antes crecíamos 6% al año, ahora solo 2.4% — nos estamos frenando",
+      "Chile diversificó su economía y su PIB per capita es el doble que el nuestro",
     ],
     peruStatus: {
       summary:
-        "Vivimos de la mineria y de la informalidad. Si el cobre baja, nos hundimos. 7 de cada 10 trabajan sin derechos. El crecimiento se freno a la mitad.",
+        "Vivimos de la minería y de la informalidad. Si el cobre baja, nos hundimos. 7 de cada 10 trabajan sin derechos. El crecimiento se frenó a la mitad.",
       score: "deficiente",
       rankings: [
         {
@@ -843,7 +843,7 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "empeorando",
           sourceUrl: "https://www.imd.org/centers/wcc/world-competitiveness-center/rankings/world-competitiveness-ranking/",
-          notes: "Quinto en LAC despues de Chile (44), Mexico (56), Colombia (57) y Brasil (62). Cerca del final del ranking global.",
+          notes: "Quinto en LAC después de Chile (44), México (56), Colombia (57) y Brasil (62). Cerca del final del ranking global.",
         },
         {
           indexName: "Global Competitiveness Index 4.0",
@@ -855,21 +855,21 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.weforum.org/publications/global-competitiveness-report-2019/",
-          notes: "Pilar de Innovacion y Dinamismo Empresarial entre los mas debiles.",
+          notes: "Pilar de Innovación y Dinamismo Empresarial entre los más débiles.",
         },
       ],
       keyProblems: [
         "64% de lo que exportamos son metales — si baja el cobre, nos hundimos",
         "7 de cada 10 trabajan informal — sin contrato, sin seguro, sin futuro",
         "Casi la mitad del PIB es informal — plata invisible para el Estado",
-        "El crecimiento se freno a la mitad: de 6% a 2.4% anual",
-        "Chile gana el doble que nosotros per capita — y eramos similares",
+        "El crecimiento se frenó a la mitad: de 6% a 2.4% anual",
+        "Chile gana el doble que nosotros per capita — y éramos similares",
       ],
     },
     benchmark: {
       country: "Chile",
       description:
-        "Chile diversifico mas alla de la mineria hacia servicios financieros, agroindustria, energia renovable y tecnologia. Mantuvo apertura comercial con multiples TLCs y reformas pro-empresa.",
+        "Chile diversificó más allá de la minería hacia servicios financieros, agroindustria, energía renovable y tecnología. Mantuvo apertura comercial con múltiples TLCs y reformas pro-empresa.",
       keyMetric: "PIB per capita Chile: USD 17,200 vs Peru: USD 8,452",
     },
     frameworks: ["wef-gci", "imd-wcr", "oecd-bli"],
@@ -887,14 +887,14 @@ export const developmentPillars: DevelopmentPillar[] = [
     icon: "HeartPulse",
     color: "rose",
     shortDescription:
-      "El 97% tiene seguro de salud en papel, pero 7 de cada 10 no reciben atencion cuando la necesitan. Eso no es salud.",
+      "El 97% tiene seguro de salud en papel, pero 7 de cada 10 no reciben atención cuando la necesitan. Eso no es salud.",
     whyItMatters:
-      "Tener un carnet del SIS no sirve si cuando te enfermas no hay cama, no hay doctor o te hacen esperar semanas. En Peru, 7 de cada 10 personas que necesitan atencion medica NO la reciben. En Puno es el doble de grave que en Lima. Un pais donde la gente se muere por falta de atencion no puede crecer.",
+      "Tener un carnet del SIS no sirve si cuando te enfermas no hay cama, no hay doctor o te hacen esperar semanas. En Perú, 7 de cada 10 personas que necesitan atención médica NO la reciben. En Puno es el doble de grave que en Lima. Un país donde la gente se muere por falta de atención no puede crecer.",
     dataPoints: [
-      "7 de cada 10 peruanos que necesitan atencion medica NO la reciben",
-      "35% no va al doctor porque los tiempos de espera son eternas",
-      "En Puno la falta de atencion es el doble que en Lima (40% vs 23%)",
-      "Vivimos 72 anos en promedio — un chileno vive 79, casi 7 anos mas",
+      "7 de cada 10 peruanos que necesitan atención médica NO la reciben",
+      "35% no va al doctor porque los tiempos de espera son eternos",
+      "En Puno la falta de atención es el doble que en Lima (40% vs 23%)",
+      "Vivimos 72 años en promedio — un chileno vive 79, casi 7 años más",
     ],
     peruStatus: {
       summary:
@@ -911,22 +911,22 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 1.0,
           trend: "estable",
           sourceUrl: "https://hdr.undp.org/data-center/human-development-index",
-          notes: "Esperanza de vida: 72.4 anos. Chile: 78.9 anos.",
+          notes: "Esperanza de vida: 72.4 años. Chile: 78.9 años.",
         },
       ],
       keyProblems: [
         "7 de cada 10 que necesitan doctor NO lo consiguen",
-        "El sistema esta partido en pedazos — SIS, EsSalud, clinicas, y ninguno se habla",
-        "En Puno la gente se queda sin atencion el doble que en Lima",
-        "Las mujeres sufren mas — 33% sin atencion vs 29% de hombres",
-        "Peru gasta menos en salud que cualquier otro pais de la region",
+        "El sistema está partido en pedazos — SIS, EsSalud, clínicas, y ninguno se habla",
+        "En Puno la gente se queda sin atención el doble que en Lima",
+        "Las mujeres sufren más — 33% sin atención vs 29% de hombres",
+        "Perú gasta menos en salud que cualquier otro país de la región",
       ],
     },
     benchmark: {
       country: "Chile",
       description:
-        "Chile tiene un sistema de salud mixto (FONASA/ISAPRE) con mejor integracion y cobertura efectiva. Esperanza de vida de 78.9 anos. Inversion en salud como porcentaje del PIB significativamente mayor.",
-      keyMetric: "Esperanza de vida Chile: 78.9 anos vs Peru: 72.4 anos",
+        "Chile tiene un sistema de salud mixto (FONASA/ISAPRE) con mejor integración y cobertura efectiva. Esperanza de vida de 78.9 años. Inversión en salud como porcentaje del PIB significativamente mayor.",
+      keyMetric: "Esperanza de vida Chile: 78.9 años vs Perú: 72.4 años",
     },
     frameworks: ["wef-gci", "undp-hdi", "oecd-bli"],
     relatedPillars: ["inclusion-social", "infraestructura"],
@@ -938,23 +938,23 @@ export const developmentPillars: DevelopmentPillar[] = [
   {
     id: "inclusion-social",
     number: 8,
-    name: "Que Nadie se Quede Atras",
+    name: "Que Nadie se Quede Atrás",
     nameEn: "Social Inclusion & Inequality Reduction",
     icon: "Users",
     color: "teal",
     shortDescription:
-      "4 de cada 10 peruanos son pobres. La mitad no come bien. Un chico en Lima tiene 3 veces mas oportunidades que uno en Huancavelica.",
+      "4 de cada 10 peruanos son pobres. La mitad no come bien. Un chico en Lima tiene 3 veces más oportunidades que uno en Huancavelica.",
     whyItMatters:
-      "36% de peruanos vive en pobreza y mas de la mitad no come lo suficiente. Si naciste en Lima, tus oportunidades son 3 veces mayores que si naciste en los Andes o la Amazonia. La pandemia borro anos de progreso — la pobreza salto de 20% a 30% de un ano a otro. Un pais donde la mitad sufre no puede avanzar.",
+      "36% de peruanos vive en pobreza y más de la mitad no come lo suficiente. Si naciste en Lima, tus oportunidades son 3 veces mayores que si naciste en los Andes o la Amazonía. La pandemia borró años de progreso — la pobreza saltó de 20% a 30% de un año a otro. Un país donde la mitad sufre no puede avanzar.",
     dataPoints: [
-      "36% de peruanos son pobres — con menos de 30 soles al dia",
-      "Mas de la mitad de peruanos no come bien (inseguridad alimentaria)",
-      "La pandemia borro anos de progreso: pobreza salto de 20% a 30% en un ano",
-      "Un chico de Lima tiene 3 veces mas oportunidades que uno del campo",
+      "36% de peruanos son pobres — con menos de 30 soles al día",
+      "Más de la mitad de peruanos no come bien (inseguridad alimentaria)",
+      "La pandemia borró años de progreso: pobreza saltó de 20% a 30% en un año",
+      "Un chico de Lima tiene 3 veces más oportunidades que uno del campo",
     ],
     peruStatus: {
       summary:
-        "Habiamos avanzado, pero la pandemia nos devolvio anos atras. La pobreza todavia esta peor que antes del COVID. Y si vives fuera de Lima, todo es peor.",
+        "Habíamos avanzado, pero la pandemia nos devolvió años atrás. La pobreza todavía está peor que antes del COVID. Y si vives fuera de Lima, todo es peor.",
       score: "deficiente",
       rankings: [
         {
@@ -972,16 +972,16 @@ export const developmentPillars: DevelopmentPillar[] = [
       ],
       keyProblems: [
         "36% vive en pobreza — peor que antes de la pandemia",
-        "Mas de la mitad de peruanos no come lo suficiente",
-        "La desigualdad es de las mas altas de America Latina",
+        "Más de la mitad de peruanos no come lo suficiente",
+        "La desigualdad es de las más altas de América Latina",
         "Si naces fuera de Lima, tus chances de salir adelante son mucho menores",
       ],
     },
     benchmark: {
       country: "Ruanda",
       description:
-        "Ruanda integro politicas de inclusion de genero en todos los niveles de gobierno y priorizo la equidad territorial a traves de la descentralizacion. Crecimiento del PIB promedio de 7.4% anual (2000-2023).",
-      keyMetric: "Primer pais del mundo en representacion femenina parlamentaria (61%)",
+        "Ruanda integró políticas de inclusión de género en todos los niveles de gobierno y priorizó la equidad territorial a través de la descentralización. Crecimiento del PIB promedio de 7.4% anual (2000-2023).",
+      keyMetric: "Primer país del mundo en representación femenina parlamentaria (61%)",
     },
     frameworks: ["undp-hdi", "oecd-bli", "wb-wgi"],
     relatedPillars: ["salud", "educacion", "infraestructura"],
@@ -998,18 +998,18 @@ export const developmentPillars: DevelopmentPillar[] = [
     icon: "Wallet",
     color: "cyan",
     shortDescription:
-      "Peru recauda la mitad de lo que necesita. Sin plata no hay hospitales, ni colegios, ni carreteras. Y la informalidad hace que casi nadie pague impuestos.",
+      "Perú recauda la mitad de lo que necesita. Sin plata no hay hospitales, ni colegios, ni carreteras. Y la informalidad hace que casi nadie pague impuestos.",
     whyItMatters:
-      "El Estado peruano recauda 17% del PIB en impuestos — los paises desarrollados recaudan 34%, el doble. Sin plata no puedes construir hospitales, pagar buenos profesores ni hacer carreteras. La razon principal: 7 de cada 10 trabajan en la informalidad y no pagan impuestos. Es un circulo vicioso: el Estado no recauda, entonces no da buenos servicios, entonces la gente no quiere pagar.",
+      "El Estado peruano recauda 17% del PIB en impuestos — los países desarrollados recaudan 34%, el doble. Sin plata no puedes construir hospitales, pagar buenos profesores ni hacer carreteras. La razón principal: 7 de cada 10 trabajan en la informalidad y no pagan impuestos. Es un círculo vicioso: el Estado no recauda, entonces no da buenos servicios, entonces la gente no quiere pagar.",
     dataPoints: [
-      "Peru recauda 17% del PIB — los paises desarrollados recaudan 34%, el doble",
-      "Somos de los que menos recaudamos en toda America Latina",
-      "En 2023 recaudamos aun MENOS que en 2022 — vamos para atras",
+      "Perú recauda 17% del PIB — los países desarrollados recaudan 34%, el doble",
+      "Somos de los que menos recaudamos en toda América Latina",
+      "En 2023 recaudamos aún MENOS que en 2022 — vamos para atrás",
       "7 de cada 10 trabajan informal y no pagan impuestos — el Estado se queda sin plata",
     ],
     peruStatus: {
       summary:
-        "El Estado no tiene plata porque casi nadie paga impuestos. Recaudamos la mitad de lo que necesitamos. Y cada ano recaudamos menos, no mas.",
+        "El Estado no tiene plata porque casi nadie paga impuestos. Recaudamos la mitad de lo que necesitamos. Y cada año recaudamos menos, no más.",
       score: "critico",
       rankings: [
         {
@@ -1022,12 +1022,12 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "empeorando",
           sourceUrl: "https://www.oecd.org/en/publications/2025/05/revenue-statistics-in-latin-america-and-the-caribbean-2025_2922daa3.html",
-          notes: "Mayor caida de la region: -2.1 pp entre 2022 y 2023. OCDE promedio: 33.8%.",
+          notes: "Mayor caída de la región: -2.1 pp entre 2022 y 2023. OCDE promedio: 33.8%.",
         },
       ],
       keyProblems: [
-        "Recaudamos la mitad de lo que necesitamos — 17% vs 34% de paises desarrollados",
-        "En 2023 recaudamos MENOS que en 2022 — la peor caida de la region",
+        "Recaudamos la mitad de lo que necesitamos — 17% vs 34% de países desarrollados",
+        "En 2023 recaudamos MENOS que en 2022 — la peor caída de la región",
         "7 de cada 10 trabajan informal — no pagan impuestos",
         "Dependemos de la mineria para los ingresos — y los precios suben y bajan",
         "No hay plata para hospitales, colegios ni carreteras porque no recaudamos",
@@ -1036,7 +1036,7 @@ export const developmentPillars: DevelopmentPillar[] = [
     benchmark: {
       country: "Chile",
       description:
-        "Chile tiene una recaudacion tributaria alrededor del 21% del PIB, con reformas tributarias progresivas, una administracion fiscal mas eficiente y menor informalidad (~27% del empleo).",
+        "Chile tiene una recaudación tributaria alrededor del 21% del PIB, con reformas tributarias progresivas, una administración fiscal más eficiente y menor informalidad (~27% del empleo).",
       keyMetric: "Chile: ~21% del PIB en impuestos vs Peru: ~17%",
     },
     frameworks: ["wef-gci", "wb-wgi", "imd-wcr"],
@@ -1056,16 +1056,16 @@ export const developmentPillars: DevelopmentPillar[] = [
     shortDescription:
       "Que puedas caminar tranquilo por la calle. Que si te roban, la policia haga algo. Que los jueces no se vendan.",
     whyItMatters:
-      "La inseguridad es la preocupacion #1 de los peruanos. Pero no basta con mas policias — necesitas jueces que no se vendan, carceles que rehabiliten y un sistema que funcione. Peru esta en el puesto 93 de 143 en estado de derecho. Si denuncias un robo, no pasa nada. Si un politico roba, tampoco. Asi no se construye un pais.",
+      "La inseguridad es la preocupación #1 de los peruanos. Pero no basta con más policías — necesitas jueces que no se vendan, cárceles que rehabiliten y un sistema que funcione. Perú está en el puesto 93 de 143 en estado de derecho. Si denuncias un robo, no pasa nada. Si un político roba, tampoco. Así no se construye un país.",
     dataPoints: [
-      "Peru esta en el puesto 93 de 143 paises en estado de derecho — en el tercio mas bajo",
-      "La inseguridad es la preocupacion #1 de los peruanos segun todas las encuestas",
-      "Si denuncias un robo, la probabilidad de que se resuelva es minima",
-      "En Lima la justicia funciona (mas o menos) — en provincias es casi inexistente",
+      "Perú está en el puesto 93 de 143 países en estado de derecho — en el tercio más bajo",
+      "La inseguridad es la preocupación #1 de los peruanos según todas las encuestas",
+      "Si denuncias un robo, la probabilidad de que se resuelva es mínima",
+      "En Lima la justicia funciona (más o menos) — en provincias es casi inexistente",
     ],
     peruStatus: {
       summary:
-        "La gente tiene miedo de salir a la calle. La policia no da abasto. Los jueces no inspiran confianza. Y si vives en provincia, la justicia casi no existe.",
+        "La gente tiene miedo de salir a la calle. La policía no da abasto. Los jueces no inspiran confianza. Y si vives en provincia, la justicia casi no existe.",
       score: "critico",
       rankings: [
         {
@@ -1078,13 +1078,13 @@ export const developmentPillars: DevelopmentPillar[] = [
           maxScore: 1.0,
           trend: "empeorando",
           sourceUrl: "https://worldjusticeproject.org/rule-of-law-index/country/Peru",
-          notes: "Puesto 29 de 41 entre paises de ingreso medio-alto. Evalua justicia civil, penal, corrupcion y derechos fundamentales.",
+          notes: "Puesto 29 de 41 entre países de ingreso medio-alto. Evalúa justicia civil, penal, corrupción y derechos fundamentales.",
         },
       ],
       keyProblems: [
-        "La inseguridad es lo que mas preocupa a los peruanos",
+        "La inseguridad es lo que más preocupa a los peruanos",
         "Si te roban y denuncias, casi nunca pasa nada",
-        "Los jueces no inspiran confianza — presion politica y mediatica",
+        "Los jueces no inspiran confianza — presión política y mediática",
         "En provincias casi no hay acceso a justicia",
         "Estamos en el puesto 93 de 143 paises en estado de derecho",
       ],
@@ -1092,7 +1092,7 @@ export const developmentPillars: DevelopmentPillar[] = [
     benchmark: {
       country: "Chile",
       description:
-        "Chile tiene un sistema judicial mas independiente y eficiente, con reformas procesales penales exitosas. Se ubica en el puesto 27 del WJP Rule of Law Index, entre los mejores de America Latina junto con Uruguay y Costa Rica.",
+        "Chile tiene un sistema judicial más independiente y eficiente, con reformas procesales penales exitosas. Se ubica en el puesto 27 del WJP Rule of Law Index, entre los mejores de América Latina junto con Uruguay y Costa Rica.",
       keyMetric: "Chile: puesto 27/143 en Rule of Law Index vs Peru: 93/143",
     },
     frameworks: ["wjp-roli", "wb-wgi", "wef-gci"],
@@ -1145,7 +1145,7 @@ export function getPillarScoreColor(score: DevelopmentPillar["peruStatus"]["scor
 
 export function getPillarScoreLabel(score: DevelopmentPillar["peruStatus"]["score"]): string {
   const labels = {
-    critico: "Critico",
+    critico: "Crítico",
     deficiente: "Deficiente",
     en_progreso: "En Progreso",
     aceptable: "Aceptable",
