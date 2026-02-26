@@ -595,6 +595,23 @@ export function getTopCandidates(count: number = 5): Candidate[] {
 // DB ROW → Candidate MAPPER
 // =============================================================================
 
+// Map local photo paths to JNE URLs (DB may have stale local paths)
+const JNE_PHOTO_BY_SLUG: Record<string, string> = {
+  "rafael-lopez-aliaga": "https://mpesije.jne.gob.pe/apidocs/b2e00ae2-1e50-4ad3-a103-71fc7e4e8255.jpg",
+  "keiko-fujimori": "https://mpesije.jne.gob.pe/apidocs/251cd1c0-acc7-4338-bd8a-439ccb9238d0.jpeg",
+  "cesar-acuna": "https://mpesije.jne.gob.pe/apidocs/d6fe3cac-7061-474b-8551-0aa686a54bad.jpg",
+  "mario-vizcarra": "https://mpesije.jne.gob.pe/apidocs/ee7a080e-bc81-4c81-9e5e-9fd95ff459ab.jpg",
+  "carlos-alvarez": "https://mpesije.jne.gob.pe/apidocs/2bd18177-d665-413d-9694-747d729d3e39.jpg",
+  "alfonso-lopez-chau": "https://mpesije.jne.gob.pe/apidocs/ddfa74eb-cae3-401c-a34c-35543ae83c57.jpg",
+  "george-forsyth": "https://mpesije.jne.gob.pe/apidocs/b1d60238-c797-4cba-936e-f13de6a34cc7.jpg",
+  "jose-luna-galvez": "https://mpesije.jne.gob.pe/apidocs/a669a883-bf8a-417c-9296-c14b943c3943.jpg",
+};
+
+function resolvePhoto(slug: string, photo: string | null): string {
+  if (photo && photo.startsWith("https://")) return photo;
+  return JNE_PHOTO_BY_SLUG[slug] || photo || "";
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapDbToCandidate(row: any, pollHistory: PollDataPoint[] = []): Candidate {
   return {
@@ -605,7 +622,7 @@ function mapDbToCandidate(row: any, pollHistory: PollDataPoint[] = []): Candidat
     party: row.party,
     partySlug: row.party_slug,
     partyColor: row.party_color,
-    photo: row.photo,
+    photo: resolvePhoto(row.slug, row.photo),
     age: row.age,
     profession: row.profession,
     region: row.region,
