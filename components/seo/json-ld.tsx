@@ -6,7 +6,7 @@
 
 import { getCountryConfig, type CountryCode } from "@/lib/config/countries";
 
-const BASE_URL = "https://condorperu.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://condorlatam.com";
 
 export function OrganizationJsonLd() {
   const schema = {
@@ -55,7 +55,7 @@ export function WebSiteJsonLd() {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${BASE_URL}/pe/candidatos?q={search_term_string}`,
+        urlTemplate: `${BASE_URL}/{country}/candidatos?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

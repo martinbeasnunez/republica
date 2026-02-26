@@ -16,6 +16,28 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
+
+// ─── Country-specific preview content ───
+
+const previewContent = {
+  pe: {
+    chatResponse: "Segun las ultimas encuestas, Lopez Aliaga lidera con 12.3%...",
+    factCheckFalse: "Elecciones se adelantan a marzo",
+    factCheckTrue: "Padron electoral supera 25 millones",
+    newsHeadline: "Lopez Aliaga presenta plan de seguridad...",
+    planCandidate: "Economia — Lopez Aliaga",
+    planScore: "67/100",
+  },
+  co: {
+    chatResponse: "Segun las ultimas encuestas, Davila lidera con 18.9%...",
+    factCheckFalse: "Reforma a la salud es inconstitucional",
+    factCheckTrue: "Colombia tiene 39 millones de electores",
+    newsHeadline: "Cepeda presenta plan contra la corrupcion...",
+    planCandidate: "Economia — Davila",
+    planScore: "72/100",
+  },
+};
 
 interface AICapability {
   id: string;
@@ -33,7 +55,7 @@ interface AICapability {
   onClick?: () => void;
 }
 
-function MiniChat() {
+function MiniChat({ content }: { content: typeof previewContent.pe }) {
   return (
     <div className="space-y-1.5 mt-3">
       <div className="flex gap-1.5 justify-end">
@@ -49,20 +71,20 @@ function MiniChat() {
           <Bot className="h-2.5 w-2.5 text-primary" />
         </div>
         <div className="rounded-md bg-muted px-2 py-1 text-[10px] text-muted-foreground max-w-[80%]">
-          Segun las ultimas encuestas, Lopez Aliaga lidera con 12.3%...
+          {content.chatResponse}
         </div>
       </div>
     </div>
   );
 }
 
-function MiniFactCheck() {
+function MiniFactCheck({ content }: { content: typeof previewContent.pe }) {
   return (
     <div className="space-y-1.5 mt-3">
       <div className="flex items-center gap-1.5">
         <XCircle className="h-3 w-3 text-rose flex-shrink-0" />
         <span className="text-[10px] text-muted-foreground truncate">
-          &ldquo;Elecciones se adelantan a marzo&rdquo;
+          &ldquo;{content.factCheckFalse}&rdquo;
         </span>
         <Badge variant="outline" className="text-[8px] h-4 px-1 border-rose/30 text-rose ml-auto flex-shrink-0">
           FALSO
@@ -71,7 +93,7 @@ function MiniFactCheck() {
       <div className="flex items-center gap-1.5">
         <CheckCircle2 className="h-3 w-3 text-emerald flex-shrink-0" />
         <span className="text-[10px] text-muted-foreground truncate">
-          &ldquo;Padron electoral supera 25 millones&rdquo;
+          &ldquo;{content.factCheckTrue}&rdquo;
         </span>
         <Badge variant="outline" className="text-[8px] h-4 px-1 border-emerald/30 text-emerald ml-auto flex-shrink-0">
           VERDADERO
@@ -81,11 +103,11 @@ function MiniFactCheck() {
   );
 }
 
-function MiniNewsBias() {
+function MiniNewsBias({ content }: { content: typeof previewContent.pe }) {
   return (
     <div className="mt-3 space-y-2">
       <p className="text-[10px] text-muted-foreground truncate">
-        &ldquo;Lopez Aliaga presenta plan de seguridad...&rdquo;
+        &ldquo;{content.newsHeadline}&rdquo;
       </p>
       <div className="space-y-1">
         <div className="flex items-center justify-between">
@@ -100,12 +122,12 @@ function MiniNewsBias() {
   );
 }
 
-function MiniPlanScore() {
+function MiniPlanScore({ content }: { content: typeof previewContent.pe }) {
   return (
     <div className="mt-3 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-muted-foreground">Economia — Lopez Aliaga</span>
-        <span className="text-[10px] font-mono font-bold text-amber tabular-nums">67/100</span>
+        <span className="text-[10px] text-muted-foreground">{content.planCandidate}</span>
+        <span className="text-[10px] font-mono font-bold text-amber tabular-nums">{content.planScore}</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
@@ -125,66 +147,70 @@ function MiniPlanScore() {
   );
 }
 
-const capabilities: AICapability[] = [
-  {
-    id: "chat",
-    title: "Asistente Electoral IA",
-    subtitle: "Pregunta lo que quieras sobre candidatos y propuestas",
-    icon: Sparkles,
-    sparkleOverlay: false,
-    color: "text-primary",
-    colorBg: "bg-primary/10",
-    gradient: "from-primary via-primary/50 to-transparent",
-    label: "CONDOR AI",
-    preview: <MiniChat />,
-    cta: "Iniciar conversacion",
-    href: "/verificador",
-  },
-  {
-    id: "factcheck",
-    title: "Verificador de Hechos",
-    subtitle: "Verifica cualquier afirmacion electoral en segundos",
-    icon: ShieldCheck,
-    sparkleOverlay: false,
-    color: "text-emerald",
-    colorBg: "bg-emerald/10",
-    gradient: "from-emerald via-emerald/50 to-transparent",
-    label: "FACT-CHECK",
-    preview: <MiniFactCheck />,
-    cta: "Verificar afirmacion",
-    href: "/verificador",
-  },
-  {
-    id: "news",
-    title: "Analisis de Noticias IA",
-    subtitle: "Detecta sesgo y separa hechos de opiniones",
-    icon: Newspaper,
-    sparkleOverlay: true,
-    color: "text-sky",
-    colorBg: "bg-sky/10",
-    gradient: "from-sky via-sky/50 to-transparent",
-    label: "NEWS INTEL",
-    preview: <MiniNewsBias />,
-    cta: "Analizar noticias",
-    href: "/noticias",
-  },
-  {
-    id: "plans",
-    title: "Analisis de Planes IA",
-    subtitle: "IA evalua viabilidad e impacto de cada propuesta",
-    icon: FileText,
-    sparkleOverlay: true,
-    color: "text-amber",
-    colorBg: "bg-amber/10",
-    gradient: "from-amber via-amber/50 to-transparent",
-    label: "PLAN ANALYSIS",
-    preview: <MiniPlanScore />,
-    cta: "Analizar planes",
-    href: "/planes",
-  },
-];
-
 export function AICapabilitiesGrid() {
+  const country = useCountry();
+  const cp = `/${country.code}`;
+  const content = previewContent[country.code] || previewContent.pe;
+
+  const capabilities: AICapability[] = [
+    {
+      id: "chat",
+      title: "Asistente Electoral IA",
+      subtitle: "Pregunta lo que quieras sobre candidatos y propuestas",
+      icon: Sparkles,
+      sparkleOverlay: false,
+      color: "text-primary",
+      colorBg: "bg-primary/10",
+      gradient: "from-primary via-primary/50 to-transparent",
+      label: "CONDOR AI",
+      preview: <MiniChat content={content} />,
+      cta: "Iniciar conversacion",
+      href: `${cp}/verificador`,
+    },
+    {
+      id: "factcheck",
+      title: "Verificador de Hechos",
+      subtitle: "Verifica cualquier afirmacion electoral en segundos",
+      icon: ShieldCheck,
+      sparkleOverlay: false,
+      color: "text-emerald",
+      colorBg: "bg-emerald/10",
+      gradient: "from-emerald via-emerald/50 to-transparent",
+      label: "FACT-CHECK",
+      preview: <MiniFactCheck content={content} />,
+      cta: "Verificar afirmacion",
+      href: `${cp}/verificador`,
+    },
+    {
+      id: "news",
+      title: "Analisis de Noticias IA",
+      subtitle: "Detecta sesgo y separa hechos de opiniones",
+      icon: Newspaper,
+      sparkleOverlay: true,
+      color: "text-sky",
+      colorBg: "bg-sky/10",
+      gradient: "from-sky via-sky/50 to-transparent",
+      label: "NEWS INTEL",
+      preview: <MiniNewsBias content={content} />,
+      cta: "Analizar noticias",
+      href: `${cp}/noticias`,
+    },
+    {
+      id: "plans",
+      title: "Analisis de Planes IA",
+      subtitle: "IA evalua viabilidad e impacto de cada propuesta",
+      icon: FileText,
+      sparkleOverlay: true,
+      color: "text-amber",
+      colorBg: "bg-amber/10",
+      gradient: "from-amber via-amber/50 to-transparent",
+      label: "PLAN ANALYSIS",
+      preview: <MiniPlanScore content={content} />,
+      cta: "Analizar planes",
+      href: `${cp}/planes`,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {capabilities.map((cap, index) => (

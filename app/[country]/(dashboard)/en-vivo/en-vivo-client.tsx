@@ -36,14 +36,14 @@ export function EnVivoClient({ topCandidates }: EnVivoClientProps) {
 
   // Simulated progress
   useEffect(() => {
-    // In production, this would be SSE from ONPE
+    // In production, this would be SSE from the electoral authority
     const timer = setInterval(() => {
       setActasProcessed((prev) => Math.min(prev + 0.1, 0));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Simulated vote counts (would be real-time from ONPE)
+  // Simulated vote counts (would be real-time from electoral authority)
   const liveResults = topCandidates.map((c, i) => ({
     ...c,
     votes: 0,
