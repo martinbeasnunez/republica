@@ -19,13 +19,8 @@ export default async function Image({
   const countryName = config?.name ?? "Latinoamerica";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
   const electionType = config?.electionType ?? "Elecciones";
-  const countryCode = country.toUpperCase();
 
-  // Colombia flag colors
   const isColombia = country === "co";
-  const flagColors = isColombia
-    ? ["#FCD116", "#003893", "#CE1126"] // Yellow, Blue, Red
-    : ["#D91023", "#FFFFFF", "#D91023"]; // Red, White, Red (Peru)
 
   return new ImageResponse(
     (
@@ -91,42 +86,42 @@ export default async function Image({
             padding: "60px 80px 40px",
           }}
         >
-          {/* Country flag stripes */}
+          {/* Country flag — inline SVG */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 0,
+              justifyContent: "center",
               marginBottom: 28,
-              borderRadius: 6,
+              borderRadius: 8,
               overflow: "hidden",
-              border: "1px solid rgba(255,255,255,0.15)",
+              border: "2px solid rgba(255,255,255,0.18)",
+              boxShadow: `0 4px 24px ${primary}30`,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                width: isColombia ? 40 : 24,
-                height: isColombia ? 48 : 48,
-                background: flagColors[0],
-              }}
-            />
-            <div
-              style={{
-                display: "flex",
-                width: 24,
-                height: 48,
-                background: flagColors[1],
-              }}
-            />
-            <div
-              style={{
-                display: "flex",
-                width: 24,
-                height: 48,
-                background: flagColors[2],
-              }}
-            />
+            {isColombia ? (
+              <svg
+                width="96"
+                height="64"
+                viewBox="0 0 6 4"
+                style={{ display: "flex" }}
+              >
+                <rect fill="#FCD116" width="6" height="2" />
+                <rect fill="#003893" y="2" width="6" height="1" />
+                <rect fill="#CE1126" y="3" width="6" height="1" />
+              </svg>
+            ) : (
+              <svg
+                width="96"
+                height="64"
+                viewBox="0 0 3 2"
+                style={{ display: "flex" }}
+              >
+                <rect fill="#D91023" width="1" height="2" />
+                <rect fill="#FFFFFF" x="1" width="1" height="2" />
+                <rect fill="#D91023" x="2" width="1" height="2" />
+              </svg>
+            )}
           </div>
 
           {/* Election type label */}
