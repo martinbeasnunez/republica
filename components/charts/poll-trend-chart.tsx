@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { Candidate } from "@/lib/data/candidates";
 import { useChartTheme } from "@/lib/echarts-theme";
+import { useCountry } from "@/lib/config/country-context";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -18,14 +19,9 @@ function toYearMonth(dateStr: string): string {
   return dateStr.substring(0, 7);
 }
 
-function getDaysUntilElection(): number {
-  const election = new Date("2026-04-12T08:00:00-05:00");
-  const now = new Date();
-  return Math.max(0, Math.floor((election.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-}
-
 export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
   const ct = useChartTheme();
+  const country = useCountry();
 
   // Only candidates with real poll data
   const withData = candidates
@@ -65,7 +61,7 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
   const maxVal = Math.max(...allValues, 5);
   const yMax = Math.ceil(maxVal / 5) * 5 + 2;
 
-  const daysLeft = getDaysUntilElection();
+  const daysLeft = Math.max(0, Math.floor((new Date(country.electionDate + "T08:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
   const leader = withData[0];
   const second = withData[1];
   const gap = leader && second ? (leader.pollAverage - second.pollAverage).toFixed(1) : "0";

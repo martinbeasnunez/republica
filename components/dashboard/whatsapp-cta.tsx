@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MessageCircle, ArrowRight, Loader2, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 const STORAGE_KEY = "condor_wa_subscribed";
 const DISMISSED_KEY = "condor_wa_dismissed";
@@ -65,6 +66,7 @@ const CONTEXTS: Record<string, { hook: string; detail: string }> = {
 };
 
 export function WhatsAppCTA({ context = "default" }: { context?: string }) {
+  const country = useCountry();
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -92,7 +94,7 @@ export function WhatsAppCTA({ context = "default" }: { context?: string }) {
     try {
       const fullPhone = phone.startsWith("+")
         ? phone
-        : `+51${phone.replace(/^0+/, "")}`;
+        : `${country.phonePrefix}${phone.replace(/^0+/, "")}`;
       const res = await fetch("/api/whatsapp/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -175,7 +177,7 @@ export function WhatsAppCTA({ context = "default" }: { context?: string }) {
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">
-                  +51
+                  {country.phonePrefix}
                 </span>
                 <input
                   type="tel"

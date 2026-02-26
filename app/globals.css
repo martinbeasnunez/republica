@@ -209,9 +209,9 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Gradient text — rojo peruano (works both themes) */
+  /* Gradient text — reads from country theme, defaults to Peru */
   .text-gradient {
-    background: linear-gradient(135deg, #8B1A1A 0%, #C42B2B 50%, #E84040 100%);
+    background: var(--country-gradient, linear-gradient(135deg, #8B1A1A 0%, #C42B2B 50%, #E84040 100%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

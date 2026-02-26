@@ -31,14 +31,18 @@ function mapDbToFactCheck(row: any): FactCheck {
   };
 }
 
-export async function fetchFactChecks(limit = 50): Promise<FactCheck[]> {
+export async function fetchFactChecks(limit = 50, countryCode?: string): Promise<FactCheck[]> {
   try {
     const supabase = getSupabase();
-    const { data, error } = await supabase
+    let query = supabase
       .from("fact_checks")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(limit);
+
+    if (countryCode) query = query.eq("country_code", countryCode);
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching fact checks:", error);
@@ -52,13 +56,13 @@ export async function fetchFactChecks(limit = 50): Promise<FactCheck[]> {
   }
 }
 
-export async function fetchFactCheckStats(): Promise<{
+export async function fetchFactCheckStats(countryCode?: string): Promise<{
   total: number;
   falsas: number;
   verdaderas: number;
   parciales: number;
 }> {
-  const checks = await fetchFactChecks(200);
+  const checks = await fetchFactChecks(200, countryCode);
   return {
     total: checks.length,
     falsas: checks.filter((c) => c.verdict === "FALSO").length,

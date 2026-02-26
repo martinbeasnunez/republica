@@ -10,8 +10,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCountry } from "@/lib/config/country-context";
 
 export function CandidateRanking({ candidates }: { candidates: Candidate[] }) {
+  const country = useCountry();
   // Show only top 8 candidates sorted by poll average
   const topCandidates = [...candidates]
     .sort((a, b) => b.pollAverage - a.pollAverage)
@@ -29,7 +31,7 @@ export function CandidateRanking({ candidates }: { candidates: Candidate[] }) {
           </p>
         </div>
         <Link
-          href="/encuestas"
+          href={`/${country.code}/encuestas`}
           className="text-xs font-medium text-primary hover:text-indigo-glow transition-colors"
         >
           Ver todas →
@@ -45,7 +47,7 @@ export function CandidateRanking({ candidates }: { candidates: Candidate[] }) {
             transition={{ duration: 0.3, delay: index * 0.05 }}
           >
             <Link
-              href={`/candidatos/${candidate.slug}`}
+              href={`/${country.code}/candidatos/${candidate.slug}`}
               className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent"
             >
               {/* Position */}

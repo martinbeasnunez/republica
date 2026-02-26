@@ -3,17 +3,18 @@ import { getSupabase } from "@/lib/supabase";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 import { normalizeVerdict } from "@/lib/fact-check-utils";
 import { randomUUID } from "crypto";
+import { COUNTRY_CODES, type CountryCode } from "@/lib/config/countries";
 
 /**
  * CRON: Auto-verify claims from recent news articles
  *
  * Runs every 4 hours (same as scraper). Picks up to 5 recent articles
- * that haven't been fact-checked yet and generates fact-check entries.
+ * per country that haven't been fact-checked yet and generates fact-check entries.
  *
- * This populates the /verificador page with real, AI-generated verifications
- * based on actual news articles scraped from Peruvian media.
+ * Supports ?country=pe or ?country=co to run for a specific country.
+ * Defaults to running for ALL countries.
  *
- * Trigger: GET /api/cron/auto-verify?source=cron
+ * Trigger: GET /api/cron/auto-verify
  * Auth: Bearer CRON_SECRET
  */
 
@@ -30,8 +31,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ─── Country param ───────────────────────────────────────
+  const countryParam = request.nextUrl.searchParams.get("country") as CountryCode | null;
+  const countries = countryParam && COUNTRY_CODES.includes(countryParam)
+    ? [countryParam]
+    : COUNTRY_CODES;
+
+  const allStats: Record<string, object> = {};
+
+  for (const countryCode of countries) {
+    const stats = await verifyCountry(countryCode);
+    allStats[countryCode] = stats;
+  }
+
+  return NextResponse.json({ success: true, stats: allStats });
+}
+
+async function verifyCountry(countryCode: CountryCode) {
   const supabase = getSupabase();
-  const stats = { checked: 0, saved: 0, errors: 0, skipped: 0 };
+  const stats = { country: countryCode, checked: 0, saved: 0, errors: 0, skipped: 0 };
 
   try {
     // ─── 1. Check if fact_checks table exists ───────────────
@@ -41,51 +59,46 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (tableCheck) {
-      return NextResponse.json({
-        error: "fact_checks table does not exist. Run the SQL from scripts/create-fact-checks-table.sql",
-        stats,
-      });
+      return { ...stats, error: "fact_checks table does not exist" };
     }
 
     // ─── 2. Get IDs of articles already fact-checked ────────
-    const { data: existingChecks } = await supabase
+    let existingQuery = supabase
       .from("fact_checks")
       .select("claim")
       .order("created_at", { ascending: false })
       .limit(200);
+
+    existingQuery = existingQuery.eq("country_code", countryCode);
+
+    const { data: existingChecks } = await existingQuery;
 
     const existingClaims = new Set(
       (existingChecks || []).map((c) => c.claim.toLowerCase().trim())
     );
 
     // ─── 3. Fetch recent news articles ──────────────────────
-    // Get articles from the last 48 hours that are active
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const { data: articles, error: articlesError } = await supabase
       .from("news_articles")
       .select("id, title, summary, source, category, fact_check, published_at")
       .eq("is_active", true)
+      .eq("country_code", countryCode)
       .gte("created_at", cutoff)
       .order("created_at", { ascending: false })
       .limit(50);
 
     if (articlesError || !articles || articles.length === 0) {
-      return NextResponse.json({
-        message: "No recent articles found",
-        stats,
-      });
+      return { ...stats, message: "No recent articles found" };
     }
 
-    // ─── 4. Extract verifiable claims from articles ─────────
-    // Prioritize: articles with questionable fact_check > breaking > recent
+    // ─── 4. Extract verifiable claims ───────────────────────
     const candidates = articles
       .filter((a) => {
-        // Skip if we already fact-checked something very similar
         const titleLower = a.title.toLowerCase().trim();
         return !existingClaims.has(titleLower);
       })
       .sort((a, b) => {
-        // Prioritize questionable articles
         const aScore = a.fact_check === "questionable" ? 10 : a.fact_check === "false" ? 8 : 0;
         const bScore = b.fact_check === "questionable" ? 10 : b.fact_check === "false" ? 8 : 0;
         return bScore - aScore;
@@ -93,14 +106,11 @@ export async function GET(request: NextRequest) {
       .slice(0, MAX_CHECKS_PER_RUN);
 
     if (candidates.length === 0) {
-      return NextResponse.json({
-        message: "No new articles to verify",
-        stats,
-      });
+      return { ...stats, message: "No new articles to verify" };
     }
 
     // ─── 5. Generate claims from article titles/summaries ───
-    const claimsToVerify = await extractClaimsFromArticles(candidates);
+    const claimsToVerify = await extractClaimsFromArticles(candidates, countryCode);
 
     // ─── 5b. Build news context for fact-checking ───────────
     const newsLines = articles.map(
@@ -116,14 +126,13 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        const result = await factCheckClaim(claim, newsContext);
+        const result = await factCheckClaim(claim, newsContext, countryCode);
 
         if (!result) {
           stats.errors++;
           continue;
         }
 
-        // Save to DB (skip NO_VERIFICABLE — not useful)
         const verdict = normalizeVerdict(result.verdict);
         if (verdict === "NO_VERIFICABLE") {
           stats.skipped++;
@@ -141,14 +150,15 @@ export async function GET(request: NextRequest) {
             sources: result.sources || [],
             source_urls: result.source_urls || [],
             confidence: result.confidence || 0,
-            context: `Verificación automática basada en: "${article.title}" (${article.source})`,
+            context: `Verificacion automatica basada en: "${article.title}" (${article.source})`,
             claimant: result.claimant || article.source || "Desconocido",
-            claim_origin: result.claim_origin || `Artículo de ${article.source}, ${article.published_at}`,
+            claim_origin: result.claim_origin || `Articulo de ${article.source}, ${article.published_at}`,
+            country_code: countryCode,
             created_at: new Date().toISOString(),
           });
 
         if (insertError) {
-          console.error("Failed to insert fact-check:", insertError);
+          console.error(`[auto-verify][${countryCode}] Failed to insert:`, insertError);
           stats.errors++;
         } else {
           stats.saved++;
@@ -156,26 +166,17 @@ export async function GET(request: NextRequest) {
         }
 
         stats.checked++;
-
-        // Small delay between API calls
         await new Promise((r) => setTimeout(r, 1000));
       } catch (err) {
-        console.error("Fact-check error for claim:", claim, err);
+        console.error(`[auto-verify][${countryCode}] Error for claim:`, claim, err);
         stats.errors++;
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      stats,
-      message: `Verified ${stats.checked} claims, saved ${stats.saved}, skipped ${stats.skipped}`,
-    });
+    return stats;
   } catch (error) {
-    console.error("Auto-verify cron error:", error);
-    return NextResponse.json(
-      { error: "Internal error", stats },
-      { status: 500 }
-    );
+    console.error(`[auto-verify][${countryCode}] Fatal error:`, error);
+    return { ...stats, error: String(error) };
   }
 }
 
@@ -192,12 +193,12 @@ interface ArticleRow {
 }
 
 async function extractClaimsFromArticles(
-  articles: ArticleRow[]
+  articles: ArticleRow[],
+  countryCode: CountryCode
 ): Promise<{ claim: string; article: ArticleRow }[]> {
   const claims: { claim: string; article: ArticleRow }[] = [];
 
   try {
-    // Use AI to extract the most verifiable claim from each article
     const articlesText = articles
       .map((a, i) => `[${i}] "${a.title}" — ${a.summary}`)
       .join("\n");
@@ -207,20 +208,7 @@ async function extractClaimsFromArticles(
       messages: [
         {
           role: "system",
-          content: `Eres un generador de afirmaciones para un verificador de hechos sobre las elecciones peruanas 2026.
-
-Dada una lista de titulares, genera UNA afirmación verificable por cada titular. IMPORTANTE: genera una MEZCLA de tipos para que el verificador sea útil:
-
-- Para 2-3 titulares: extrae la afirmación REAL y correcta del titular
-- Para 1-2 titulares: genera una versión DISTORSIONADA o EXAGERADA (ej: cambiar cifras, atribuir al candidato equivocado, presentar propuesta como hecho consumado)
-- Para 1 titular: genera una afirmación PARCIALMENTE correcta que mezcle datos reales con imprecisiones
-
-Las afirmaciones falsas/engañosas deben ser PLAUSIBLES, como desinformación real en redes sociales.
-Si el titular es solo opinión, escribe "SKIP".
-Responde en español.
-
-FORMATO (JSON):
-{ "claims": ["afirmación 1 o SKIP", "afirmación 2 o SKIP", ...] }`,
+          content: SYSTEM_PROMPTS.claimExtractor(countryCode),
         },
         {
           role: "user",
@@ -245,8 +233,7 @@ FORMATO (JSON):
       }
     }
   } catch (err) {
-    console.error("Failed to extract claims:", err);
-    // Fallback: use article titles directly
+    console.error(`[auto-verify][${countryCode}] Failed to extract claims:`, err);
     for (const article of articles) {
       claims.push({ claim: article.title, article });
     }
@@ -268,15 +255,23 @@ interface FactCheckResult {
   claim_origin: string;
 }
 
-async function factCheckClaim(claim: string, newsContext: string): Promise<FactCheckResult | null> {
+async function factCheckClaim(
+  claim: string,
+  newsContext: string,
+  countryCode: CountryCode
+): Promise<FactCheckResult | null> {
   try {
+    const config = await import("@/lib/config/countries").then(m => m.getCountryConfig(countryCode));
+    const countryName = config?.name ?? "Perú";
+    const year = config?.electionDate.slice(0, 4) ?? "2026";
+
     const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPTS.factChecker },
+        { role: "system", content: SYSTEM_PROMPTS.factChecker(countryCode) },
         {
           role: "user",
-          content: `Verifica la siguiente afirmación sobre las elecciones peruanas 2026:\n\n"${claim}"${newsContext}`,
+          content: `Verifica la siguiente afirmacion sobre las elecciones de ${countryName} ${year}:\n\n"${claim}"${newsContext}`,
         },
       ],
       response_format: { type: "json_object" },
@@ -288,7 +283,7 @@ async function factCheckClaim(claim: string, newsContext: string): Promise<FactC
       completion.choices[0].message.content || "null"
     );
   } catch (err) {
-    console.error("OpenAI fact-check error:", err);
+    console.error(`[auto-verify][${countryCode}] OpenAI error:`, err);
     return null;
   }
 }

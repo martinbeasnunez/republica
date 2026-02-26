@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 const STORAGE_KEY = "condor_wa_subscribed";
 
 export function WhatsAppFAB() {
+  const country = useCountry();
   const [expanded, setExpanded] = useState(false);
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +42,7 @@ export function WhatsAppFAB() {
     setIsSubmitting(true);
 
     try {
-      const fullPhone = phone.startsWith("+") ? phone : `+51${phone.replace(/^0+/, "")}`;
+      const fullPhone = phone.startsWith("+") ? phone : `${country.phonePrefix}${phone.replace(/^0+/, "")}`;
       const res = await fetch("/api/whatsapp/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,7 +116,7 @@ export function WhatsAppFAB() {
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono">
-                      +51
+                      {country.phonePrefix}
                     </span>
                     <input
                       type="tel"

@@ -1,7 +1,10 @@
 /**
  * JSON-LD Structured Data Components for SEO
  * Provides Organization, WebSite, Person, FAQPage, and BreadcrumbList schemas
+ * Country-aware for multi-country support
  */
+
+import { getCountryConfig, type CountryCode } from "@/lib/config/countries";
 
 const BASE_URL = "https://condorperu.vercel.app";
 
@@ -10,18 +13,18 @@ export function OrganizationJsonLd() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "CONDOR",
-    alternateName: "CONDOR Perú 2026",
+    alternateName: "CONDOR — Inteligencia Electoral con IA",
     url: BASE_URL,
     logo: `${BASE_URL}/favicon.ico`,
     description:
-      "Plataforma de inteligencia electoral con IA para las elecciones presidenciales de Perú 2026. Análisis de candidatos, verificación de hechos y monitoreo de noticias en tiempo real.",
+      "Plataforma de inteligencia electoral con IA para elecciones en Latinoamérica. Análisis de candidatos, verificación de hechos y monitoreo de noticias en tiempo real.",
     foundingDate: "2025",
-    areaServed: {
-      "@type": "Country",
-      name: "Peru",
-    },
+    areaServed: [
+      { "@type": "Country", name: "Peru" },
+      { "@type": "Country", name: "Colombia" },
+    ],
     knowsAbout: [
-      "Elecciones Perú 2026",
+      "Elecciones latinoamericanas",
       "Candidatos presidenciales",
       "Encuestas electorales",
       "Verificación de hechos",
@@ -46,13 +49,13 @@ export function WebSiteJsonLd() {
     alternateName: "CONDOR — Inteligencia Electoral con IA",
     url: BASE_URL,
     description:
-      "La primera plataforma de inteligencia electoral con IA para las elecciones Perú 2026.",
+      "Plataforma de inteligencia electoral con IA para Latinoamérica.",
     inLanguage: "es",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${BASE_URL}/candidatos?q={search_term_string}`,
+        urlTemplate: `${BASE_URL}/pe/candidatos?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },
@@ -76,6 +79,7 @@ interface CandidateJsonLdProps {
   slug: string;
   photo: string;
   pollAverage: number;
+  countryCode?: CountryCode;
 }
 
 export function CandidateJsonLd({
@@ -88,14 +92,18 @@ export function CandidateJsonLd({
   slug,
   photo,
   pollAverage,
+  countryCode = "pe",
 }: CandidateJsonLdProps) {
+  const config = getCountryConfig(countryCode)!;
+  const year = config.electionDate.slice(0, 4);
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Person",
     name,
     jobTitle: `Candidato presidencial - ${party}`,
     description: bio,
-    url: `${BASE_URL}/candidatos/${slug}`,
+    url: `${BASE_URL}/${countryCode}/candidatos/${slug}`,
     image: photo.startsWith("http") ? photo : `${BASE_URL}${photo}`,
     birthPlace: {
       "@type": "Place",
@@ -105,7 +113,7 @@ export function CandidateJsonLd({
       "@type": "PoliticalParty",
       name: party,
     },
-    knowsAbout: [profession, "Política peruana", "Elecciones Perú 2026"],
+    knowsAbout: [profession, `Política de ${config.name}`, `Elecciones ${config.name} ${year}`],
   };
 
   return (
@@ -141,29 +149,33 @@ export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
   );
 }
 
-export function ElectionJsonLd() {
+export function ElectionJsonLd({ countryCode = "pe" }: { countryCode?: CountryCode }) {
+  const config = getCountryConfig(countryCode)!;
+  const year = config.electionDate.slice(0, 4);
+
+  // Electoral bodies for the country
+  const organizer = config.electoralBodies[0];
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: "Elecciones Generales Perú 2026",
-    description:
-      "Elecciones presidenciales y congresales de la República del Perú 2026. Primera vuelta electoral con más de 34 candidatos presidenciales.",
-    startDate: "2026-04-12",
-    endDate: "2026-04-12",
+    name: `${config.electionType} ${config.name} ${year}`,
+    description: `${config.electionType} de ${config.name} ${year}.`,
+    startDate: config.electionDate,
+    endDate: config.electionDate,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     location: {
       "@type": "Country",
-      name: "Peru",
+      name: config.nameEn,
       address: {
         "@type": "PostalAddress",
-        addressCountry: "PE",
+        addressCountry: config.code.toUpperCase(),
       },
     },
     organizer: {
       "@type": "Organization",
-      name: "ONPE - Oficina Nacional de Procesos Electorales",
-      url: "https://www.onpe.gob.pe",
+      name: organizer?.name || `Organismo Electoral de ${config.name}`,
     },
     about: {
       "@type": "GovernmentService",

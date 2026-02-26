@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 interface StatItem {
   label: string;
@@ -11,7 +12,8 @@ interface StatItem {
 }
 
 export function ElectionCountdownStrip() {
-  const electionDate = new Date("2026-04-12T08:00:00-05:00");
+  const country = useCountry();
+  const electionDate = new Date(country.electionDate + "T08:00:00");
   const now = new Date();
   const daysToElection = Math.max(
     0,
@@ -20,9 +22,9 @@ export function ElectionCountdownStrip() {
 
   const stats: StatItem[] = [
     { label: "Días para la elección", value: daysToElection, highlight: true },
-    { label: "Candidatos", value: 36 },
-    { label: "Padrón electoral", value: "25.3M" },
-    { label: "Fuentes monitoreadas", value: 5, color: "text-sky" },
+    { label: "Encuestadoras", value: country.pollsters.length },
+    { label: "Electorado", value: country.electorateSize.replace("~", "").split(" ")[0] },
+    { label: "Fuentes monitoreadas", value: country.mediaSources.length, color: "text-sky" },
   ];
 
   return (

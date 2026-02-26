@@ -1,6 +1,8 @@
 import { createHash } from "crypto";
 import { getOpenAI } from "@/lib/ai/openai";
 import { type RawArticle } from "./fetch-rss";
+import { getSupabase } from "@/lib/supabase";
+import { getCountryConfig, type CountryCode } from "@/lib/config/countries";
 
 /** Article ready to insert into Supabase news_articles table */
 export interface ClassifiedArticle {
@@ -16,6 +18,7 @@ export interface ClassifiedArticle {
   image_url: string | null;
   is_breaking: boolean;
   is_active: boolean;
+  country_code: string;
   /** Poll data extracted from encuestas articles (not stored in news_articles) */
   _poll_data?: PollDataExtracted[];
 }
@@ -26,69 +29,56 @@ export interface PollDataExtracted {
   value: number;
   pollster: string;
   date: string; // YYYY-MM-DD
+  country_code: string;
 }
 
-const CANDIDATE_SLUGS = [
-  // Existing 8 (DB slugs)
-  "rafael-lopez-aliaga",
-  "keiko-fujimori",
-  "cesar-acuna",
-  "mario-vizcarra",
-  "carlos-alvarez",
-  "alfonso-lopez-chau",
-  "george-forsyth",
-  "jose-luna-galvez",
-  // New 28 from JNE
-  "alex-gonzales",
-  "alfonso-espa",
-  "alvaro-paz-de-la-barra",
-  "antonio-ortiz",
-  "armando-masse",
-  "carlos-jaico",
-  "charlie-carrasco",
-  "fiorella-molinelli",
-  "francisco-diez-canseco",
-  "herbert-caller",
-  "jorge-nieto",
-  "jose-williams",
-  "fernando-olivera",
-  "marisol-perez-tello",
-  "mesias-guevara",
-  "napoleon-becerra",
-  "paul-jaimes",
-  "pitter-valderrama",
-  "rafael-belaunde",
-  "ricardo-belmont",
-  "roberto-chiabra",
-  "roberto-sanchez",
-  "ronald-atencio",
-  "rosario-fernandez",
-  "vladimir-cerron",
-  "walter-chirinos",
-  "wolfgang-grozo",
-  "yonhy-lescano",
-];
+// =============================================================================
+// CANDIDATE CACHE (fetched from DB on first use per country)
+// =============================================================================
 
-/**
- * Mapping from classifier slug → actual DB id for candidates
- * whose DB id differs from their slug (the original 8 candidates).
- * New candidates use their slug as their DB id, so they don't need mapping.
- */
-const SLUG_TO_DB_ID: Record<string, string> = {
-  "rafael-lopez-aliaga": "1",
-  "keiko-fujimori": "2",
-  "cesar-acuna": "3",
-  "mario-vizcarra": "4",
-  "carlos-alvarez": "5",
-  "alfonso-lopez-chau": "6",
-  "george-forsyth": "7",
-  "jose-luna-galvez": "8",
-};
-
-/** Convert a classifier slug to the actual DB candidate id */
-function slugToDbId(slug: string): string {
-  return SLUG_TO_DB_ID[slug] || slug;
+interface CandidateInfo {
+  id: string;
+  slug: string;
+  name: string;
+  party: string;
 }
+
+const candidateCache: Record<string, CandidateInfo[]> = {};
+
+async function getCandidatesForCountry(countryCode: CountryCode): Promise<CandidateInfo[]> {
+  if (candidateCache[countryCode]) return candidateCache[countryCode];
+
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from("candidates")
+      .select("id, slug, name, party")
+      .eq("country_code", countryCode)
+      .eq("is_active", true);
+
+    if (error || !data) {
+      console.error(`[classify] Failed to fetch candidates for ${countryCode}:`, error);
+      return [];
+    }
+
+    candidateCache[countryCode] = data;
+    return data;
+  } catch (err) {
+    console.error(`[classify] Error fetching candidates for ${countryCode}:`, err);
+    return [];
+  }
+}
+
+/** Clear cached candidates (useful for tests or when new candidates are seeded) */
+export function clearCandidateCache() {
+  for (const key of Object.keys(candidateCache)) {
+    delete candidateCache[key];
+  }
+}
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
 
 const VALID_CATEGORIES = [
   "politica",
@@ -100,62 +90,29 @@ const VALID_CATEGORIES = [
 ];
 
 /**
- * Whitelist of recognized Peruvian pollsters.
- * Poll data from any other source is rejected.
+ * Build the classification prompt dynamically based on country.
  */
-const VALID_POLLSTERS = new Set([
-  "ipsos",
-  "datum",
-  "iep",
-  "cpi",
-  "vox populi",
-  "gfk",
-  "proetica",
-]);
+function buildClassificationPrompt(
+  countryCode: CountryCode,
+  candidates: CandidateInfo[],
+): string {
+  const config = getCountryConfig(countryCode);
+  const countryName = config?.name ?? "Perú";
+  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const pollsters = config?.pollsters ?? ["Ipsos", "Datum", "IEP", "CPI"];
+  const electoralBodies = config?.electoralBodies.map(b => b.acronym).join(", ") ?? "JNE, ONPE";
 
-function isValidPollster(pollster: string): boolean {
-  return VALID_POLLSTERS.has(pollster.toLowerCase().trim());
-}
+  const candidateList = candidates
+    .map((c) => `- ${c.slug} (${c.name}, ${c.party})`)
+    .join("\n");
 
-const CLASSIFICATION_PROMPT = `Eres un clasificador de noticias electorales peruanas (elecciones 2026). Analiza la siguiente noticia y responde en JSON.
+  const pollsterList = pollsters.join(", ");
+  const mediaExamples = config?.mediaSources.slice(0, 4).map(s => s.name).join(", ") ?? "";
+
+  return `Eres un clasificador de noticias electorales de ${countryName} (elecciones ${year}). Analiza la siguiente noticia y responde en JSON.
 
 CANDIDATOS PRESIDENCIALES (usa estos slugs exactos):
-- rafael-lopez-aliaga (Rafael Lopez Aliaga, Renovacion Popular)
-- keiko-fujimori (Keiko Fujimori, Fuerza Popular)
-- cesar-acuna (Cesar Acuna, Alianza para el Progreso)
-- mario-vizcarra (Mario Vizcarra, Peru Primero)
-- carlos-alvarez (Carlos Alvarez, Pais para Todos)
-- alfonso-lopez-chau (Alfonso Lopez Chau, Ahora Nacion)
-- george-forsyth (George Forsyth, Somos Peru)
-- jose-luna-galvez (Jose Luna Galvez, Podemos Peru)
-- alex-gonzales (Alex Gonzales, Partido Democrata Verde)
-- alfonso-espa (Alfonso Espa, Partido Sicreo)
-- alvaro-paz-de-la-barra (Alvaro Paz de la Barra, Fe en el Peru)
-- antonio-ortiz (Antonio Ortiz, Salvemos al Peru)
-- armando-masse (Armando Masse, Partido Democratico Federal)
-- carlos-jaico (Carlos Jaico, Peru Moderno)
-- charlie-carrasco (Charlie Carrasco, Partido Democrata Unido Peru)
-- fiorella-molinelli (Fiorella Molinelli, Fuerza y Libertad)
-- francisco-diez-canseco (Francisco Diez-Canseco, Peru Accion)
-- herbert-caller (Herbert Caller, Partido Patriotico del Peru)
-- jorge-nieto (Jorge Nieto, Partido del Buen Gobierno)
-- jose-williams (Jose Williams, Avanza Pais)
-- fernando-olivera (Fernando Olivera, Frente de la Esperanza)
-- marisol-perez-tello (Marisol Perez Tello, Primero la Gente)
-- mesias-guevara (Mesias Guevara, Partido Morado)
-- napoleon-becerra (Napoleon Becerra, PTE Peru)
-- paul-jaimes (Paul Jaimes, Progresemos)
-- pitter-valderrama (Pitter Valderrama, Partido Aprista Peruano / APRA)
-- rafael-belaunde (Rafael Belaunde, Libertad Popular)
-- ricardo-belmont (Ricardo Belmont, Partido Civico Obras)
-- roberto-chiabra (Roberto Chiabra, Unidad Nacional)
-- roberto-sanchez (Roberto Sanchez, Juntos por el Peru)
-- ronald-atencio (Ronald Atencio, Alianza Electoral Venceremos)
-- rosario-fernandez (Rosario Fernandez, Un Camino Diferente)
-- vladimir-cerron (Vladimir Cerron, Peru Libre)
-- walter-chirinos (Walter Chirinos, PRIN)
-- wolfgang-grozo (Wolfgang Grozo, Integridad Democratica)
-- yonhy-lescano (Yonhy Lescano, Cooperacion Popular)
+${candidateList}
 
 CATEGORIAS VALIDAS: politica, economia, seguridad, encuestas, corrupcion, opinion
 
@@ -176,17 +133,19 @@ RESPONDE EN JSON:
 
 REGLAS para poll_data (ESTRICTAS — seguir al pie de la letra):
 - SOLO extraer poll_data si la noticia reporta resultados de una ENCUESTA de intencion de voto realizada por una ENCUESTADORA RECONOCIDA
-- ENCUESTADORAS VALIDAS (UNICA lista aceptada): Ipsos, Datum, IEP, CPI, Vox Populi, GfK, Proética
+- ENCUESTADORAS VALIDAS (UNICA lista aceptada): ${pollsterList}
 - Si la encuestadora mencionada NO esta en la lista anterior, poll_data = []
-- Si la noticia es de un MEDIO (La Republica, RPP, El Comercio, Infobae, etc.) y NO cita una encuestadora de la lista, poll_data = []
+- Si la noticia es de un MEDIO (${mediaExamples}, etc.) y NO cita una encuestadora de la lista, poll_data = []
 - Un medio de comunicacion NO es una encuestadora. NUNCA usar el nombre del medio como "pollster"
 - "value" es el porcentaje exacto reportado por la encuestadora (ej: 12.5, 7.3, 4.0)
-- "pollster" DEBE ser una de las encuestadoras de la lista (Ipsos, Datum, IEP, CPI, Vox Populi, GfK)
+- "pollster" DEBE ser una de las encuestadoras de la lista (${pollsterList})
 - Si no puedes identificar la encuestadora, poll_data = []
 - Si la noticia es opinion, analisis, columna, desmentido, o editorial, poll_data = []
 - Si el titulo contiene negacion ("NO lidera", "falso que", "desmiente"), poll_data = []
-- Rango: ningun candidato supera el 20% en 2026. Si el valor es mayor a 25%, poll_data = []
-- Solo incluir candidatos de la lista CONOCIDA`;
+- Rango: ningun candidato supera el 25%. Si el valor es mayor a 30%, poll_data = []
+- Solo incluir candidatos de la lista CONOCIDA
+- CONTEXTO ELECTORAL: Organismos electorales son ${electoralBodies}`;
+}
 
 /**
  * Generate a deterministic ID from a URL for deduplication.
@@ -202,11 +161,31 @@ export function generateArticleId(url: string): string {
  * If the article is about polls, also extracts poll data in _poll_data.
  */
 export async function classifyArticle(
-  raw: RawArticle
+  raw: RawArticle,
+  countryCode: CountryCode = "pe"
 ): Promise<ClassifiedArticle | null> {
   try {
     const openai = getOpenAI();
+    const config = getCountryConfig(countryCode);
+    const candidates = await getCandidatesForCountry(countryCode);
 
+    if (candidates.length === 0) {
+      console.warn(`[classifyArticle] No candidates found for ${countryCode}, skipping`);
+      return null;
+    }
+
+    const validSlugs = candidates.map((c) => c.slug);
+    const slugToId: Record<string, string> = {};
+    for (const c of candidates) {
+      slugToId[c.slug] = c.id;
+    }
+
+    // Build valid pollsters set from country config
+    const validPollsters = new Set(
+      (config?.pollsters ?? []).map((p) => p.toLowerCase().trim())
+    );
+
+    const prompt = buildClassificationPrompt(countryCode, candidates);
     const userMessage = `TITULO: ${raw.title}\nFUENTE: ${raw.source}\nFECHA: ${raw.pubDate}\nDESCRIPCION: ${raw.description || "(sin descripcion)"}`;
 
     const response = await openai.chat.completions.create({
@@ -215,7 +194,7 @@ export async function classifyArticle(
       max_tokens: 600,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: CLASSIFICATION_PROMPT },
+        { role: "system", content: prompt },
         { role: "user", content: userMessage },
       ],
     });
@@ -236,12 +215,13 @@ export async function classifyArticle(
 
     const candidatesMentioned = Array.isArray(result.candidates_mentioned)
       ? result.candidates_mentioned.filter((s: string) =>
-          CANDIDATE_SLUGS.includes(s)
+          validSlugs.includes(s)
         )
       : [];
 
     // Parse the publication date
-    const publishedAt = formatPublishedDate(raw.pubDate);
+    const locale = config?.locale === "es_CO" ? "es-CO" : "es-PE";
+    const publishedAt = formatPublishedDate(raw.pubDate, locale);
     const isoDate = formatISODate(raw.pubDate);
 
     // Extract poll data if present — STRICT: only from recognized pollsters
@@ -251,18 +231,19 @@ export async function classifyArticle(
         .filter(
           (p: { candidate_id?: string; value?: number; pollster?: string }) =>
             p.candidate_id &&
-            CANDIDATE_SLUGS.includes(p.candidate_id) &&
+            validSlugs.includes(p.candidate_id) &&
             typeof p.value === "number" &&
             p.value > 0 &&
-            p.value <= 25 && // No candidate exceeds 20% in 2026, 25% is hard cap
+            p.value <= 30 && // Hard cap
             p.pollster &&
-            isValidPollster(p.pollster) // MUST be a recognized pollster
+            validPollsters.has(p.pollster.toLowerCase().trim())
         )
         .map((p: { candidate_id: string; value: number; pollster?: string }) => ({
-          candidate_id: slugToDbId(p.candidate_id),
+          candidate_id: slugToId[p.candidate_id] || p.candidate_id,
           value: Math.round(p.value * 10) / 10, // 1 decimal
-          pollster: p.pollster!, // Already validated by isValidPollster
+          pollster: p.pollster!,
           date: isoDate,
+          country_code: countryCode,
         }));
     }
 
@@ -283,6 +264,7 @@ export async function classifyArticle(
       image_url: null,
       is_breaking: result.is_breaking === true,
       is_active: true,
+      country_code: countryCode,
       _poll_data: pollData.length > 0 ? pollData : undefined,
     };
   } catch (err) {
@@ -292,23 +274,23 @@ export async function classifyArticle(
 }
 
 /** Convert RSS pubDate to a display-friendly format like "18 Feb 2026" */
-function formatPublishedDate(pubDate: string): string {
+function formatPublishedDate(pubDate: string, locale = "es-PE"): string {
   try {
     const date = new Date(pubDate);
     if (isNaN(date.getTime())) {
-      return new Date().toLocaleDateString("es-PE", {
+      return new Date().toLocaleDateString(locale, {
         day: "numeric",
         month: "short",
         year: "numeric",
       });
     }
-    return date.toLocaleDateString("es-PE", {
+    return date.toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
   } catch {
-    return new Date().toLocaleDateString("es-PE", {
+    return new Date().toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",

@@ -40,15 +40,19 @@ function mapDbToArticle(row: any): NewsArticle {
 // =============================================================================
 
 /** Fetch all active news articles, most recent first */
-export async function fetchArticles(): Promise<NewsArticle[]> {
+export async function fetchArticles(countryCode?: string): Promise<NewsArticle[]> {
   try {
     const supabase = getSupabase();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("news_articles")
       .select("*")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
+
+    if (countryCode) query = query.eq("country_code", countryCode);
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("[fetchArticles] Error:", error);
@@ -63,8 +67,8 @@ export async function fetchArticles(): Promise<NewsArticle[]> {
 }
 
 /** Build a text context block with all news for AI injection */
-export async function fetchNewsContext(): Promise<string> {
-  const articles = await fetchArticles();
+export async function fetchNewsContext(countryCode?: string): Promise<string> {
+  const articles = await fetchArticles(countryCode);
   return articles
     .map(
       (a, i) =>

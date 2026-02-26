@@ -29,6 +29,7 @@ import {
 import type { Candidate } from "@/lib/data/candidates";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -42,6 +43,7 @@ interface ChatMessage {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
+  const country = useCountry();
   const [mode, setMode] = useState<"search" | "ai">("ai");
   const [aiQuery, setAiQuery] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -50,13 +52,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const chatRef = useRef<HTMLDivElement>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
 
-  // Fetch candidates client-side (uses anon key with public read RLS)
+  // Fetch candidates client-side filtered by country
   useEffect(() => {
     const supabase = getSupabaseBrowser();
     supabase
       .from("candidates")
       .select("id, slug, name, short_name, party, party_color")
       .eq("is_active", true)
+      .eq("country_code", country.code)
       .order("sort_order", { ascending: true })
       .then(({ data }) => {
         if (data) {
@@ -72,7 +75,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           );
         }
       });
-  }, []);
+  }, [country.code]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -123,6 +126,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             role: m.role,
             content: m.content,
           })),
+          countryCode: country.code,
         }),
       });
 
@@ -211,12 +215,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 <Bot className="h-10 w-10 text-primary/40 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
                   Pregúntame sobre candidatos, propuestas, encuestas o el
-                  proceso electoral Perú 2026
+                  proceso electoral
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   {[
                     "Quién lidera las encuestas?",
-                    "Qué propone Lopez Aliaga?",
+                    "Compara las propuestas de los candidatos",
                     "Cuándo son las elecciones?",
                   ].map((q) => (
                     <button
@@ -354,7 +358,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               value={candidate.name}
               onSelect={() =>
                 runCommand(() =>
-                  router.push(`/candidatos/${candidate.slug}`)
+                  router.push(`/${country.code}/candidatos/${candidate.slug}`)
                 )
               }
             >
@@ -374,15 +378,15 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         <CommandGroup heading="Secciones">
           {[
-            { name: "Dashboard", icon: LayoutDashboard, href: "/" },
-            { name: "Candidatos", icon: Users, href: "/candidatos" },
-            { name: "Mapa Electoral", icon: Map, href: "/mapa" },
-            { name: "Encuestas", icon: BarChart3, href: "/encuestas" },
-            { name: "Noticias", icon: Newspaper, href: "/noticias" },
-            { name: "Verificador", icon: ShieldCheck, href: "/verificador" },
-            { name: "Planes de Gobierno", icon: FileText, href: "/planes" },
-            { name: "Quiz Electoral", icon: HelpCircle, href: "/quiz" },
-            { name: "En Vivo", icon: Radio, href: "/en-vivo" },
+            { name: "Dashboard", icon: LayoutDashboard, href: `/${country.code}` },
+            { name: "Candidatos", icon: Users, href: `/${country.code}/candidatos` },
+            { name: "Mapa Electoral", icon: Map, href: `/${country.code}/mapa` },
+            { name: "Encuestas", icon: BarChart3, href: `/${country.code}/encuestas` },
+            { name: "Noticias", icon: Newspaper, href: `/${country.code}/noticias` },
+            { name: "Verificador", icon: ShieldCheck, href: `/${country.code}/verificador` },
+            { name: "Planes de Gobierno", icon: FileText, href: `/${country.code}/planes` },
+            { name: "Quiz Electoral", icon: HelpCircle, href: `/${country.code}/quiz` },
+            { name: "En Vivo", icon: Radio, href: `/${country.code}/en-vivo` },
           ].map((item) => (
             <CommandItem
               key={item.href}

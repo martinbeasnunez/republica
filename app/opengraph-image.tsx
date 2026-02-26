@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "CONDOR — La primera elección con inteligencia artificial | Perú 2026";
+export const alt = "CONDOR — Inteligencia Electoral con IA para Latinoamérica";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -54,7 +54,7 @@ export default async function Image() {
             fontFamily: "monospace",
           }}
         >
-          CONDOR &nbsp;&nbsp;// &nbsp;&nbsp;SISTEMA DE INTELIGENCIA ELECTORAL &nbsp;&nbsp;// &nbsp;&nbsp;PERU 2026 &nbsp;&nbsp;// &nbsp;&nbsp;AI-POWERED
+          CONDOR &nbsp;&nbsp;// &nbsp;&nbsp;SISTEMA DE INTELIGENCIA ELECTORAL &nbsp;&nbsp;// &nbsp;&nbsp;LATAM &nbsp;&nbsp;// &nbsp;&nbsp;AI-POWERED
         </div>
 
         {/* Condor silhouette / Wing shape */}
@@ -136,7 +136,7 @@ export default async function Image() {
                 fontFamily: "monospace",
               }}
             >
-              PERU 2026
+              ELECTORAL AI
             </span>
           </div>
         </div>

@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 import { getSupabase } from "@/lib/supabase";
+import { getCountryConfig, type CountryCode } from "@/lib/config/countries";
 import { normalizeVerdict } from "@/lib/fact-check-utils";
 import { randomUUID } from "crypto";
 
 /**
  * Fetch recent news articles to give the AI real context.
- * This prevents the AI from saying "I don't have recent data".
+ * Filtered by country code.
  */
-async function getNewsContext(): Promise<string> {
+async function getNewsContext(countryCode: CountryCode): Promise<string> {
   try {
     const supabase = getSupabase();
-    const { data } = await supabase
+    let query = supabase
       .from("news_articles")
       .select("title, summary, source, source_url, published_at, category")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(20);
+
+    query = query.eq("country_code", countryCode);
+
+    const { data } = await query;
 
     if (!data || data.length === 0) return "";
 
@@ -33,7 +38,7 @@ async function getNewsContext(): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
-    const { claim } = await req.json();
+    const { claim, countryCode = "pe" } = await req.json();
 
     if (!claim || typeof claim !== "string") {
       return NextResponse.json(
@@ -42,16 +47,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cc = countryCode as CountryCode;
+    const config = getCountryConfig(cc);
+    const countryName = config?.name ?? "Perú";
+    const year = config?.electionDate.slice(0, 4) ?? "2026";
+
     // Get real news context so AI doesn't hallucinate
-    const newsContext = await getNewsContext();
+    const newsContext = await getNewsContext(cc);
 
     const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPTS.factChecker },
+        { role: "system", content: SYSTEM_PROMPTS.factChecker(cc) },
         {
           role: "user",
-          content: `Verifica la siguiente afirmación sobre las elecciones peruanas 2026:\n\n"${claim}"${newsContext}`,
+          content: `Verifica la siguiente afirmacion sobre las elecciones de ${countryName} ${year}:\n\n"${claim}"${newsContext}`,
         },
       ],
       response_format: { type: "json_object" },
@@ -82,6 +92,7 @@ export async function POST(req: NextRequest) {
           context: result.context || "",
           claimant: result.claimant || "Desconocido",
           claim_origin: result.claim_origin || "",
+          country_code: cc,
           created_at: now,
         });
       } catch (dbErr) {

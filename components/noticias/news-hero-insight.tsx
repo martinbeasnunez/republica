@@ -20,9 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { NewsArticle } from "@/lib/data/news";
 import type { Candidate } from "@/lib/data/candidates";
-
-// ─── Election date ───
-const ELECTION_DATE = new Date("2026-04-12T08:00:00-05:00");
+import { useCountry } from "@/lib/config/country-context";
 
 // ─── Compute Insights ───
 
@@ -62,13 +60,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 function computeInsights(
   articles: NewsArticle[],
-  candidates?: Candidate[]
+  candidates?: Candidate[],
+  electionDate?: string
 ): NewsInsights {
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
+  const elDate = electionDate ? new Date(electionDate) : new Date("2026-04-12");
   const daysToElection = Math.max(
     0,
-    Math.floor((ELECTION_DATE.getTime() - now.getTime()) / 86400000)
+    Math.floor((elDate.getTime() - now.getTime()) / 86400000)
   );
 
   // Today's articles
@@ -150,11 +150,12 @@ interface NewsHeroInsightProps {
 }
 
 export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) {
+  const country = useCountry();
   const [briefing, setBriefing] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [showBriefing, setShowBriefing] = useState(false);
 
-  const insights = computeInsights(articles, candidates);
+  const insights = computeInsights(articles, candidates, country.electionDate);
 
   const requestBriefing = async () => {
     if (isStreaming) return;
@@ -170,10 +171,10 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
           messages: [
             {
               role: "user",
-              content:
-                "Genera un briefing ejecutivo de las noticias electorales de hoy. Resume los temas principales, candidatos mencionados, y que deberia saber un ciudadano peruano. Se conciso, maximo 3-4 parrafos. Incluye los enlaces de las fuentes.",
+              content: `Genera un briefing ejecutivo de las noticias electorales de hoy en ${country.name}. Resume los temas principales, candidatos mencionados, y que deberia saber un ciudadano. Se conciso, maximo 3-4 parrafos. Incluye los enlaces de las fuentes.`,
             },
           ],
+          countryCode: country.code,
         }),
       });
 

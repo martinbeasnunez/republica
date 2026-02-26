@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, ExternalLink, ShieldCheck, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type NewsArticle } from "@/lib/data/news";
+import { useCountry } from "@/lib/config/country-context";
 
 const factCheckConfig = {
   verified: {
@@ -29,6 +30,7 @@ interface NewsTickerProps {
 }
 
 export function NewsTicker({ articles }: NewsTickerProps) {
+  const country = useCountry();
   // Show up to 6 most recent articles
   const displayArticles = articles.slice(0, 6);
 
@@ -42,7 +44,7 @@ export function NewsTicker({ articles }: NewsTickerProps) {
           </h3>
         </div>
         <a
-          href="/noticias"
+          href={`/${country.code}/noticias`}
           className="text-xs font-medium text-primary hover:text-indigo-glow transition-colors"
         >
           Ver todas →

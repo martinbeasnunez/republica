@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Send, Loader2, Bot, ArrowRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -19,6 +20,7 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export function AIPromptBar() {
+  const country = useCountry();
   const [query, setQuery] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
@@ -55,6 +57,7 @@ export function AIPromptBar() {
             role: m.role,
             content: m.content,
           })),
+          countryCode: country.code,
         }),
       });
 

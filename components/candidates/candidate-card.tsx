@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Candidate } from "@/lib/data/candidates";
 import { IDEOLOGY_LABELS } from "@/lib/data/candidates";
 import Link from "next/link";
+import { useCountry } from "@/lib/config/country-context";
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -15,6 +16,7 @@ interface CandidateCardProps {
 }
 
 export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
+  const country = useCountry();
   const trendIcon = {
     up: <TrendingUp className="h-3 w-3 text-emerald" />,
     down: <TrendingDown className="h-3 w-3 text-rose" />,
@@ -27,7 +29,7 @@ export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
     >
-      <Link href={`/candidatos/${candidate.slug}`}>
+      <Link href={`/${country.code}/candidatos/${candidate.slug}`}>
         <div className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
           {/* Top color band */}
           <div

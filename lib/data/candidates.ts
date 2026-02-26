@@ -627,20 +627,29 @@ function mapDbToCandidate(row: any, pollHistory: PollDataPoint[] = []): Candidat
 // =============================================================================
 
 /** Fetch all active candidates with their poll history */
-export async function fetchCandidates(): Promise<Candidate[]> {
+export async function fetchCandidates(countryCode?: string): Promise<Candidate[]> {
   try {
     const supabase = getSupabase();
 
+    let candidatesQuery = supabase
+      .from("candidates")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    let pollsQuery = supabase
+      .from("poll_data_points")
+      .select("*")
+      .order("date", { ascending: true });
+
+    if (countryCode) {
+      candidatesQuery = candidatesQuery.eq("country_code", countryCode);
+      pollsQuery = pollsQuery.eq("country_code", countryCode);
+    }
+
     const [candidatesRes, pollsRes] = await Promise.all([
-      supabase
-        .from("candidates")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("poll_data_points")
-        .select("*")
-        .order("date", { ascending: true }),
+      candidatesQuery,
+      pollsQuery,
     ]);
 
     if (candidatesRes.error) {
@@ -671,7 +680,7 @@ export async function fetchCandidates(): Promise<Candidate[]> {
 }
 
 /** Fetch a single candidate by slug */
-export async function fetchCandidateBySlug(slug: string): Promise<Candidate | undefined> {
+export async function fetchCandidateBySlug(slug: string, countryCode?: string): Promise<Candidate | undefined> {
   try {
     const supabase = getSupabase();
 
@@ -704,16 +713,20 @@ export async function fetchCandidateBySlug(slug: string): Promise<Candidate | un
 }
 
 /** Fetch top N candidates by poll average */
-export async function fetchTopCandidates(count: number = 5): Promise<Candidate[]> {
+export async function fetchTopCandidates(count: number = 5, countryCode?: string): Promise<Candidate[]> {
   try {
     const supabase = getSupabase();
 
-    const { data: rows, error } = await supabase
+    let query = supabase
       .from("candidates")
       .select("*")
       .eq("is_active", true)
       .order("poll_average", { ascending: false })
       .limit(count);
+
+    if (countryCode) query = query.eq("country_code", countryCode);
+
+    const { data: rows, error } = await query;
 
     if (error || !rows) return [];
 

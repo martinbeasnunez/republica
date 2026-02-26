@@ -2,8 +2,12 @@
 
 import { motion } from "framer-motion";
 import { Cpu, Activity, ShieldCheck, Sparkles } from "lucide-react";
+import { useCountry } from "@/lib/config/country-context";
 
 export function AIHero() {
+  const country = useCountry();
+  const year = country.electionDate.slice(0, 4);
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
       {/* Background effects */}
@@ -13,7 +17,7 @@ export function AIHero() {
       <div className="relative z-10">
         {/* Classification header */}
         <div className="classification-header px-4 py-2 text-center">
-          CONDOR &nbsp;// &nbsp;SISTEMA DE INTELIGENCIA ELECTORAL &nbsp;// &nbsp;PERU 2026 &nbsp;// &nbsp;AI-POWERED
+          CONDOR &nbsp;// &nbsp;SISTEMA DE INTELIGENCIA ELECTORAL &nbsp;// &nbsp;{country.name.toUpperCase()} {year} &nbsp;// &nbsp;AI-POWERED
         </div>
 
         {/* Main hero content */}
@@ -35,8 +39,8 @@ export function AIHero() {
               <span className="text-gradient">
                 La primera elección{" "}
                 <img
-                  src="https://flagcdn.com/w40/pe.png"
-                  alt="Bandera de Perú"
+                  src={`https://flagcdn.com/w40/${country.flag.toLowerCase()}.png`}
+                  alt={`Bandera de ${country.name}`}
                   className="inline-block h-7 sm:h-8 lg:h-9 align-baseline -mb-0.5 rounded-sm"
                   width={40}
                   height={27}
@@ -69,12 +73,12 @@ export function AIHero() {
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <ShieldCheck className="h-3 w-3 text-emerald" />
-              <span>36 candidatos monitoreados</span>
+              <span>{country.mediaSources.length * 4} candidatos monitoreados</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Cpu className="h-3 w-3 text-primary" />
-              <span>5 fuentes RSS activas</span>
+              <span>{country.mediaSources.filter(s => s.rss).length} fuentes RSS activas</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">

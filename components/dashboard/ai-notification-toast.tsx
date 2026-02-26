@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, MessageCircle, Send, Loader2 } from "lucide-react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
+import { useCountry } from "@/lib/config/country-context";
 
 interface ToastNotification {
   id: string;
@@ -63,6 +64,7 @@ const CTA_DISMISSED_KEY = "condor_wa_toast_cta_dismissed";
 
 // ─── Inline WhatsApp CTA Toast ───
 function WhatsAppCTAToast({ onDismiss }: { onDismiss: () => void }) {
+  const country = useCountry();
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -74,7 +76,7 @@ function WhatsAppCTAToast({ onDismiss }: { onDismiss: () => void }) {
     setIsSubmitting(true);
 
     try {
-      const fullPhone = phone.startsWith("+") ? phone : `+51${phone.replace(/^0+/, "")}`;
+      const fullPhone = phone.startsWith("+") ? phone : `${country.phonePrefix}${phone.replace(/^0+/, "")}`;
       const res = await fetch("/api/whatsapp/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,7 +121,7 @@ function WhatsAppCTAToast({ onDismiss }: { onDismiss: () => void }) {
       <div className="flex gap-2">
         <div className="relative flex-1">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">
-            +51
+            {country.phonePrefix}
           </span>
           <input
             type="tel"
@@ -168,6 +170,7 @@ function WhatsAppCTAToast({ onDismiss }: { onDismiss: () => void }) {
 // ─── Main Toast Component ───
 export function AINotificationToast() {
   const router = useRouter();
+  const country = useCountry();
   const [notifications, setNotifications] = useState<ToastNotification[]>([]);
   const [current, setCurrent] = useState<ToastNotification | null>(null);
   const [index, setIndex] = useState(0);
@@ -214,6 +217,7 @@ export function AINotificationToast() {
           .from("news_articles")
           .select("id, title, source, category, fact_check, published_at, source_url, is_breaking")
           .eq("is_active", true)
+          .eq("country_code", country.code)
           .order("created_at", { ascending: false })
           .limit(20);
 

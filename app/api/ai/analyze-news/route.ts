@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
+import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
-    const { headline, content, source } = await req.json();
+    const { headline, content, source, countryCode = "pe" } = await req.json();
 
     if (!headline) {
       return NextResponse.json(
@@ -12,12 +13,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cc = countryCode as CountryCode;
+
     const userMessage = `Analiza la siguiente noticia electoral:\n\nTitulo: ${headline}\nFuente: ${source || "No especificada"}\n${content ? `\nContenido: ${content}` : ""}`;
 
     const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPTS.newsAnalyzer },
+        { role: "system", content: SYSTEM_PROMPTS.newsAnalyzer(cc) },
         { role: "user", content: userMessage },
       ],
       response_format: { type: "json_object" },

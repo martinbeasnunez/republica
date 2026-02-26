@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { getOpenAI } from "@/lib/ai/openai";
+import { COUNTRY_CODES, getCountryConfig, type CountryCode } from "@/lib/config/countries";
 
 /**
  * CRON: /api/cron/update-polls
@@ -8,20 +9,18 @@ import { getOpenAI } from "@/lib/ai/openai";
  * Dedicated cron for keeping poll data fresh.
  * Runs twice a week (Mon & Thu at 12:00 UTC).
  *
+ * Supports ?country=pe or ?country=co to run for a specific country.
+ * Defaults to running for ALL countries.
+ *
  * Strategy:
  * 1. Check the most recent poll data date per candidate
  * 2. If any candidate's latest poll is older than 7 days, use AI to
  *    generate a realistic estimate based on recent trends
  * 3. Also processes any recent "encuestas" articles that may have
  *    poll data not yet extracted
- *
- * This ensures the dashboard always shows up-to-date poll numbers
- * even if the scrape-news cron misses some encuesta articles.
  */
 
 export const maxDuration = 60;
-
-const VALID_POLLSTERS = ["Ipsos", "Datum", "IEP", "CPI", "Vox Populi", "GfK"];
 
 export async function GET(request: NextRequest) {
   // ─── Auth ────────────────────────────────────────────────
@@ -32,8 +31,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // ─── Country param ───────────────────────────────────────
+  const countryParam = request.nextUrl.searchParams.get("country") as CountryCode | null;
+  const countries = countryParam && COUNTRY_CODES.includes(countryParam)
+    ? [countryParam]
+    : COUNTRY_CODES;
+
+  const allStats: Record<string, object> = {};
+
+  for (const countryCode of countries) {
+    const stats = await updatePollsForCountry(countryCode);
+    allStats[countryCode] = stats;
+  }
+
+  return NextResponse.json({ success: true, stats: allStats });
+}
+
+async function updatePollsForCountry(countryCode: CountryCode) {
   const startTime = Date.now();
+  const config = getCountryConfig(countryCode);
+  const validPollsters = config?.pollsters ?? ["Ipsos", "Datum", "IEP", "CPI"];
+
   const stats = {
+    country: countryCode,
     candidates_checked: 0,
     stale_candidates: 0,
     polls_inserted: 0,
@@ -47,11 +67,12 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabase();
 
-    // ─── 1. Get all active candidates ──────────────────────
+    // ─── 1. Get all active candidates for this country ──────
     const { data: candidateRows, error: candError } = await supabase
       .from("candidates")
       .select("id, name, slug, poll_average, poll_trend")
       .eq("is_active", true)
+      .eq("country_code", countryCode)
       .order("sort_order", { ascending: true });
 
     if (candError || !candidateRows) {
@@ -60,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     stats.candidates_checked = candidateRows.length;
 
-    // ─── 2. Get latest poll date per candidate ─────────────
+    // ─── 2. Get latest poll date per candidate ──────────────
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
     const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -99,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     stats.stale_candidates = staleCandidates.length;
 
-    // ─── 3. Check for unprocessed encuesta articles ────────
+    // ─── 3. Check for unprocessed encuesta articles ─────────
     const threeDaysAgo = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000)
       .toISOString()
       .split("T")[0];
@@ -109,13 +130,14 @@ export async function GET(request: NextRequest) {
       .select("id, title, summary, source, published_at")
       .eq("category", "encuestas")
       .eq("is_active", true)
+      .eq("country_code", countryCode)
       .gte("created_at", threeDaysAgo)
       .order("created_at", { ascending: false })
       .limit(10);
 
     stats.articles_scanned = recentArticles?.length || 0;
 
-    // ─── 4. If we have encuesta articles, extract poll data with AI ─
+    // ─── 4. If we have encuesta articles, extract poll data ─
     if (recentArticles && recentArticles.length > 0) {
       const openai = getOpenAI();
 
@@ -133,12 +155,12 @@ export async function GET(request: NextRequest) {
             messages: [
               {
                 role: "system",
-                content: `Extrae datos de encuestas de esta noticia electoral peruana.
+                content: `Extrae datos de encuestas de esta noticia electoral de ${config?.name ?? "Perú"}.
 
 CANDIDATOS:
 ${candidateList}
 
-ENCUESTADORAS VALIDAS: ${VALID_POLLSTERS.join(", ")}
+ENCUESTADORAS VALIDAS: ${validPollsters.join(", ")}
 
 Responde en JSON:
 {
@@ -149,11 +171,11 @@ Responde en JSON:
 
 REGLAS ESTRICTAS:
 - Solo extraer si la noticia menciona una ENCUESTA de una encuestadora reconocida
-- El pollster DEBE ser de la lista de encuestadoras válidas
+- El pollster DEBE ser de la lista de encuestadoras validas
 - value es el porcentaje exacto (ej: 12.5, 7.3)
-- Rango válido: 0.5 a 25.0
+- Rango valido: 0.5 a 30.0
 - Si no hay datos de encuesta claros, polls = []
-- Un medio (RPP, El Comercio) NO es una encuestadora`,
+- Un medio NO es una encuestadora`,
               },
               {
                 role: "user",
@@ -166,33 +188,27 @@ REGLAS ESTRICTAS:
           if (!content) continue;
 
           const result = JSON.parse(content);
-          if (!Array.isArray(result.polls) || result.polls.length === 0)
-            continue;
+          if (!Array.isArray(result.polls) || result.polls.length === 0) continue;
 
-          // Validate and insert
           for (const poll of result.polls) {
             if (
               !poll.candidate_id ||
               !poll.value ||
               !poll.pollster ||
               poll.value < 0.5 ||
-              poll.value > 25
-            )
-              continue;
+              poll.value > 30
+            ) continue;
 
-            // Check if valid pollster
-            const isValid = VALID_POLLSTERS.some(
+            const isValid = validPollsters.some(
               (p) => p.toLowerCase() === poll.pollster.toLowerCase().trim()
             );
             if (!isValid) continue;
 
-            // Check if this candidate exists
             const candidateExists = candidateRows.some(
               (c) => c.id === poll.candidate_id
             );
             if (!candidateExists) continue;
 
-            // Check if already exists for this date
             const { data: existing } = await supabase
               .from("poll_data_points")
               .select("id")
@@ -209,6 +225,7 @@ REGLAS ESTRICTAS:
                 value: Math.round(poll.value * 10) / 10,
                 pollster: poll.pollster,
                 date: todayStr,
+                country_code: countryCode,
               });
 
             if (!insertErr) {
@@ -219,7 +236,7 @@ REGLAS ESTRICTAS:
           }
         } catch (err) {
           console.error(
-            `[update-polls] Error processing article ${article.id}:`,
+            `[update-polls][${countryCode}] Error processing article ${article.id}:`,
             err
           );
           stats.errors++;
@@ -227,31 +244,25 @@ REGLAS ESTRICTAS:
       }
     }
 
-    // ─── 5. For stale candidates with no new data, generate trend estimate ─
+    // ─── 5. For stale candidates, generate trend estimate ───
     if (staleCandidates.length > 0) {
       console.log(
-        `[update-polls] ${staleCandidates.length} candidates have stale poll data`
+        `[update-polls][${countryCode}] ${staleCandidates.length} candidates have stale poll data`
       );
 
       for (const candidate of staleCandidates) {
         try {
           if (candidate.recentValues.length < 2) continue;
 
-          // Calculate simple trend-based estimate
           const [latest, prev] = candidate.recentValues;
           const trend = latest - prev;
-          // Apply dampened trend (50% of recent change)
           let estimated = latest + trend * 0.5;
-          // Clamp to reasonable range
-          estimated = Math.max(0.5, Math.min(25, estimated));
+          estimated = Math.max(0.5, Math.min(30, estimated));
           estimated = Math.round(estimated * 10) / 10;
 
-          // Pick a pollster round-robin style
-          const pollsterIndex =
-            new Date().getDay() % VALID_POLLSTERS.length;
-          const pollster = VALID_POLLSTERS[pollsterIndex];
+          const pollsterIndex = new Date().getDay() % validPollsters.length;
+          const pollster = validPollsters[pollsterIndex];
 
-          // Check if already exists for today
           const { data: existing } = await supabase
             .from("poll_data_points")
             .select("id")
@@ -268,6 +279,7 @@ REGLAS ESTRICTAS:
               value: estimated,
               pollster: `${pollster} (estimado)`,
               date: todayStr,
+              country_code: countryCode,
             });
 
           if (!insertErr) {
@@ -275,12 +287,12 @@ REGLAS ESTRICTAS:
             await recalculatePollStats(supabase, candidate.id);
             stats.candidates_updated++;
             console.log(
-              `[update-polls] Estimated ${candidate.name}: ${estimated}% (${pollster})`
+              `[update-polls][${countryCode}] Estimated ${candidate.name}: ${estimated}% (${pollster})`
             );
           }
         } catch (err) {
           console.error(
-            `[update-polls] Error estimating ${candidate.name}:`,
+            `[update-polls][${countryCode}] Error estimating ${candidate.name}:`,
             err
           );
           stats.errors++;
@@ -290,24 +302,20 @@ REGLAS ESTRICTAS:
 
     stats.duration_ms = Date.now() - startTime;
     console.log(
-      `[update-polls] Done: ${stats.polls_inserted} estimated, ${stats.article_polls_extracted} from articles, ${stats.candidates_updated} updated in ${stats.duration_ms}ms`
+      `[update-polls][${countryCode}] Done: ${stats.polls_inserted} estimated, ${stats.article_polls_extracted} from articles, ${stats.candidates_updated} updated in ${stats.duration_ms}ms`
     );
 
-    return NextResponse.json({ success: true, stats });
+    return stats;
   } catch (err) {
-    console.error("[update-polls] Fatal error:", err);
+    console.error(`[update-polls][${countryCode}] Fatal error:`, err);
     stats.errors++;
     stats.duration_ms = Date.now() - startTime;
-    return NextResponse.json(
-      { success: false, error: String(err), stats },
-      { status: 500 }
-    );
+    return stats;
   }
 }
 
 /**
- * Recalculate poll_average and poll_trend for a candidate
- * based on their most recent poll data points.
+ * Recalculate poll_average and poll_trend for a candidate.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function recalculatePollStats(supabase: any, candidateId: string) {

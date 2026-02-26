@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCountry } from "@/lib/config/country-context";
 import {
   X,
   Send,
@@ -30,6 +31,7 @@ const VIEWS_RETRIGGER = 5;
 const DISMISS_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
 export function WhatsAppCaptureModal() {
+  const country = useCountry();
   const [show, setShow] = useState(false);
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,7 +89,7 @@ export function WhatsAppCaptureModal() {
     try {
       const fullPhone = phone.startsWith("+")
         ? phone
-        : `+51${phone.replace(/^0+/, "")}`;
+        : `${country.phonePrefix}${phone.replace(/^0+/, "")}`;
 
       const res = await fetch("/api/whatsapp/subscribe", {
         method: "POST",
@@ -246,7 +248,7 @@ export function WhatsAppCaptureModal() {
                     <div className="space-y-3">
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">
-                          +51
+                          {country.phonePrefix}
                         </span>
                         <input
                           type="tel"

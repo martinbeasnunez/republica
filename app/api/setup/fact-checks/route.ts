@@ -190,7 +190,7 @@ Responde con JSON: { "claims": [{ "text": "afirmación", "articleIndex": 0 }] }`
         const completion = await getOpenAI().chat.completions.create({
           model: "gpt-4o-mini",
           messages: [
-            { role: "system", content: SYSTEM_PROMPTS.factChecker },
+            { role: "system", content: SYSTEM_PROMPTS.factChecker() },
             {
               role: "user",
               content: `Verifica la siguiente afirmación sobre las elecciones peruanas 2026:\n\n"${claim}"${newsContext}`,

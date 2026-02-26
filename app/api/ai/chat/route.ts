@@ -2,10 +2,11 @@ import { NextRequest } from "next/server";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 import { fetchCandidates } from "@/lib/data/candidates";
 import { fetchNewsContext } from "@/lib/data/news";
+import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const { messages, countryCode = "pe" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -14,9 +15,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cc = countryCode as CountryCode;
+
     const [candidates, newsContext] = await Promise.all([
-      fetchCandidates(),
-      fetchNewsContext(),
+      fetchCandidates(cc),
+      fetchNewsContext(cc),
     ]);
 
     const candidateContext = candidates
@@ -31,7 +34,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `${SYSTEM_PROMPTS.electoralAssistant}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`,
+          content: `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`,
         },
         ...messages,
       ],
