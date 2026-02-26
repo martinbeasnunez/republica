@@ -23,10 +23,16 @@ export async function POST(req: NextRequest) {
     ]);
 
     const candidateContext = candidates
-      .map(
-        (c) =>
-          `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años, región ${c.region}. Encuesta: ${c.pollAverage}%. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`
-      )
+      .map((c) => {
+        // Get the latest poll data point for context
+        const latestPoll = c.pollHistory.length > 0
+          ? c.pollHistory[c.pollHistory.length - 1]
+          : null;
+        const latestPollInfo = latestPoll
+          ? ` Ultima encuesta: ${latestPoll.value}% (${latestPoll.pollster}, ${latestPoll.date}).`
+          : "";
+        return `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años, región ${c.region}. Promedio encuestas recientes: ${c.pollAverage}%.${latestPollInfo} Tendencia: ${c.pollTrend}. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`;
+      })
       .join("\n");
 
     const stream = await getOpenAI().chat.completions.create({

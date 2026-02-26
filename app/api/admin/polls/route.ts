@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { candidate_id, date, value, pollster } = body;
+    const { candidate_id, date, value, pollster, country_code: bodyCountryCode } = body;
 
     if (!candidate_id || !date || value === undefined || !pollster) {
       return NextResponse.json(
@@ -58,10 +58,21 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabase();
 
+    // Resolve country_code: body > candidate lookup > default "pe"
+    let country_code = bodyCountryCode;
+    if (!country_code) {
+      const { data: cand } = await supabase
+        .from("candidates")
+        .select("country_code")
+        .eq("id", candidate_id)
+        .single();
+      country_code = cand?.country_code || "pe";
+    }
+
     // Insert the new poll data point
     const { data: poll, error: insertError } = await supabase
       .from("poll_data_points")
-      .insert({ candidate_id, date, value, pollster })
+      .insert({ candidate_id, date, value, pollster, country_code })
       .select()
       .single();
 
