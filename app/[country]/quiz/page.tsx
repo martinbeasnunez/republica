@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
 import { isValidCountry } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import { notFound } from "next/navigation";
 import QuizClient from "./quiz-client";
 
@@ -10,31 +11,23 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const name = country === "co" ? "Colombia" : "Perú";
-  const year = country === "co" ? "2026" : "2026";
+  const seo = getCountrySeo(country, "/quiz");
 
   return {
-    title: `¿Por Quién Votar? Quiz Electoral ${year} ${name} — Descubre tu Candidato`,
-    description: `Resuelve este test de 10 preguntas y te damos un ranking con los candidatos presidenciales de ${name} ${year} más afines a ti. Descubre con quién coincides.`,
-    alternates: { canonical: `https://condorlatam.com/${country}/quiz` },
-    keywords: [
-      `por quien votar ${year} ${name.toLowerCase()}`,
-      `quiz electoral ${year}`,
-      `con que candidato coincido`,
-      `elecciones ${year} ${name.toLowerCase()} quiz`,
-      `candidatos presidenciales ${year} ${name.toLowerCase()}`,
-      `test electoral ${name.toLowerCase()}`,
-    ],
+    title: `¿Por Quién Votar? Quiz Electoral ${seo.year} ${seo.name} — Descubre tu Candidato`,
+    description: `Resuelve este test de 10 preguntas y te damos un ranking con los candidatos presidenciales de ${seo.name} ${seo.year} más afines a ti. Descubre con quién coincides.`,
+    keywords: getCountryKeywords(country, "quiz"),
+    alternates: seo.alternates,
     openGraph: {
-      title: `¿No sabes por quién votar en ${name}? Resuelve este test`,
-      description: `10 preguntas → ranking personalizado de candidatos ${year}. Descubre con quién coincides más.`,
-      url: `https://condorlatam.com/${country}/quiz`,
+      ...seo.openGraph,
+      title: `¿No sabes por quién votar en ${seo.name}? Resuelve este test`,
+      description: `10 preguntas → ranking personalizado de candidatos ${seo.year}. Descubre con quién coincides más.`,
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title: `¿No sabes por quién votar en ${name}? Resuelve este test`,
-      description: `10 preguntas → ranking personalizado de candidatos ${year}. Descubre con quién coincides más.`,
+      title: `¿No sabes por quién votar en ${seo.name}? Resuelve este test`,
+      description: `10 preguntas → ranking personalizado de candidatos ${seo.year}. Descubre con quién coincides más.`,
     },
   };
 }

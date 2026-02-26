@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { fetchArticles } from "@/lib/data/news";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import NoticiasClient from "./noticias-client";
 
 export async function generateMetadata({
@@ -10,14 +10,19 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, "/noticias");
 
   return {
-    title: `Noticias Electorales — ${name} ${year} en Tiempo Real`,
-    description: `Noticias electorales verificadas sobre las elecciones ${name} ${year}.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/noticias` },
+    title: `Noticias Electorales — ${seo.name} ${seo.year} en Tiempo Real`,
+    description: `Noticias electorales verificadas sobre las elecciones ${seo.name} ${seo.year}. Última hora y análisis con IA.`,
+    keywords: getCountryKeywords(country, "noticias"),
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: `Noticias Elecciones ${seo.name} ${seo.year}`,
+      description: `Noticias electorales verificadas sobre las elecciones ${seo.name} ${seo.year}. Análisis con inteligencia artificial.`,
+      type: "website",
+    },
   };
 }
 

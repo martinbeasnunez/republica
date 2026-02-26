@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import { CompararClient } from "./comparar-client";
 
 export async function generateMetadata({
@@ -9,14 +9,19 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, "/candidatos/comparar");
 
   return {
-    title: `Comparar Candidatos ${year} — ${name}`,
-    description: `Compara candidatos presidenciales ${name} ${year} lado a lado. Propuestas, encuestas, ideología y plan de gobierno.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/candidatos/comparar` },
+    title: `Comparar Candidatos ${seo.year} — ${seo.name}`,
+    description: `Compara candidatos presidenciales ${seo.name} ${seo.year} lado a lado. Propuestas, encuestas, ideología y plan de gobierno.`,
+    keywords: getCountryKeywords(country, "comparar"),
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: `Comparar Candidatos — ${seo.name} ${seo.year}`,
+      description: `Compara candidatos presidenciales ${seo.name} ${seo.year} lado a lado.`,
+      type: "website",
+    },
   };
 }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import { PlanesPageClient } from "./planes-page-client";
 
 export async function generateMetadata({
@@ -9,14 +9,19 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, "/planes");
 
   return {
-    title: `Planes de Gobierno ${year} — Propuestas de Todos los Candidatos`,
-    description: `Planes de gobierno elecciones ${name} ${year}: propuestas de todos los candidatos. Compara por economía, seguridad, salud y educación.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/planes` },
+    title: `Planes de Gobierno ${seo.year} — Propuestas de Todos los Candidatos`,
+    description: `Planes de gobierno elecciones ${seo.name} ${seo.year}: propuestas de todos los candidatos. Compara por economía, seguridad, salud y educación.`,
+    keywords: getCountryKeywords(country, "planes"),
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: `Planes de Gobierno ${seo.name} ${seo.year}`,
+      description: `Compara los planes de gobierno de todos los candidatos presidenciales de ${seo.name} ${seo.year}.`,
+      type: "website",
+    },
   };
 }
 

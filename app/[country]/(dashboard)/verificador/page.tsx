@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fetchFactChecks, fetchFactCheckStats } from "@/lib/data/fact-checks";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import VerificadorClient from "./verificador-client";
 
 export async function generateMetadata({
@@ -9,14 +9,19 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, "/verificador");
 
   return {
-    title: `Verificador de Hechos — Fact Check Elecciones ${name} ${year}`,
-    description: `Verificador de hechos con inteligencia artificial para las elecciones ${name} ${year}.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/verificador` },
+    title: `Verificador de Hechos — Fact Check Elecciones ${seo.name} ${seo.year}`,
+    description: `Verificador de hechos con inteligencia artificial para las elecciones ${seo.name} ${seo.year}. ¿Es verdad o mentira?`,
+    keywords: getCountryKeywords(country, "verificador"),
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: `Verificador de Hechos — Elecciones ${seo.name} ${seo.year}`,
+      description: `¿Es verdad o mentira? Verificador de hechos con IA para las elecciones ${seo.name} ${seo.year}.`,
+      type: "website",
+    },
   };
 }
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fetchTopCandidates } from "@/lib/data/candidates";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import EncuestasClient from "./encuestas-client";
 
 export async function generateMetadata({
@@ -9,14 +9,19 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, "/encuestas");
 
   return {
-    title: `Última Encuesta Presidencial ${year} — Intención de Voto ${name}`,
-    description: `Última encuesta presidencial ${name} ${year}. Quién lidera la intención de voto. Promedio actualizado.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/encuestas` },
+    title: `Última Encuesta Presidencial ${seo.year} — Intención de Voto ${seo.name}`,
+    description: `Última encuesta presidencial ${seo.name} ${seo.year}. Quién lidera la intención de voto. Promedio actualizado.`,
+    keywords: getCountryKeywords(country, "encuestas"),
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: `Encuestas ${seo.name} ${seo.year} — ¿Quién va ganando?`,
+      description: `Promedio actualizado de encuestas presidenciales ${seo.name} ${seo.year}. Intención de voto y tendencias.`,
+      type: "website",
+    },
   };
 }
 

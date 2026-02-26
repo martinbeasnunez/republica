@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { getCountryConfig } from "@/lib/config/countries";
 import { getRadiografiasForCountry } from "@/lib/data/radiografia";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import RadiografiaIndexClient from "./radiografia-index-client";
 
 export async function generateMetadata({
@@ -10,14 +10,19 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, "/radiografia");
 
   return {
-    title: `Radiografía de Candidatos — Análisis Profundo ${name} ${year}`,
-    description: `Radiografía completa de los candidatos presidenciales ${name} ${year}. Patrimonio, procesos legales y financiamiento.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/radiografia` },
+    title: `Radiografía de Candidatos — Análisis Profundo ${seo.name} ${seo.year}`,
+    description: `Radiografía completa de los candidatos presidenciales ${seo.name} ${seo.year}. Patrimonio, procesos legales y financiamiento.`,
+    keywords: getCountryKeywords(country, "radiografia"),
+    alternates: seo.alternates,
+    openGraph: {
+      ...seo.openGraph,
+      title: `Radiografía de Candidatos — ${seo.name} ${seo.year}`,
+      description: `Análisis profundo de los candidatos: patrimonio, procesos legales y financiamiento de campaña.`,
+      type: "website",
+    },
   };
 }
 

@@ -5,13 +5,11 @@ import { CandidateProfileClient } from "./candidate-profile-client";
 import { CandidateJsonLd, BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/seo/json-ld";
 import { IDEOLOGY_LABELS } from "@/lib/data/candidates";
 import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 
 export async function generateMetadata({ params }: { params: Promise<{ country: string; slug: string }> }): Promise<Metadata> {
   const { country, slug } = await params;
-  const config = getCountryConfig(country);
-  const domain = config?.domain ?? "condorlatam.com";
-  const countryName = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country, `/candidatos/${slug}`);
   const candidate = await fetchCandidateBySlug(slug, country);
   if (!candidate) return { title: "Candidato no encontrado" };
 
@@ -21,11 +19,19 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
   const trend = candidate.pollTrend === "up" ? "sube" : candidate.pollTrend === "down" ? "baja" : "estable";
 
   return {
-    title: `${name} — Encuestas, Propuestas y Plan de Gobierno ${year}`,
-    description: `Todo sobre ${name} (${party}) candidato presidencial ${countryName} ${year}. Última encuesta: ${poll}% (${trend}).`,
-    alternates: { canonical: `https://${domain}/${country}/candidatos/${slug}` },
+    title: `${name} — Encuestas, Propuestas y Plan de Gobierno ${seo.year}`,
+    description: `Todo sobre ${name} (${party}) candidato presidencial ${seo.name} ${seo.year}. Última encuesta: ${poll}% (${trend}).`,
+    keywords: [
+      ...getCountryKeywords(country, "candidato"),
+      `${name.toLowerCase()} encuestas`,
+      `${name.toLowerCase()} propuestas`,
+      `${name.toLowerCase()} ${seo.year}`,
+      `${party.toLowerCase()} candidato`,
+    ],
+    alternates: seo.alternates,
     openGraph: {
-      title: `${name} — Encuestas ${poll}% | Elecciones ${countryName} ${year}`,
+      ...seo.openGraph,
+      title: `${name} — Encuestas ${poll}% | Elecciones ${seo.name} ${seo.year}`,
       description: `Perfil completo de ${name} (${party}). Encuestas: ${poll}% y ${trend}. Propuestas y análisis con IA.`,
       type: "profile",
     },

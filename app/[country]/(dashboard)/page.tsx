@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { fetchCandidates, fetchTopCandidates } from "@/lib/data/candidates";
 import { fetchArticles } from "@/lib/data/news";
 import { fetchFactChecks } from "@/lib/data/fact-checks";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import HomeClient from "./home-client";
 
 export async function generateMetadata({
@@ -11,16 +11,16 @@ export async function generateMetadata({
   params: Promise<{ country: string }>;
 }): Promise<Metadata> {
   const { country } = await params;
-  const config = getCountryConfig(country);
-  const name = config?.name ?? "Perú";
-  const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const seo = getCountrySeo(country);
 
   return {
-    title: `Elecciones ${name} ${year} — Candidatos, Encuestas y Noticias`,
-    description: `Resumen rápido elecciones ${name} ${year}. ¿Quién va ganando? Conoce a los candidatos, mira las encuestas y descubre por quién votar. Información verificada con IA.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}` },
+    title: `Elecciones ${seo.name} ${seo.year} — Candidatos, Encuestas y Noticias`,
+    description: `Resumen rápido elecciones ${seo.name} ${seo.year}. ¿Quién va ganando? Conoce a los candidatos, mira las encuestas y descubre por quién votar. Información verificada con IA.`,
+    keywords: getCountryKeywords(country, "home"),
+    alternates: seo.alternates,
     openGraph: {
-      title: `Elecciones ${name} ${year} — Candidatos, Encuestas y Noticias`,
+      ...seo.openGraph,
+      title: `Elecciones ${seo.name} ${seo.year} — Candidatos, Encuestas y Noticias`,
       description: `¿Quién va ganando? Conoce a los candidatos, mira las encuestas y descubre por quién votar. CONDOR — Inteligencia Electoral.`,
       type: "website",
     },
