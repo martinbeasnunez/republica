@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCountry } from "@/lib/config/country-context";
 
 // =============================================================================
 // TYPES
@@ -154,6 +155,7 @@ const CHANGELOG: ChangelogDay[] = [
 // =============================================================================
 
 export default function ActualizacionesClient() {
+  const country = useCountry();
   const totalEntries = CHANGELOG.reduce((sum, day) => sum + day.entries.length, 0);
 
   return (
@@ -261,7 +263,7 @@ export default function ActualizacionesClient() {
       {/* Footer */}
       <div className="border-t border-border pt-4 text-center">
         <p className="text-xs text-muted-foreground/50 font-mono">
-          &gt; hecho con Next.js + Supabase + Claude &middot; open data for peru
+          &gt; hecho con Next.js + Supabase + Claude &middot; open data for {country.name.toLowerCase()}
         </p>
       </div>
     </div>

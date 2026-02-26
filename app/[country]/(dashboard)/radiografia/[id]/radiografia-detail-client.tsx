@@ -36,7 +36,7 @@ import { Progress } from "@/components/ui/progress";
 import { type Candidate } from "@/lib/data/candidates";
 import {
   getRadiografia,
-  formatSoles,
+  formatCurrency,
   RISK_COLORS,
   STATUS_LABELS,
   type CandidateRadiografia,
@@ -46,6 +46,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/lib/echarts-theme";
+import { useCountry } from "@/lib/config/country-context";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -65,12 +66,32 @@ interface RadiografiaDetailClientProps {
   id: string;
 }
 
+// Country-aware institution labels
+const INSTITUTIONS = {
+  pe: {
+    patrimonio: "JNE DECLARACION JURADA DE HOJA DE VIDA",
+    legal: "PODER JUDICIAL, FISCALIA, JNE",
+    finance: "ONPE, DECLARACIONES DE APORTES",
+  },
+  co: {
+    patrimonio: "CNE / RNEC DECLARACION JURADA DE BIENES Y RENTAS",
+    legal: "FISCALIA GENERAL, PROCURADURIA, CONSEJO SUPERIOR DE LA JUDICATURA",
+    finance: "CNE, DECLARACIONES DE APORTES",
+  },
+} as const;
+
 export default function RadiografiaDetailClient({ candidates, id }: RadiografiaDetailClientProps) {
   const ct = useChartTheme();
+  const country = useCountry();
   const candidate = candidates.find((c) => c.id === id)!;
   const radiografia = getRadiografia(id)!;
   const [activeLayer, setActiveLayer] = useState<Layer>("patrimonio");
   const [expandedLegal, setExpandedLegal] = useState<string | null>(null);
+
+  // Country-aware currency formatter
+  const fmt = (amount: number) => formatCurrency(amount, country.code);
+  const currencySymbol = country.code === "co" ? "COP" : "S/";
+  const inst = INSTITUTIONS[country.code as keyof typeof INSTITUTIONS] || INSTITUTIONS.pe;
 
   const riskColor =
     radiografia.riskScore >= 60
@@ -112,7 +133,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
         const year = params[0]?.axisValue;
         let html = `<div style="font-family:monospace;font-size:11px;"><strong>${year}</strong><br/>`;
         params.forEach((p: { seriesName: string; value: number }) => {
-          html += `${p.seriesName}: S/ ${(p.value / 1_000_000).toFixed(1)}M<br/>`;
+          html += `${p.seriesName}: ${fmt(p.value)}<br/>`;
         });
         html += "</div>";
         return html;
@@ -136,7 +157,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
         color: ct.axis.labelColor,
         fontSize: 10,
         fontFamily: "JetBrains Mono, monospace",
-        formatter: (val: number) => `${(val / 1_000_000).toFixed(0)}M`,
+        formatter: (val: number) => `${currencySymbol} ${(val / 1_000_000).toFixed(0)}M`,
       },
       splitLine: { lineStyle: { color: ct.axis.splitLineColor, type: "dashed" as const } },
     },
@@ -292,10 +313,10 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
   return (
     <div className="space-y-6">
       {/* Back */}
-      <Link href={`/candidatos/${candidate.slug}`}>
+      <Link href={`/${country.code}/radiografia`}>
         <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
           <ArrowLeft className="h-4 w-4" />
-          Volver al perfil
+          Volver a radiografías
         </Button>
       </Link>
 
@@ -481,7 +502,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "patrimonio" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 0: PATRIMONIO — FUENTE: JNE DECLARACION JURADA DE HOJA DE VIDA //
+                // CAPA 0: PATRIMONIO — FUENTE: {inst.patrimonio} //
               </div>
 
               {/* Patrimonio summary cards */}
@@ -493,7 +514,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                       <span className="text-[10px] text-muted-foreground font-mono uppercase">Patrimonio Neto</span>
                     </div>
                     <p className="terminal-text text-lg font-bold tabular-nums">
-                      {latestPatrimonio ? formatSoles(latestPatrimonio.netWorth) : "N/D"}
+                      {latestPatrimonio ? fmt(latestPatrimonio.netWorth) : "N/D"}
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-1 font-mono">
                       {latestPatrimonio?.year}
@@ -582,10 +603,10 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                         {radiografia.patrimonio.map((p, i) => (
                           <tr key={p.year} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                             <td className="p-3 font-mono text-xs text-foreground tabular-nums">{p.year}</td>
-                            <td className="p-3 font-mono text-xs text-emerald text-right tabular-nums">{formatSoles(p.totalAssets)}</td>
-                            <td className="p-3 font-mono text-xs text-rose text-right tabular-nums">{formatSoles(p.totalLiabilities)}</td>
-                            <td className="p-3 font-mono text-xs text-indigo-glow text-right tabular-nums font-bold">{formatSoles(p.netWorth)}</td>
-                            <td className="p-3 font-mono text-xs text-foreground text-right tabular-nums">{formatSoles(p.income)}</td>
+                            <td className="p-3 font-mono text-xs text-emerald text-right tabular-nums">{fmt(p.totalAssets)}</td>
+                            <td className="p-3 font-mono text-xs text-rose text-right tabular-nums">{fmt(p.totalLiabilities)}</td>
+                            <td className="p-3 font-mono text-xs text-indigo-glow text-right tabular-nums font-bold">{fmt(p.netWorth)}</td>
+                            <td className="p-3 font-mono text-xs text-foreground text-right tabular-nums">{fmt(p.income)}</td>
                             <td className="p-3 text-center">
                               <Badge variant="outline" className="text-[9px] font-mono">{p.source}</Badge>
                             </td>
@@ -603,7 +624,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "legal" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 1: HISTORIAL LEGAL — FUENTE: PODER JUDICIAL, FISCALIA, JNE //
+                // CAPA 1: HISTORIAL LEGAL — FUENTE: {inst.legal} //
               </div>
 
               {/* Legal summary */}
@@ -804,7 +825,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "finance" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 3: FINANCIAMIENTO DE CAMPANA — FUENTE: ONPE, DECLARACIONES DE APORTES //
+                // CAPA 3: FINANCIAMIENTO DE CAMPANA — FUENTE: {inst.finance} //
               </div>
 
               {/* Finance summary */}
@@ -813,7 +834,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                   <CardContent className="p-4">
                     <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Total Declarado</p>
                     <p className="terminal-text text-lg font-bold tabular-nums mt-1">
-                      {formatSoles(radiografia.finance.totalDeclared)}
+                      {fmt(radiografia.finance.totalDeclared)}
                     </p>
                   </CardContent>
                 </Card>
@@ -821,7 +842,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                   <CardContent className="p-4">
                     <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Gasto en Medios</p>
                     <p className="terminal-text-amber text-lg font-bold tabular-nums mt-1">
-                      {formatSoles(radiografia.finance.mediaSpend)}
+                      {fmt(radiografia.finance.mediaSpend)}
                     </p>
                   </CardContent>
                 </Card>
@@ -829,7 +850,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                   <CardContent className="p-4">
                     <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Gasto Digital</p>
                     <p className="terminal-text-indigo text-lg font-bold tabular-nums mt-1">
-                      {formatSoles(radiografia.finance.digitalSpend)}
+                      {fmt(radiografia.finance.digitalSpend)}
                     </p>
                   </CardContent>
                 </Card>
@@ -883,7 +904,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                             <p className="text-[10px] text-muted-foreground">{donor.type}</p>
                           </div>
                           <p className={cn("font-mono text-xs font-bold tabular-nums", donor.flagged ? "text-rose" : "text-foreground")}>
-                            {formatSoles(donor.amount)}
+                            {fmt(donor.amount)}
                           </p>
                         </div>
                       ))}
