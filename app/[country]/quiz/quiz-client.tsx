@@ -21,10 +21,18 @@ import { cn } from "@/lib/utils";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 import { useCountry } from "@/lib/config/country-context";
 
+interface CountryCtx {
+  code: string;
+  name: string;
+  capital: string;
+}
+
+type QText = string | ((ctx: CountryCtx) => string);
+
 interface QuizQuestion {
   id: string;
-  question: string | ((countryName: string) => string);
-  description: string | ((capital: string) => string);
+  question: QText;
+  description: QText;
   topic: string;
 }
 
@@ -32,7 +40,10 @@ const questions: QuizQuestion[] = [
   {
     id: "pena-muerte",
     question: "Estas a favor de la pena de muerte para delitos graves?",
-    description: "Como violacion, sicariato y terrorismo.",
+    description: ({ code }) =>
+      code === "co"
+        ? "La Constitucion colombiana la prohibe. Requeriria reforma constitucional."
+        : "Como violacion, sicariato y terrorismo.",
     topic: "Seguridad",
   },
   {
@@ -43,44 +54,68 @@ const questions: QuizQuestion[] = [
   },
   {
     id: "inversion-extranjera",
-    question: (country) => `Se debe promover mas la inversion extranjera en ${country}?`,
+    question: ({ name }) => `Se debe promover mas la inversion extranjera en ${name}?`,
     description: "Con incentivos fiscales y facilidades regulatorias.",
     topic: "Economia",
   },
   {
     id: "mineria",
-    question: "La mineria debe expandirse para impulsar la economia?",
+    question: ({ code }) =>
+      code === "co"
+        ? "La mineria y la extraccion de petroleo deben expandirse para impulsar la economia?"
+        : "La mineria debe expandirse para impulsar la economia?",
     description: "Incluso en zonas sensibles ambientalmente.",
     topic: "Medio Ambiente",
   },
   {
     id: "aborto",
-    question: "Estas a favor de despenalizar el aborto en mas causales?",
-    description: "Actualmente solo es legal por riesgo de vida de la madre.",
+    question: ({ code }) =>
+      code === "co"
+        ? "Estas a favor de mantener el derecho al aborto como esta actualmente?"
+        : "Estas a favor de despenalizar el aborto en mas causales?",
+    description: ({ code }) =>
+      code === "co"
+        ? "Desde 2022, el aborto es legal hasta la semana 24 de gestacion por fallo de la Corte Constitucional."
+        : "Actualmente solo es legal por riesgo de vida de la madre.",
     topic: "Derechos",
   },
   {
     id: "matrimonio-igualitario",
-    question: "Estas a favor del matrimonio entre personas del mismo sexo?",
-    description: "Con los mismos derechos civiles que el matrimonio tradicional.",
+    question: ({ code }) =>
+      code === "co"
+        ? "Estas a favor de ampliar los derechos de las parejas del mismo sexo?"
+        : "Estas a favor del matrimonio entre personas del mismo sexo?",
+    description: ({ code }) =>
+      code === "co"
+        ? "El matrimonio igualitario es legal desde 2016. Incluye derechos de adopcion y herencia."
+        : "Con los mismos derechos civiles que el matrimonio tradicional.",
     topic: "Derechos",
   },
   {
     id: "descentralizacion",
-    question: "Las regiones deben tener mas autonomia y presupuesto?",
-    description: (capital) => `Reduciendo el centralismo de ${capital}.`,
+    question: ({ code }) =>
+      code === "co"
+        ? "Los departamentos deben tener mas autonomia y presupuesto?"
+        : "Las regiones deben tener mas autonomia y presupuesto?",
+    description: ({ capital }) => `Reduciendo el centralismo de ${capital}.`,
     topic: "Gobernanza",
   },
   {
     id: "educacion-publica",
     question: "Se debe aumentar significativamente el presupuesto en educacion?",
-    description: "Hasta alcanzar el 6% del PBI como minimo.",
+    description: ({ code }) =>
+      code === "co"
+        ? "Hasta alcanzar el 6% del PIB como minimo."
+        : "Hasta alcanzar el 6% del PBI como minimo.",
     topic: "Educacion",
   },
   {
     id: "salud-universal",
-    question: (country) => `Todos los ciudadanos de ${country} deben tener acceso a salud gratuita y de calidad?`,
-    description: "A traves de un sistema universal de salud.",
+    question: ({ name }) => `Todos los ciudadanos de ${name} deben tener acceso a salud gratuita y de calidad?`,
+    description: ({ code }) =>
+      code === "co"
+        ? "Reformando el sistema de EPS hacia un modelo de salud universal."
+        : "A traves de un sistema universal de salud.",
     topic: "Salud",
   },
   {
@@ -91,11 +126,11 @@ const questions: QuizQuestion[] = [
   },
 ];
 
-function resolveQuestion(q: QuizQuestion, countryName: string, capital: string) {
+function resolveQuestion(q: QuizQuestion, ctx: CountryCtx) {
   return {
     id: q.id,
-    question: typeof q.question === "function" ? q.question(countryName) : q.question,
-    description: typeof q.description === "function" ? q.description(capital) : q.description,
+    question: typeof q.question === "function" ? q.question(ctx) : q.question,
+    description: typeof q.description === "function" ? q.description(ctx) : q.description,
     topic: q.topic,
   };
 }
@@ -128,9 +163,10 @@ export default function QuizClient({ candidates }: QuizClientProps) {
   const capital = country.capital;
   const countryCode = country.code;
 
+  const ctx: CountryCtx = { code: countryCode, name: countryName, capital };
   const resolvedQuestions = useMemo(
-    () => questions.map((q) => resolveQuestion(q, countryName, capital)),
-    [countryName, capital]
+    () => questions.map((q) => resolveQuestion(q, ctx)),
+    [countryCode, countryName, capital]
   );
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
