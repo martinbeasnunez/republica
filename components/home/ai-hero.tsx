@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Cpu, Activity, ShieldCheck, Sparkles } from "lucide-react";
 import { useCountry } from "@/lib/config/country-context";
 
-export function AIHero() {
+export function AIHero({ candidateCount }: { candidateCount?: number }) {
   const country = useCountry();
   const year = country.electionDate.slice(0, 4);
 
@@ -73,7 +73,7 @@ export function AIHero() {
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <ShieldCheck className="h-3 w-3 text-emerald" />
-              <span>{country.mediaSources.length * 4} candidatos monitoreados</span>
+              <span>{candidateCount ?? "—"} candidatos monitoreados</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">

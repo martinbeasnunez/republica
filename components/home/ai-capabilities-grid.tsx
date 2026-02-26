@@ -22,20 +22,20 @@ import { useCountry } from "@/lib/config/country-context";
 
 const previewContent = {
   pe: {
-    chatResponse: "Segun las ultimas encuestas, Lopez Aliaga lidera con 12.3%...",
+    chatResponse: "Segun las ultimas encuestas, los 3 candidatos con mayor intencion de voto son...",
     factCheckFalse: "Elecciones se adelantan a marzo",
     factCheckTrue: "Padron electoral supera 25 millones",
-    newsHeadline: "Lopez Aliaga presenta plan de seguridad...",
-    planCandidate: "Economia — Lopez Aliaga",
-    planScore: "67/100",
+    newsHeadline: "Candidato presenta plan de seguridad ciudadana...",
+    planCandidate: "Economia",
+    planScore: "— /100",
   },
   co: {
-    chatResponse: "Segun las ultimas encuestas, Davila lidera con 18.9%...",
+    chatResponse: "Segun las ultimas encuestas, los 3 candidatos con mayor intencion de voto son...",
     factCheckFalse: "Reforma a la salud es inconstitucional",
     factCheckTrue: "Colombia tiene 39 millones de electores",
-    newsHeadline: "Cepeda presenta plan contra la corrupcion...",
-    planCandidate: "Economia — Davila",
-    planScore: "72/100",
+    newsHeadline: "Candidato presenta plan contra la corrupcion...",
+    planCandidate: "Economia",
+    planScore: "— /100",
   },
 };
 

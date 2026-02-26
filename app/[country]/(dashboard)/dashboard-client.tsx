@@ -48,7 +48,7 @@ export default function DashboardClient({ candidates, topCandidates, articles, f
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* === SECTION 1: AI Hero === */}
-      <AIHero />
+      <AIHero candidateCount={candidates.length} />
 
       {/* === SECTION 2: AI Prompt Bar === */}
       <AIPromptBar />

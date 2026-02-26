@@ -4,6 +4,12 @@ import { useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
+/* ── Admin detection (skip tracking for admin sessions) ── */
+function isAdminSession(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.includes("condor_admin_session=");
+}
+
 /* ── Persistent visitor ID (localStorage — survives sessions) ── */
 function getVisitorId(): string {
   if (typeof window === "undefined") return "";
@@ -35,6 +41,7 @@ export function useAnalytics() {
   useEffect(() => {
     if (pathname === tracked.current) return;
     if (pathname.startsWith("/admin")) return; // Don't track admin pages
+    if (isAdminSession()) return; // Don't track admin users browsing the site
     tracked.current = pathname;
 
     const track = async () => {
@@ -60,6 +67,7 @@ export function useAnalytics() {
     (event: string, target: string, metadata?: Record<string, unknown>) => {
       const track = async () => {
         try {
+          if (isAdminSession()) return; // Don't track admin events
           const supabase = getSupabaseBrowser();
           if (!supabase) return;
 
