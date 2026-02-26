@@ -9,8 +9,13 @@ import {
   Share2,
   RotateCcw,
   ChevronRight,
+  ChevronDown,
   CheckCircle2,
+  CircleCheck,
+  CircleMinus,
+  CircleX,
 } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -153,6 +158,48 @@ const answerColors: Record<Answer, string> = {
   [2]: "bg-emerald text-white",
 };
 
+// ── Topic breakdown helper ──
+const positionLabel = (val: number): string => {
+  if (val >= 2) return "Totalmente a favor";
+  if (val >= 1) return "A favor";
+  if (val === 0) return "Neutral";
+  if (val >= -1) return "En contra";
+  return "Totalmente en contra";
+};
+
+interface TopicBreakdown {
+  topicId: string;
+  topicLabel: string;
+  userAnswer: number;
+  candidatePosition: number;
+  diff: number;
+  match: "agree" | "partial" | "disagree";
+}
+
+function getTopicBreakdown(
+  userAnswers: Record<string, number>,
+  candidate: Candidate,
+  resolvedQs: { id: string; topic: string }[]
+): TopicBreakdown[] {
+  return resolvedQs.map((q) => {
+    const userAnswer = userAnswers[q.id] ?? 0;
+    const candidatePosition = candidate.quizPositions[q.id] ?? 0;
+    const diff = Math.abs(userAnswer - candidatePosition);
+    return {
+      topicId: q.id,
+      topicLabel: q.topic,
+      userAnswer,
+      candidatePosition,
+      diff,
+      match: diff <= 1 ? "agree" : diff <= 2 ? "partial" : "disagree",
+    };
+  });
+}
+
+function countAgreements(breakdown: TopicBreakdown[]): number {
+  return breakdown.filter((t) => t.match === "agree").length;
+}
+
 interface QuizClientProps {
   candidates: Candidate[];
 }
@@ -258,6 +305,9 @@ export default function QuizClient({ candidates }: QuizClientProps) {
     });
   }, [showResults, results, answers, countryCode]);
 
+  // ── Expandable detail state for candidates #2+ ──
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   if (showResults) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
@@ -277,98 +327,220 @@ export default function QuizClient({ candidates }: QuizClientProps) {
         </motion.div>
 
         <div className="space-y-3">
-          {results.slice(0, 8).map((result, index) => (
-            <motion.div
-              key={result.candidate.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.08 }}
-            >
-              <Card
-                className={cn(
-                  "bg-card border-border overflow-hidden",
-                  index === 0 && "border-primary/30 glow-indigo"
-                )}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    {/* Rank */}
-                    <span
-                      className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-lg font-mono text-sm font-bold",
-                        index === 0
-                          ? "bg-primary text-white"
-                          : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {index + 1}
-                    </span>
+          {results.slice(0, 8).map((result, index) => {
+            const breakdown = getTopicBreakdown(answers, result.candidate, resolvedQuestions);
+            const agrees = countAgreements(breakdown);
+            const isTop = index === 0;
+            const isExpanded = isTop || expandedId === result.candidate.id;
 
-                    {/* Avatar */}
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-full"
-                      style={{
-                        backgroundColor:
-                          result.candidate.partyColor + "20",
-                      }}
-                    >
-                      <User
-                        className="h-5 w-5"
-                        style={{ color: result.candidate.partyColor }}
+            return (
+              <motion.div
+                key={result.candidate.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.08 }}
+              >
+                <Card
+                  className={cn(
+                    "bg-card border-border overflow-hidden",
+                    isTop && "border-primary/30 glow-indigo"
+                  )}
+                >
+                  <CardContent className={cn("p-4", isTop && "p-5")}>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      {/* Rank */}
+                      <span
+                        className={cn(
+                          "flex shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold",
+                          isTop
+                            ? "h-9 w-9 bg-primary text-white"
+                            : "h-8 w-8 bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {index + 1}
+                      </span>
+
+                      {/* Photo */}
+                      <div
+                        className={cn(
+                          "relative shrink-0 overflow-hidden rounded-full border-2",
+                          isTop ? "h-14 w-14" : "h-10 w-10"
+                        )}
+                        style={{ borderColor: result.candidate.partyColor }}
+                      >
+                        {result.candidate.photo ? (
+                          <Image
+                            src={result.candidate.photo}
+                            alt={result.candidate.name}
+                            fill
+                            className="object-cover"
+                            sizes={isTop ? "56px" : "40px"}
+                          />
+                        ) : (
+                          <div
+                            className="flex h-full w-full items-center justify-center"
+                            style={{
+                              backgroundColor: result.candidate.partyColor + "20",
+                            }}
+                          >
+                            <User
+                              className={cn(isTop ? "h-7 w-7" : "h-5 w-5")}
+                              style={{ color: result.candidate.partyColor }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={cn(
+                            "font-semibold text-foreground truncate",
+                            isTop ? "text-base" : "text-sm"
+                          )}
+                        >
+                          {result.candidate.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span
+                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium"
+                            style={{
+                              backgroundColor: result.candidate.partyColor + "20",
+                              color: result.candidate.partyColor,
+                            }}
+                          >
+                            {result.candidate.party}
+                          </span>
+                          {!isTop && (
+                            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                              Coinciden en {agrees}/{resolvedQuestions.length}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Compatibility */}
+                      <div className="text-right shrink-0">
+                        <p
+                          className={cn(
+                            "font-mono font-bold tabular-nums",
+                            isTop ? "text-2xl" : "text-xl",
+                            result.compatibility >= 70
+                              ? "text-emerald"
+                              : result.compatibility >= 50
+                                ? "text-amber"
+                                : "text-muted-foreground"
+                          )}
+                        >
+                          {result.compatibility}%
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          compatible
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Compatibility bar */}
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{
+                          backgroundColor: result.candidate.partyColor,
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${result.compatibility}%`,
+                        }}
+                        transition={{
+                          duration: 0.8,
+                          delay: index * 0.08,
+                        }}
                       />
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">
-                        {result.candidate.name}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {result.candidate.party}
-                      </p>
-                    </div>
-
-                    {/* Compatibility */}
-                    <div className="text-right">
-                      <p
-                        className={cn(
-                          "font-mono text-xl font-bold tabular-nums",
-                          result.compatibility >= 70
-                            ? "text-emerald"
-                            : result.compatibility >= 50
-                              ? "text-amber"
-                              : "text-muted-foreground"
-                        )}
+                    {/* Topic breakdown — always open for #1, expandable for others */}
+                    {!isTop && (
+                      <button
+                        onClick={() =>
+                          setExpandedId(
+                            expandedId === result.candidate.id
+                              ? null
+                              : result.candidate.id
+                          )
+                        }
+                        className="mt-3 flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        {result.compatibility}%
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        compatible
-                      </p>
-                    </div>
-                  </div>
+                        <span>
+                          Coinciden en {agrees} de {resolvedQuestions.length} temas
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            isExpanded && "rotate-180"
+                          )}
+                        />
+                      </button>
+                    )}
 
-                  {/* Compatibility bar */}
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{
-                        backgroundColor: result.candidate.partyColor,
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${result.compatibility}%`,
-                      }}
-                      transition={{
-                        duration: 0.8,
-                        delay: index * 0.08,
-                      }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={isTop ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className={cn("space-y-1.5", isTop ? "mt-4 pt-4 border-t border-border" : "mt-2")}>
+                            {isTop && (
+                              <p className="text-xs font-semibold text-foreground mb-2">
+                                ¿Por qué coincides con {result.candidate.shortName}?
+                              </p>
+                            )}
+                            {breakdown.map((topic) => (
+                              <div
+                                key={topic.topicId}
+                                className="flex items-center gap-2 text-xs"
+                              >
+                                {topic.match === "agree" ? (
+                                  <CircleCheck className="h-4 w-4 shrink-0 text-emerald" />
+                                ) : topic.match === "partial" ? (
+                                  <CircleMinus className="h-4 w-4 shrink-0 text-amber" />
+                                ) : (
+                                  <CircleX className="h-4 w-4 shrink-0 text-rose" />
+                                )}
+                                <span className="font-medium text-foreground w-24 shrink-0">
+                                  {topic.topicLabel}
+                                </span>
+                                <span className="text-muted-foreground truncate">
+                                  {topic.match === "agree"
+                                    ? `Ambos: ${positionLabel(topic.candidatePosition).toLowerCase()}`
+                                    : topic.match === "partial"
+                                      ? `Tú: ${positionLabel(topic.userAnswer).toLowerCase()} · Candidato: ${positionLabel(topic.candidatePosition).toLowerCase()}`
+                                      : `Tú: ${positionLabel(topic.userAnswer).toLowerCase()} · Candidato: ${positionLabel(topic.candidatePosition).toLowerCase()}`}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Link to full profile for top candidate */}
+                          {isTop && (
+                            <Link
+                              href={`/${countryCode}/candidatos/${result.candidate.slug}`}
+                              className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                            >
+                              Ver perfil completo de {result.candidate.shortName}
+                              <ChevronRight className="h-4 w-4" />
+                            </Link>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
 
         <WhatsAppCTA context="quiz" />
