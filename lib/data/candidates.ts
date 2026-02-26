@@ -111,7 +111,7 @@ export const candidates: Candidate[] = [
     profession: "Empresario",
     region: "Lima",
     ideology: "derecha",
-    bio: "Empresario y político conservador, actual alcalde de Lima. Conocido por su discurso frontal contra la corrupción y su postura firme en temas de seguridad ciudadana.",
+    bio: "Empresario y político conservador, ex alcalde de Lima (renunció en octubre 2025 para postular a la presidencia). Fundador de Renovación Popular. Lidera las encuestas para las elecciones 2026.",
     keyProposals: [
       {
         category: "seguridad",
@@ -168,11 +168,11 @@ export const candidates: Candidate[] = [
     partySlug: "fuerza-popular",
     partyColor: PARTY_COLORS["fuerza-popular"],
     photo: "/candidatos/keiko-fujimori.jpg",
-    age: 49,
+    age: 50,
     profession: "Política",
     region: "Lima",
     ideology: "centro-derecha",
-    bio: "Lideresa de Fuerza Popular e hija del expresidente Alberto Fujimori. Tres veces candidata presidencial con amplia base electoral en sectores populares.",
+    bio: "Lideresa de Fuerza Popular e hija del fallecido expresidente Alberto Fujimori (m. septiembre 2024). Cuatro veces candidata presidencial con amplia base electoral en sectores populares.",
     keyProposals: [
       {
         category: "seguridad",
@@ -224,17 +224,17 @@ export const candidates: Candidate[] = [
   {
     id: "3",
     slug: "carlos-alvarez",
-    name: "Carlos Álvarez (Carlín)",
-    shortName: "Carlín",
-    party: "Ahora Nación",
-    partySlug: "ahora-nacion",
-    partyColor: PARTY_COLORS["ahora-nacion"],
+    name: "Carlos Álvarez",
+    shortName: "C. Álvarez",
+    party: "País para Todos",
+    partySlug: "pais-para-todos",
+    partyColor: PARTY_COLORS["pais-para-todos"],
     photo: "/candidatos/carlos-alvarez.jpg",
     age: 61,
     profession: "Comunicador y comediante",
     region: "Lima",
     ideology: "centro",
-    bio: "Reconocido comediante, imitador político y comunicador peruano. Su candidatura representa una propuesta ciudadana centrada en la transparencia y la lucha anticorrupción.",
+    bio: "Comediante, imitador político y comunicador peruano. Se retiró de la comedia en enero 2026 para enfocarse en su candidatura presidencial. Candidato outsider con fuerte presencia mediática.",
     keyProposals: [
       {
         category: "anticorrupcion",
@@ -291,11 +291,11 @@ export const candidates: Candidate[] = [
     partySlug: "somos-peru",
     partyColor: PARTY_COLORS["somos-peru"],
     photo: "/candidatos/george-forsyth.jpg",
-    age: 42,
+    age: 43,
     profession: "Exfutbolista y político",
     region: "Lima",
     ideology: "centro-derecha",
-    bio: "Exarquero de Alianza Lima y exalcalde de La Victoria. Ganó notoriedad por su gestión municipal enfocada en seguridad y orden en zonas comerciales.",
+    bio: "Exarquero profesional y exalcalde de La Victoria. Figura política joven y mediática. Segunda postulación presidencial, ahora por Somos Perú.",
     keyProposals: [
       {
         category: "seguridad",
@@ -340,18 +340,18 @@ export const candidates: Candidate[] = [
   },
   {
     id: "5",
-    slug: "jose-lopez-chau",
-    name: "José López-Chau",
+    slug: "alfonso-lopez-chau",
+    name: "Alfonso López-Chau",
     shortName: "López-Chau",
-    party: "País para Todos",
-    partySlug: "pais-para-todos",
-    partyColor: PARTY_COLORS["pais-para-todos"],
-    photo: "/candidatos/jose-lopez-chau.jpg",
+    party: "Ahora Nación",
+    partySlug: "ahora-nacion",
+    partyColor: PARTY_COLORS["ahora-nacion"],
+    photo: "/candidatos/alfonso-lopez-chau.jpg",
     age: 58,
     profession: "Economista",
     region: "Lima",
     ideology: "centro-izquierda",
-    bio: "Economista y académico con experiencia en políticas públicas. Propone un modelo de desarrollo inclusivo con mayor participación del Estado en sectores estratégicos.",
+    bio: "Economista y académico peruano, exrector de la Universidad Nacional de Ingeniería (UNI). Candidato por Ahora Nación. Figura emergente con enfoque en políticas sociales y desarrollo económico inclusivo.",
     keyProposals: [
       {
         category: "economia",
@@ -408,11 +408,11 @@ export const candidates: Candidate[] = [
     partySlug: "alianza-para-el-progreso",
     partyColor: PARTY_COLORS["alianza-para-el-progreso"],
     photo: "/candidatos/cesar-acuna.jpg",
-    age: 72,
+    age: 73,
     profession: "Empresario y educador",
-    region: "Trujillo",
+    region: "La Libertad",
     ideology: "centro-derecha",
-    bio: "Fundador de la Universidad César Vallejo y exgobernador regional de La Libertad. Empresario del sector educativo con amplia red política en provincias.",
+    bio: "Empresario educativo y político. Fundador de la Universidad César Vallejo y Alianza para el Progreso. Exgobernador de La Libertad (renunció en octubre 2025 para postular a la presidencia).",
     keyProposals: [
       {
         category: "educacion",
@@ -474,7 +474,7 @@ export const candidates: Candidate[] = [
     profession: "Economista",
     region: "Lima",
     ideology: "centro-derecha",
-    bio: "Economista de renombre internacional, autor de 'El misterio del capital'. Defensor de la formalización de la propiedad como motor del desarrollo económico.",
+    bio: "Economista de renombre internacional. Renunció a su precandidatura en mayo 2025 y fue nombrado Presidente del Consejo de Ministros en el gobierno de transición.",
     keyProposals: [
       {
         category: "economia",
@@ -535,7 +535,7 @@ export const candidates: Candidate[] = [
     profession: "Militar retirado y político",
     region: "Lima",
     ideology: "centro",
-    bio: "General retirado del Ejército y excongresista. Conocido por su postura firme en seguridad ciudadana y su experiencia en la lucha contra el terrorismo.",
+    bio: "General retirado del Ejército y excongresista. En febrero 2026, el Tribunal Constitucional anuló su condena de 12 años por prescripción (caso Hugo Bustíos). No es candidato presidencial; José Luna Gálvez es el candidato de Podemos Perú.",
     keyProposals: [
       {
         category: "seguridad",
@@ -567,7 +567,7 @@ export const candidates: Candidate[] = [
       { date: "2026-02-22", value: 3.5, pollster: "CPI" },
     ],
     hasLegalIssues: true,
-    legalNote: "Fue procesado por el caso del periodista Hugo Bustíos. Absuelto en segunda instancia, pero el caso generó controversia pública.",
+    legalNote: "Condenado a 12 años por el caso Hugo Bustíos. El TC anuló la condena por prescripción en febrero 2026 (no fue absuelto).",
     socialMedia: {
       twitter: "@DanielUrresti1",
     },

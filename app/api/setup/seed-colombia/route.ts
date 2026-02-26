@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
       party_color: "#D4001A",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Ivan_Cepeda_Congreso.jpg/400px-Ivan_Cepeda_Congreso.jpg",
       age: 63,
-      profession: "Senador y defensor de derechos humanos",
+      profession: "Exsenador y defensor de derechos humanos",
       region: "Bogotá",
       ideology: "izquierda",
-      bio: "Senador del Pacto Histórico y reconocido defensor de derechos humanos. Fue víctima del conflicto armado y ha dedicado su carrera a la paz y la justicia social. Considerado el candidato natural del petrismo para 2026.",
+      bio: "Candidato presidencial del Pacto Histórico y reconocido defensor de derechos humanos. Fue víctima del conflicto armado y ha dedicado su carrera a la paz y la justicia social. Lidera las encuestas para 2026.",
       key_proposals: [
         {
           category: "economia",
@@ -142,15 +142,15 @@ export async function POST(request: NextRequest) {
       slug: "claudia-lopez",
       name: "Claudia López",
       short_name: "Claudia",
-      party: "Alianza Verde",
-      party_slug: "alianza-verde",
+      party: "Imparables",
+      party_slug: "imparables",
       party_color: "#2E8B57",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Claudia_L%C3%B3pez.png/400px-Claudia_L%C3%B3pez.png",
       age: 55,
       profession: "Politóloga y exalcaldesa de Bogotá",
       region: "Bogotá",
       ideology: "centro-izquierda",
-      bio: "Exalcaldesa de Bogotá (2020-2023) y politóloga. Reconocida por su lucha anticorrupción y su gestión urbana en Bogotá. Primera mujer y primera persona abiertamente LGBTQ+ en gobernar la capital.",
+      bio: "Exalcaldesa de Bogotá (2020-2023) y politóloga. Candidata presidencial por el movimiento Imparables. Reconocida por su lucha anticorrupción. Primera mujer y primera persona abiertamente LGBTQ+ en gobernar la capital.",
       key_proposals: [
         {
           category: "anticorrupcion",
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       profession: "Matemático y exalcalde de Medellín",
       region: "Medellín",
       ideology: "centro",
-      bio: "Matemático, exalcalde de Medellín y exgobernador de Antioquia. Reconocido por transformar Medellín a través de la educación y la cultura. Candidato presidencial en 2018 y 2022.",
+      bio: "Matemático, exalcalde de Medellín y exgobernador de Antioquia. Reconocido por transformar Medellín a través de la educación y la cultura. Tercer intento presidencial (2018, 2022 y 2026).",
       key_proposals: [
         {
           category: "educacion",
@@ -250,10 +250,10 @@ export async function POST(request: NextRequest) {
       party_color: "#003366",
       photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Paloma_Valencia.png/400px-Paloma_Valencia.png",
       age: 46,
-      profession: "Politóloga y senadora",
+      profession: "Politóloga y exsenadora",
       region: "Valle del Cauca",
       ideology: "derecha",
-      bio: "Senadora del Centro Democrático de Álvaro Uribe. Figura visible de la oposición al gobierno Petro. Defensora de la seguridad democrática, la propiedad privada y la libre empresa.",
+      bio: "Exsenadora del Centro Democrático. Ganó la consulta interna del partido en diciembre 2025. Figura visible de la oposición al gobierno Petro. Defensora de la seguridad democrática, la propiedad privada y la libre empresa.",
       key_proposals: [
         {
           category: "seguridad",
@@ -304,7 +304,7 @@ export async function POST(request: NextRequest) {
       profession: "Periodista y directora de medios",
       region: "Bucaramanga",
       ideology: "centro-derecha",
-      bio: "Periodista reconocida, exdirectora de la revista Semana. Conocida por sus investigaciones contra la corrupción y su estilo directo. Ingresó a la política como figura anticorrupción y antiestablishment.",
+      bio: "Periodista reconocida, exdirectora de la revista Semana (renunció en noviembre 2024 para entrar a la política). Candidata presidencial por el movimiento Valientes. Figura anticorrupción y antiestablishment.",
       key_proposals: [
         {
           category: "anticorrupcion",
@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
       profession: "Médico cirujano y político",
       region: "Valle del Cauca",
       ideology: "centro-izquierda",
-      bio: "Médico cirujano, excongresista y expresidente del Senado. Fue clave en la negociación del Acuerdo de Paz con las FARC. Ha militado en varios partidos a lo largo de su carrera política.",
+      bio: "Médico cirujano, excongresista, expresidente del Senado y exembajador en el Reino Unido. Fue clave en la negociación del Acuerdo de Paz con las FARC. Candidato en la consulta Frente por la Vida.",
       key_proposals: [
         {
           category: "salud",
