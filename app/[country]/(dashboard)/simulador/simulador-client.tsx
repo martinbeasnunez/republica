@@ -34,6 +34,8 @@ import {
 import type { Candidate } from "@/lib/data/candidates";
 import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/lib/echarts-theme";
+import { useCountry } from "@/lib/config/country-context";
+import { AlertTriangle, Scale } from "lucide-react";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -43,7 +45,14 @@ interface SimuladorClientProps {
 
 export function SimuladorClient({ candidates }: SimuladorClientProps) {
   const ct = useChartTheme();
-  const [config, setConfig] = useState<SimulationConfig>(DEFAULT_CONFIG);
+  const country = useCountry();
+  const isColombia = country.code === "co";
+  const [config, setConfig] = useState<SimulationConfig>({
+    ...DEFAULT_CONFIG,
+    // Colombia has lower blank vote rates (~3-5%) vs Peru (~5-15%)
+    blankVoteMean: isColombia ? 5 : 8,
+    blankVoteStdDev: isColombia ? 2 : 3,
+  });
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -208,9 +217,29 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // CONDOR INTELLIGENCE SYSTEM — SIMULADOR ELECTORAL MONTE CARLO — MODELO PREDICTIVO //
+          // CONDOR INTELLIGENCE SYSTEM — {isColombia ? "ANÁLISIS DE ESCENARIOS" : "SIMULADOR ELECTORAL"} MONTE CARLO — MODELO PREDICTIVO //
         </div>
       </motion.div>
+
+      {/* Legal disclaimer for Colombia (Ley 2494/2025) */}
+      {isColombia && (
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 sm:p-4"
+        >
+          <div className="flex items-start gap-2">
+            <Scale className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+            <div className="text-xs text-amber-200/80">
+              <span className="font-semibold text-amber-400">Aviso legal:</span>{" "}
+              Esta herramienta es un ejercicio educativo de análisis de escenarios basado en modelos estadísticos (Monte Carlo).
+              No constituye encuesta ni sondeo de intención de voto bajo los términos de la{" "}
+              <span className="font-mono text-amber-300">Ley 2494 de 2025</span>.
+              Los resultados son proyecciones hipotéticas, no predicciones.
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -219,7 +248,7 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
         <div className="flex flex-wrap items-center gap-2">
           <Dice6 className="h-5 w-5 text-primary" />
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            Simulador Electoral
+            {isColombia ? "Análisis de Escenarios" : "Simulador Electoral"}
           </h1>
           <Badge variant="secondary" className="text-[10px] gap-1 font-mono">
             <Activity className="h-3 w-3" />

@@ -53,7 +53,7 @@ const navigation = [
   // ─── Análisis profundo ───
   { name: "Pilares", href: "/pilares", icon: Target },
   { name: "Radiografía", href: "/radiografia", icon: Scan, badge: "NEW" as const },
-  { name: "Simulador", href: "/simulador", icon: Dice6, badge: "NEW" as const },
+  { name: "Simulador", href: "/simulador", icon: Dice6, badge: "NEW" as const, nameByCountry: { co: "Escenarios" } as Record<string, string> },
   { name: "Mapa Electoral", href: "/mapa", icon: Map },
   // ─── Extras ───
   { name: "En Vivo", href: "/en-vivo", icon: Radio, badge: "LIVE" as const },
@@ -78,6 +78,8 @@ function NavLink({
   onClick?: () => void;
 }) {
   const fullHref = useCountryHref(item.href);
+  const country = useCountry();
+  const displayName = item.nameByCountry?.[country.code] ?? item.name;
 
   return (
     <Link
@@ -101,7 +103,7 @@ function NavLink({
       />
       {!collapsed && (
         <>
-          <span className="flex-1">{item.name}</span>
+          <span className="flex-1">{displayName}</span>
           {item.badge && (
             <span
               className={cn(

@@ -8,6 +8,8 @@ export interface SimulationConfig {
   volatility: number; // 0-1, how much polls can swing
   undecidedPercent: number; // % of undecided voters
   turnoutVariation: number; // % variation in turnout
+  blankVoteMean?: number; // default 8 (PE), 5 (CO)
+  blankVoteStdDev?: number; // default 3
 }
 
 export interface CandidateSimResult {
@@ -99,7 +101,9 @@ export function runSimulation(config: SimulationConfig, candidates: Candidate[])
     });
 
     // Normalize to ~100% (accounting for blank/null votes)
-    const blankVote = Math.max(1, randomNormal(8, 3)); // Peru typically has 5-15% blank/null
+    const blankMean = config.blankVoteMean ?? 8;
+    const blankStd = config.blankVoteStdDev ?? 3;
+    const blankVote = Math.max(1, randomNormal(blankMean, blankStd));
     const effectiveTotal = 100 - blankVote;
     const normFactor = effectiveTotal / totalVote;
 
@@ -178,7 +182,7 @@ export function runSimulation(config: SimulationConfig, candidates: Candidate[])
     secondRoundMatchups,
     timestamp: new Date().toISOString(),
     totalSimulations: numSimulations,
-    blankVoteProbability: 8, // approximate
+    blankVoteProbability: config.blankVoteMean ?? 8,
   };
 }
 

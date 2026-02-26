@@ -32,15 +32,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
+import { useCountry } from "@/lib/config/country-context";
 import {
-  developmentPillars,
+  getCountryPillars,
+  getCountryEconomicIndicators,
+  getCountryBenchmarks,
   internationalFrameworks,
-  peruEconomicIndicators,
-  benchmarkCountries,
   getPillarScoreColor,
   getPillarScoreLabel,
   type DevelopmentPillar,
-} from "@/lib/data/pilares-desarrollo";
+} from "@/lib/data/pilares/index";
 import { type Candidate, type Category } from "@/lib/data/candidates";
 
 // ─── MAPPINGS ───
@@ -76,17 +77,31 @@ const scoreColors: Record<string, { ring: string; bg: string; text: string; glow
 };
 
 // CONDOR AI insights per pillar — what's the real story?
-const pillarInsights: Record<string, string> = {
-  institucionalidad: "Varios candidatos hablan de anticorrupcion pero ninguno propone reformas estructurales a las instituciones. Hablan de castigo, no de prevencion. Nadie menciona fortalecer la independencia judicial ni crear mecanismos de rendicion de cuentas real.",
-  anticorrupcion: "Fujimori y Alvarez proponen combatir la corrupcion pero con enfoques distintos. Alvarez propone muerte civil para corruptos y transparencia total. Fujimori quiere reformar el sistema judicial. Ninguno habla de reformar el sistema de contrataciones del Estado, que es donde nace la corrupcion.",
-  educacion: "Solo Alvarez, Acuna y Luna hablan de educacion. Alvarez propone subir al 6% del PIB. Luna quiere universidad para todos. Acuna apuesta por capacitacion laboral. Pero NADIE habla de calidad docente, que segun PISA es el factor #1 para mejorar resultados.",
-  infraestructura: "Lopez Aliaga propone trenes, Forsyth ciudades modernas, Acuna infraestructura regional. Buenas ideas, pero ninguno habla de la razon por la que los proyectos fracasan: corrupcion en licitaciones y falta de capacidad del Estado para ejecutar obras.",
-  "transformacion-digital": "Solo Luna menciona tecnologia directamente (internet rural). Forsyth habla de 'Peru digital' y videovigilancia. Es uno de los pilares mas desatendidos a pesar de que Estonia demostro que digitalizar el Estado reduce corrupcion y burocracia de golpe.",
-  "diversificacion-economica": "Lopez Aliaga quiere bajar impuestos, Fujimori habla de estabilidad, Lopez-Chau propone economia inclusiva, Acuna apoya emprendedores. Enfoques variados. Pero ninguno tiene un plan claro para formalizar al 71% de trabajadores informales.",
-  salud: "Solo Alvarez tiene una propuesta especifica de salud (ampliar SIS y construir hospitales). Lopez-Chau tambien propone reforma de salud. Los demas lo ignoran. Es preocupante porque 7 de cada 10 peruanos no reciben atencion cuando la necesitan.",
-  "inclusion-social": "Ningun candidato habla directamente de reducir desigualdad o pobreza. Fujimori menciona 'programas sociales focalizados' y Luna propone empleo joven. Pero nadie tiene un plan para el 36% que vive en pobreza ni para la brecha entre Lima y provincias.",
-  "capacidad-fiscal": "Lopez Aliaga quiere BAJAR impuestos — exactamente lo opuesto a lo que Peru necesita segun los expertos. Nadie propone una reforma tributaria seria ni un plan para formalizar la economia. Sin recaudar mas, todo lo demas es promesa vacia.",
-  "justicia-seguridad": "Este es el pilar favorito de los politicos: todos hablan de seguridad. Lopez Aliaga y Fujimori quieren mano dura con FF.AA. en las calles, Forsyth quiere tecnologia. Pero ninguno habla de reformar el sistema judicial, que es la raiz del problema.",
+const pillarInsightsByCountry: Record<string, Record<string, string>> = {
+  pe: {
+    institucionalidad: "Varios candidatos hablan de anticorrupcion pero ninguno propone reformas estructurales a las instituciones. Hablan de castigo, no de prevencion. Nadie menciona fortalecer la independencia judicial ni crear mecanismos de rendicion de cuentas real.",
+    anticorrupcion: "Fujimori y Alvarez proponen combatir la corrupcion pero con enfoques distintos. Alvarez propone muerte civil para corruptos y transparencia total. Fujimori quiere reformar el sistema judicial. Ninguno habla de reformar el sistema de contrataciones del Estado, que es donde nace la corrupcion.",
+    educacion: "Solo Alvarez, Acuna y Luna hablan de educacion. Alvarez propone subir al 6% del PIB. Luna quiere universidad para todos. Acuna apuesta por capacitacion laboral. Pero NADIE habla de calidad docente, que segun PISA es el factor #1 para mejorar resultados.",
+    infraestructura: "Lopez Aliaga propone trenes, Forsyth ciudades modernas, Acuna infraestructura regional. Buenas ideas, pero ninguno habla de la razon por la que los proyectos fracasan: corrupcion en licitaciones y falta de capacidad del Estado para ejecutar obras.",
+    "transformacion-digital": "Solo Luna menciona tecnologia directamente (internet rural). Forsyth habla de 'Peru digital' y videovigilancia. Es uno de los pilares mas desatendidos a pesar de que Estonia demostro que digitalizar el Estado reduce corrupcion y burocracia de golpe.",
+    "diversificacion-economica": "Lopez Aliaga quiere bajar impuestos, Fujimori habla de estabilidad, Lopez-Chau propone economia inclusiva, Acuna apoya emprendedores. Enfoques variados. Pero ninguno tiene un plan claro para formalizar al 71% de trabajadores informales.",
+    salud: "Solo Alvarez tiene una propuesta especifica de salud (ampliar SIS y construir hospitales). Lopez-Chau tambien propone reforma de salud. Los demas lo ignoran. Es preocupante porque 7 de cada 10 peruanos no reciben atencion cuando la necesitan.",
+    "inclusion-social": "Ningun candidato habla directamente de reducir desigualdad o pobreza. Fujimori menciona 'programas sociales focalizados' y Luna propone empleo joven. Pero nadie tiene un plan para el 36% que vive en pobreza ni para la brecha entre Lima y provincias.",
+    "capacidad-fiscal": "Lopez Aliaga quiere BAJAR impuestos — exactamente lo opuesto a lo que Peru necesita segun los expertos. Nadie propone una reforma tributaria seria ni un plan para formalizar la economia. Sin recaudar mas, todo lo demas es promesa vacia.",
+    "justicia-seguridad": "Este es el pilar favorito de los politicos: todos hablan de seguridad. Lopez Aliaga y Fujimori quieren mano dura con FF.AA. en las calles, Forsyth quiere tecnologia. Pero ninguno habla de reformar el sistema judicial, que es la raiz del problema.",
+  },
+  co: {
+    institucionalidad: "Colombia tiene una Constitucion moderna (1991) y organismos de control, pero la presencia del Estado en muchas regiones sigue siendo debil. El Acuerdo de Paz prometio llevar el Estado a las zonas de conflicto — la implementacion va lenta. Sin instituciones en todo el territorio, nada mas funciona.",
+    anticorrupcion: "Odebrecht, las regalias mal invertidas, los elefantes blancos... la corrupcion en Colombia es sistematica. Los organismos de control existen pero los procesos son lentos y la impunidad alta. Ningun candidato propone reformar el sistema de contratacion publica de raiz.",
+    educacion: "Los jovenes colombianos salen del colegio 89 puntos por debajo del promedio OCDE en matematicas. La brecha entre un colegio privado de Bogota y una escuela rural del Choco es abismal. Ser Pilo Paga y Generacion E fueron esfuerzos, pero sin calidad docente no hay resultado.",
+    infraestructura: "Las vias 4G llevan anos de retraso y sobrecostos. En el Pacifico no hay agua potable. La geografia es retadora pero la corrupcion en licitaciones empeora todo. Chile logro la mejor logistica de America Latina — Colombia puede hacerlo tambien.",
+    "transformacion-digital": "Colombia avanzo con GOV.CO y el MinTIC, pero en municipios rurales el papel sigue mandando. La brecha digital entre Bogota/Medellin y el campo es enorme. Estonia digitalizo el 100% de sus servicios — Colombia deberia seguir ese camino.",
+    "diversificacion-economica": "~30% de las exportaciones son petroleo y carbon. Si baja el precio del crudo, se cae la balanza comercial. 6 de cada 10 colombianos trabajan en la informalidad. La transicion energetica agrega urgencia: hay que diversificar antes de que el petroleo deje de ser negocio.",
+    salud: "El 97% esta afiliado pero las EPS estan en crisis: deudas billonarias, pacientes muriendo en filas, tutelas como unica via de acceso. La Ley 100 fue visionaria pero su implementacion fallo. La reforma de salud del gobierno Petro genera debate, pero el sistema necesita cambios profundos.",
+    "inclusion-social": "Con un Gini de 51.5, Colombia es de los paises mas desiguales del mundo. 8 millones de desplazados, un tercio en pobreza, y brechas territoriales inmensas. Si naciste en el Choco, tus oportunidades son radicalmente menores que si naciste en Bogota.",
+    "capacidad-fiscal": "Colombia recauda 19.4% del PIB — mejor que Peru pero debajo del promedio regional. La reforma tributaria de 2022 busco mejorar pero los resultados son mixtos. La informalidad del 58% y la dependencia petrolera limitan los ingresos del Estado.",
+    "justicia-seguridad": "50+ anos de conflicto armado, 9 millones de victimas, y grupos armados que persisten. La JEP es innovadora pero enfrenta resistencias. Los lideres sociales siguen siendo asesinados. La inseguridad urbana es la preocupacion diaria de los colombianos.",
+  },
 };
 
 // ─── HELPERS ───
@@ -111,18 +126,18 @@ function getCandidatesWithoutProposals(pillarId: string, candidates: Candidate[]
 }
 
 // How many pillars does each candidate cover?
-function getCandidateCoverage(candidates: Candidate[]) {
+function getCandidateCoverage(candidates: Candidate[], pillars: DevelopmentPillar[]) {
   return candidates
     .sort((a, b) => b.pollAverage - a.pollAverage)
     .map((c) => {
-      const coveredPillars = developmentPillars.filter((p) => {
+      const coveredPillars = pillars.filter((p) => {
         const categories = pillarToCategoryMap[p.id] || [];
         return c.keyProposals.some((prop) => categories.includes(prop.category));
       });
       return {
         candidate: c,
         covered: coveredPillars.length,
-        total: developmentPillars.length,
+        total: pillars.length,
         pillarIds: coveredPillars.map((p) => p.id),
       };
     });
@@ -241,14 +256,14 @@ function PillarCard({ pillar, index, onSelect, candidates }: { pillar: Developme
 
 // ─── DETAIL MODAL ───
 
-function PillarDetailModal({ pillar, onClose, candidates }: { pillar: DevelopmentPillar; onClose: () => void; candidates: Candidate[] }) {
+function PillarDetailModal({ pillar, onClose, candidates, insights }: { pillar: DevelopmentPillar; onClose: () => void; candidates: Candidate[]; insights: Record<string, string> }) {
   const Icon = iconMap[pillar.icon] || Target;
   const colorKey = getPillarScoreColor(pillar.peruStatus.score);
   const colors = scoreColors[colorKey] || scoreColors.amber;
   const label = getPillarScoreLabel(pillar.peruStatus.score);
   const candidateProposals = getCandidateProposals(pillar.id, candidates);
   const candidatesWithout = getCandidatesWithoutProposals(pillar.id, candidates);
-  const insight = pillarInsights[pillar.id] || "";
+  const insight = insights[pillar.id] || "";
 
   return (
     <motion.div
@@ -456,8 +471,8 @@ const PILLAR_SHORT: Record<string, string> = {
   "justicia-seguridad": "Seguridad",
 };
 
-function CandidateCoverageSection({ candidates }: { candidates: Candidate[] }) {
-  const coverage = getCandidateCoverage(candidates);
+function CandidateCoverageSection({ candidates, pillars }: { candidates: Candidate[]; pillars: DevelopmentPillar[] }) {
+  const coverage = getCandidateCoverage(candidates, pillars);
   const sorted = [...coverage].sort((a, b) => b.covered - a.covered);
   const top8 = sorted.slice(0, 8);
 
@@ -544,6 +559,12 @@ interface PilaresClientProps {
 }
 
 export default function PilaresClient({ candidates }: PilaresClientProps) {
+  const { code: countryCode, name: countryName } = useCountry();
+  const pillars = getCountryPillars(countryCode);
+  const economicIndicators = getCountryEconomicIndicators(countryCode);
+  const benchmarks = getCountryBenchmarks(countryCode);
+  const pillarInsights = pillarInsightsByCountry[countryCode] || pillarInsightsByCountry.pe;
+
   const [selected, setSelected] = useState<DevelopmentPillar | null>(null);
 
   const handleSelect = useCallback((p: DevelopmentPillar) => {
@@ -563,11 +584,11 @@ export default function PilaresClient({ candidates }: PilaresClientProps) {
         <div className="flex items-center gap-2">
           <Target className="h-5 w-5 text-primary" />
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            Que necesita Peru para salir adelante
+            Que necesita {countryName} para salir adelante
           </h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          10 cosas que Peru debe resolver si quiere crecer como Chile, Corea o Singapur. Y que propone cada candidato al respecto.
+          10 cosas que {countryName} debe resolver si quiere crecer como Chile, Corea o Singapur. Y que propone cada candidato al respecto.
         </p>
       </motion.div>
 
@@ -581,9 +602,9 @@ export default function PilaresClient({ candidates }: PilaresClientProps) {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
         <Card>
           <CardContent className="p-4 sm:p-5">
-            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">Peru en numeros — como estamos vs el mundo</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">{countryName} en numeros — como estamos vs el mundo</p>
             <div className="grid sm:grid-cols-2 gap-2">
-              {peruEconomicIndicators.slice(0, 8).map((indicator) => (
+              {economicIndicators.slice(0, 8).map((indicator) => (
                 <a key={indicator.name} href={indicator.sourceUrl} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 rounded-xl border border-border p-3 hover:border-primary/30 transition-all">
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-muted-foreground group-hover:text-primary transition-colors">{indicator.name}</p>
@@ -602,7 +623,7 @@ export default function PilaresClient({ candidates }: PilaresClientProps) {
 
       {/* ─── CANDIDATO COVERAGE ─── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-        <CandidateCoverageSection candidates={candidates} />
+        <CandidateCoverageSection candidates={candidates} pillars={pillars} />
       </motion.div>
 
       {/* ─── PILLAR CARDS ─── */}
@@ -612,7 +633,7 @@ export default function PilaresClient({ candidates }: PilaresClientProps) {
           <h2 className="text-sm font-bold text-foreground">Los 10 pilares — toca cada uno para ver que proponen los candidatos</h2>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
-          {developmentPillars.map((pillar, i) => (
+          {pillars.map((pillar, i) => (
             <PillarCard key={pillar.id} pillar={pillar} index={i} onSelect={handleSelect} candidates={candidates} />
           ))}
         </div>
@@ -626,11 +647,11 @@ export default function PilaresClient({ candidates }: PilaresClientProps) {
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center gap-2 mb-1">
               <Flag className="h-4 w-4 text-emerald" />
-              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Estos paises lo lograron — Peru tambien puede</p>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Estos paises lo lograron — {countryName} tambien puede</p>
             </div>
-            <p className="text-[11px] text-muted-foreground mb-3">Paises que estaban en situaciones similares a Peru y salieron adelante. Que hicieron diferente?</p>
+            <p className="text-[11px] text-muted-foreground mb-3">Paises que estaban en situaciones similares a {countryName} y salieron adelante. Que hicieron diferente?</p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {benchmarkCountries.map((country, i) => (
+              {benchmarks.map((country, i) => (
                 <motion.div key={country.country} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.05 }} className="rounded-xl border border-border p-3 hover:border-emerald/30 transition-colors">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-bold text-foreground">{country.country}</h3>
@@ -686,7 +707,7 @@ export default function PilaresClient({ candidates }: PilaresClientProps) {
 
       {/* ─── DETAIL MODAL ─── */}
       <AnimatePresence>
-        {selected && <PillarDetailModal pillar={selected} onClose={handleClose} candidates={candidates} />}
+        {selected && <PillarDetailModal pillar={selected} onClose={handleClose} candidates={candidates} insights={pillarInsights} />}
       </AnimatePresence>
     </div>
   );
