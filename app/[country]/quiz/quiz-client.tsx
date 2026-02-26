@@ -204,11 +204,11 @@ export default function QuizClient({ candidates }: QuizClientProps) {
     const question = resolvedQuestions[currentQuestion];
     setAnswers({ ...answers, [question.id]: answer });
 
+    // Auto-advance to next question, but NOT to results on last question
     if (currentQuestion < resolvedQuestions.length - 1) {
       setTimeout(() => setCurrentQuestion(currentQuestion + 1), 200);
-    } else {
-      setTimeout(() => setShowResults(true), 300);
     }
+    // On the last question, stay — user must tap "Ver resultados" explicitly
   };
 
   const reset = () => {
@@ -440,6 +440,24 @@ export default function QuizClient({ candidates }: QuizClientProps) {
         </motion.div>
       </AnimatePresence>
 
+      {/* Show prominent "Ver resultados" CTA when all questions answered */}
+      {Object.keys(answers).length === resolvedQuestions.length && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Button
+            size="lg"
+            onClick={() => setShowResults(true)}
+            className="w-full gap-2 text-base font-bold py-6"
+          >
+            <CheckCircle2 className="h-5 w-5" />
+            Ver resultados
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+        </motion.div>
+      )}
+
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
@@ -477,14 +495,12 @@ export default function QuizClient({ candidates }: QuizClientProps) {
           onClick={() => {
             if (currentQuestion < resolvedQuestions.length - 1) {
               setCurrentQuestion(currentQuestion + 1);
-            } else if (Object.keys(answers).length === resolvedQuestions.length) {
-              setShowResults(true);
             }
           }}
-          disabled={currentQuestion === resolvedQuestions.length - 1 && Object.keys(answers).length < resolvedQuestions.length}
+          disabled={currentQuestion === resolvedQuestions.length - 1}
           className="gap-2"
         >
-          {currentQuestion === resolvedQuestions.length - 1 ? "Ver resultados" : "Siguiente"}
+          Siguiente
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

@@ -15,7 +15,7 @@ export async function generateMetadata({
 
   return {
     title: `¿Por Quién Votar? Quiz Electoral ${year} ${name} — Descubre tu Candidato`,
-    description: `¿No sabes por quién votar en las elecciones ${year} de ${name}? Descubre con qué candidato presidencial coincides más. Quiz de 10 preguntas.`,
+    description: `Resuelve este test de 10 preguntas y te damos un ranking con los candidatos presidenciales de ${name} ${year} más afines a ti. Descubre con quién coincides.`,
     alternates: { canonical: `https://condorlatam.com/${country}/quiz` },
     keywords: [
       `por quien votar ${year} ${name.toLowerCase()}`,
@@ -23,7 +23,19 @@ export async function generateMetadata({
       `con que candidato coincido`,
       `elecciones ${year} ${name.toLowerCase()} quiz`,
       `candidatos presidenciales ${year} ${name.toLowerCase()}`,
+      `test electoral ${name.toLowerCase()}`,
     ],
+    openGraph: {
+      title: `¿No sabes por quién votar en ${name}? Resuelve este test`,
+      description: `10 preguntas → ranking personalizado de candidatos ${year}. Descubre con quién coincides más.`,
+      url: `https://condorlatam.com/${country}/quiz`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `¿No sabes por quién votar en ${name}? Resuelve este test`,
+      description: `10 preguntas → ranking personalizado de candidatos ${year}. Descubre con quién coincides más.`,
+    },
   };
 }
 
