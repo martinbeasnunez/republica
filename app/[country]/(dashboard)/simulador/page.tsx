@@ -12,11 +12,16 @@ export async function generateMetadata({
   const config = getCountryConfig(country);
   const name = config?.name ?? "Perú";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
+  const isColombia = country === "co";
 
   return {
-    title: `Simulador Electoral — Escenarios ${name} ${year}`,
-    description: `Simulador electoral con Monte Carlo para las elecciones ${name} ${year}. Calcula probabilidades basado en encuestas.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/simulador` },
+    title: isColombia
+      ? `Análisis de Escenarios Electorales — ${name} ${year}`
+      : `Simulador Electoral — Escenarios ${name} ${year}`,
+    description: isColombia
+      ? `Análisis de escenarios electorales con modelo Monte Carlo para las elecciones ${name} ${year}. Proyecciones basadas en encuestas.`
+      : `Simulador electoral con Monte Carlo para las elecciones ${name} ${year}. Calcula probabilidades basado en encuestas.`,
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/simulador` },
   };
 }
 

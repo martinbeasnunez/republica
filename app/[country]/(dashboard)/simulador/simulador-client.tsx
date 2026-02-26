@@ -226,15 +226,17 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 sm:p-4"
+          className="rounded-lg border border-amber-400/50 bg-amber-500/10 p-4 sm:p-5"
         >
-          <div className="flex items-start gap-2">
-            <Scale className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-            <div className="text-xs text-amber-200/80">
-              <span className="font-semibold text-amber-400">Aviso legal:</span>{" "}
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 shrink-0">
+              <Scale className="h-4 w-4 text-amber-400" />
+            </div>
+            <div className="text-sm text-amber-100/90 leading-relaxed">
+              <span className="font-bold text-amber-300">⚖️ Aviso legal:</span>{" "}
               Esta herramienta es un ejercicio educativo de análisis de escenarios basado en modelos estadísticos (Monte Carlo).
               No constituye encuesta ni sondeo de intención de voto bajo los términos de la{" "}
-              <span className="font-mono text-amber-300">Ley 2494 de 2025</span>.
+              <span className="font-mono font-semibold text-amber-300">Ley 2494 de 2025</span>.
               Los resultados son proyecciones hipotéticas, no predicciones.
             </div>
           </div>
@@ -256,7 +258,7 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
           </Badge>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-          Ejecuta miles de simulaciones para proyectar probabilidades de victoria
+          Ejecuta miles de {isColombia ? "escenarios" : "simulaciones"} para proyectar probabilidades de victoria
         </p>
       </motion.div>
 
@@ -274,13 +276,13 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
                 {isRunning ? (
                   <>
                     <Activity className="h-4 w-4 animate-pulse" />
-                    SIMULANDO...
+                    {isColombia ? "ANALIZANDO..." : "SIMULANDO..."}
                   </>
                 ) : (
                   <>
                     <Play className="h-4 w-4" />
-                    <span className="hidden sm:inline">EJECUTAR {config.numSimulations.toLocaleString()} SIMULACIONES</span>
-                    <span className="sm:hidden">SIMULAR</span>
+                    <span className="hidden sm:inline">EJECUTAR {config.numSimulations.toLocaleString()} {isColombia ? "ESCENARIOS" : "SIMULACIONES"}</span>
+                    <span className="sm:hidden">{isColombia ? "ANALIZAR" : "SIMULAR"}</span>
                   </>
                 )}
               </Button>
@@ -327,7 +329,7 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
                   <div>
                     <label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-3">
                       <BarChart3 className="h-3 w-3" />
-                      Simulaciones
+                      {isColombia ? "Escenarios" : "Simulaciones"}
                     </label>
                     <Slider
                       value={[config.numSimulations]}
@@ -406,7 +408,7 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
               </div>
             </div>
             <p className="mt-4 font-mono text-sm text-primary animate-pulse">
-              Ejecutando {config.numSimulations.toLocaleString()} simulaciones...
+              Ejecutando {config.numSimulations.toLocaleString()} {isColombia ? "escenarios" : "simulaciones"}...
             </p>
             <p className="mt-1 font-mono text-[10px] text-muted-foreground">
               Modelo Monte Carlo con distribución normal multivariada
@@ -632,15 +634,16 @@ export function SimuladorClient({ candidates }: SimuladorClientProps) {
             </div>
           </div>
           <h3 className="text-sm font-medium text-foreground">
-            Listo para simular
+            {isColombia ? "Listo para analizar" : "Listo para simular"}
           </h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-md text-center">
-            El simulador ejecuta miles de elecciones aleatorias basadas en encuestas actuales,
-            volatilidad histórica y porcentaje de indecisos para proyectar probabilidades de victoria.
+            {isColombia
+              ? "El modelo ejecuta miles de escenarios electorales basados en encuestas actuales, volatilidad histórica y porcentaje de indecisos para proyectar probabilidades de victoria."
+              : "El simulador ejecuta miles de elecciones aleatorias basadas en encuestas actuales, volatilidad histórica y porcentaje de indecisos para proyectar probabilidades de victoria."}
           </p>
           <Button onClick={handleRun} className="mt-6 gap-2 font-mono" size="lg">
             <Play className="h-4 w-4" />
-            EJECUTAR SIMULACIÓN
+            {isColombia ? "EJECUTAR ANÁLISIS" : "EJECUTAR SIMULACIÓN"}
           </Button>
         </motion.div>
       )}

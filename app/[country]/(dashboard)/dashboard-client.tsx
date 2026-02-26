@@ -120,6 +120,7 @@ export default function DashboardClient({ candidates, topCandidates, articles, f
 
 function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
   const country = useCountry();
+  const isColombia = country.code === "co";
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -150,7 +151,7 @@ function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
               <Dice6 className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Simulador Electoral</h3>
+              <h3 className="text-sm font-semibold text-foreground">{isColombia ? "Análisis de Escenarios" : "Simulador Electoral"}</h3>
               <p className="text-[10px] text-muted-foreground font-mono">MONTE CARLO</p>
             </div>
             <Badge variant="secondary" className="text-[9px] font-mono">NEW</Badge>
@@ -159,7 +160,7 @@ function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
           {!result ? (
             <div className="flex-1 flex flex-col items-center justify-center py-4 sm:py-6">
               <p className="text-xs text-muted-foreground text-center mb-4">
-                Ejecuta 5,000 simulaciones para proyectar quien ganaria hoy
+                Ejecuta 5,000 {isColombia ? "escenarios" : "simulaciones"} para proyectar quien ganaria hoy
               </p>
               <Button
                 onClick={handleQuickSim}
@@ -170,12 +171,12 @@ function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
                 {isRunning ? (
                   <>
                     <Activity className="h-3.5 w-3.5 animate-pulse" />
-                    SIMULANDO...
+                    {isColombia ? "ANALIZANDO..." : "SIMULANDO..."}
                   </>
                 ) : (
                   <>
                     <Play className="h-3.5 w-3.5" />
-                    SIMULAR AHORA
+                    {isColombia ? "ANALIZAR AHORA" : "SIMULAR AHORA"}
                   </>
                 )}
               </Button>
@@ -201,7 +202,7 @@ function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
               ))}
               <div className="pt-2 border-t border-border">
                 <p className="text-[10px] text-muted-foreground font-mono">
-                  {result.totalSimulations.toLocaleString()} simulaciones ejecutadas
+                  {result.totalSimulations.toLocaleString()} {isColombia ? "escenarios ejecutados" : "simulaciones ejecutadas"}
                 </p>
               </div>
             </div>
@@ -209,7 +210,7 @@ function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
 
           <Link href={`/${country.code}/simulador`} className="mt-3">
             <Button variant="ghost" size="sm" className="w-full gap-2 text-xs text-muted-foreground hover:text-primary">
-              Ver simulador completo
+              {isColombia ? "Ver análisis completo" : "Ver simulador completo"}
               <ArrowRight className="h-3 w-3" />
             </Button>
           </Link>
