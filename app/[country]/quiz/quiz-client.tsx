@@ -20,7 +20,6 @@ import {
   Trophy,
   ExternalLink,
 } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -484,14 +483,11 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                       className="relative h-24 w-24 overflow-hidden rounded-full border-3"
                       style={{ borderColor: top.candidate.partyColor }}
                     >
-                      {top.candidate.photo ? (
-                        <Image
+                      {top.candidate.photo && (top.candidate.photo.startsWith("http") || top.candidate.photo.startsWith("/")) ? (
+                        <img
                           src={top.candidate.photo}
                           alt={top.candidate.name}
-                          fill
-                          className="object-cover"
-                          sizes="96px"
-                          priority
+                          className="h-full w-full object-cover"
                         />
                       ) : (
                         <div
@@ -581,13 +577,11 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                           className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border-2"
                           style={{ borderColor: r.candidate.partyColor }}
                         >
-                          {r.candidate.photo ? (
-                            <Image
+                          {r.candidate.photo && (r.candidate.photo.startsWith("http") || r.candidate.photo.startsWith("/")) ? (
+                            <img
                               src={r.candidate.photo}
                               alt={r.candidate.shortName}
-                              fill
-                              className="object-cover"
-                              sizes="32px"
+                              className="h-full w-full object-cover"
                             />
                           ) : (
                             <div
@@ -755,13 +749,11 @@ export default function QuizClient({ candidates }: QuizClientProps) {
                         className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border-2"
                         style={{ borderColor: result.candidate.partyColor }}
                       >
-                        {result.candidate.photo ? (
-                          <Image
+                        {result.candidate.photo && (result.candidate.photo.startsWith("http") || result.candidate.photo.startsWith("/")) ? (
+                          <img
                             src={result.candidate.photo}
                             alt={result.candidate.shortName}
-                            fill
-                            className="object-cover"
-                            sizes="32px"
+                            className="h-full w-full object-cover"
                           />
                         ) : (
                           <div
