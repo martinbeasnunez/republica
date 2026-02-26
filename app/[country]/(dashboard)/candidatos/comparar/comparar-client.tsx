@@ -86,7 +86,7 @@ export function CompararClient({ candidates }: CompararClientProps) {
               className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full overflow-hidden"
               style={{ backgroundColor: candidate.partyColor + "20" }}
             >
-              {candidate.photo && candidate.photo.startsWith("http") ? (
+              {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
                 <img
                   src={candidate.photo}
                   alt={candidate.name}

@@ -104,7 +104,7 @@ export function CandidateJsonLd({
     jobTitle: `Candidato presidencial - ${party}`,
     description: bio,
     url: `${BASE_URL}/${countryCode}/candidatos/${slug}`,
-    image: photo.startsWith("http") ? photo : `${BASE_URL}${photo}`,
+    image: photo.startsWith("http") ? photo : photo.startsWith("/") ? `${BASE_URL}${photo}` : `${BASE_URL}/candidatos/${photo}`,
     birthPlace: {
       "@type": "Place",
       name: region,

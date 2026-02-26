@@ -340,7 +340,7 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                           backgroundColor: candidate.partyColor + "15",
                         }}
                       >
-                        {candidate.photo && candidate.photo.startsWith("http") ? (
+                        {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
                           <img
                             src={candidate.photo}
                             alt={candidate.name}

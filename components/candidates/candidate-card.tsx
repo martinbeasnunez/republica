@@ -56,7 +56,7 @@ export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
                   borderColor: candidate.partyColor,
                 }}
               >
-                {candidate.photo && candidate.photo.startsWith("http") ? (
+                {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
                   <img
                     src={candidate.photo}
                     alt={candidate.name}

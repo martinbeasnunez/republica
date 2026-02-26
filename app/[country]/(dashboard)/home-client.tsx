@@ -185,7 +185,7 @@ function EncuestasBlock({ candidates }: { candidates: Candidate[] }) {
                   borderColor: candidate.partyColor,
                 }}
               >
-                {candidate.photo?.startsWith("http") ? (
+                {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
                   <img
                     src={candidate.photo}
                     alt={candidate.shortName}
@@ -316,7 +316,7 @@ function ConocelosBlock({
                       borderColor: candidate.partyColor,
                     }}
                   >
-                    {candidate.photo?.startsWith("http") ? (
+                    {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
                       <img
                         src={candidate.photo}
                         alt={candidate.shortName}

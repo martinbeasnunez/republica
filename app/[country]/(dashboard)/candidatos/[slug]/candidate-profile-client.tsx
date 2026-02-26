@@ -128,7 +128,7 @@ export function CandidateProfileClient({ candidate }: CandidateProfileClientProp
                 borderColor: candidate.partyColor + "40",
               }}
             >
-              {candidate.photo && candidate.photo.startsWith("http") ? (
+              {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
                 <img
                   src={candidate.photo}
                   alt={candidate.name}
