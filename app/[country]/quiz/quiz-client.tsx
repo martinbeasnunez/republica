@@ -14,6 +14,11 @@ import {
   CircleCheck,
   CircleMinus,
   CircleX,
+  Copy,
+  Check,
+  Sparkles,
+  Trophy,
+  ExternalLink,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -25,6 +30,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 import { useCountry } from "@/lib/config/country-context";
+import { getCountryConfig } from "@/lib/config/countries";
 
 interface CountryCtx {
   code: string;
@@ -200,6 +206,27 @@ function countAgreements(breakdown: TopicBreakdown[]): number {
   return breakdown.filter((t) => t.match === "agree").length;
 }
 
+// ── Animated count-up number ──
+function AnimatedNumber({ value, delay = 0 }: { value: number; delay?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const duration = 1000;
+      const startTime = performance.now();
+      const step = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setDisplay(Math.round(eased * value));
+        if (progress < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, [value, delay]);
+  return <>{display}</>;
+}
+
 interface QuizClientProps {
   candidates: Candidate[];
 }
@@ -308,260 +335,541 @@ export default function QuizClient({ candidates }: QuizClientProps) {
   // ── Expandable detail state for candidates #2+ ──
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // ── Theme colors for branded results ──
+  const countryConfig = getCountryConfig(countryCode);
+  const primary = countryConfig?.theme.primary ?? "#8B1A1A";
+  const primaryLight = countryConfig?.theme.primaryLight ?? "#A52525";
+  const electionYear = countryConfig?.electionDate?.slice(0, 4) ?? "2026";
+
+  // ── Share state ──
+  const [shareState, setShareState] = useState<"idle" | "copied">("idle");
+
+  // ── Reveal animation stages ──
+  const [revealStage, setRevealStage] = useState(0);
+
+  useEffect(() => {
+    if (!showResults) { setRevealStage(0); return; }
+    const timers = [
+      setTimeout(() => setRevealStage(1), 100),
+      setTimeout(() => setRevealStage(2), 500),
+      setTimeout(() => setRevealStage(3), 1200),
+      setTimeout(() => setRevealStage(4), 1800),
+      setTimeout(() => setRevealStage(5), 2400),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [showResults]);
+
+  const handleShare = async () => {
+    if (!results[0]) return;
+    const top = results[0];
+    const quizUrl = `https://condorlatam.com/${countryCode}/quiz`;
+    const shareText = `Mi candidato #1 es ${top.candidate.shortName} con ${top.compatibility}% de compatibilidad 🗳️ Descubre el tuyo en CONDOR:`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: "CONDOR Quiz Electoral", text: shareText, url: quizUrl });
+        return;
+      } catch { /* user cancelled */ }
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${quizUrl}`);
+      setShareState("copied");
+      setTimeout(() => setShareState("idle"), 2500);
+    } catch {
+      window.prompt("Copia este enlace:", `${shareText}\n${quizUrl}`);
+    }
+  };
+
   if (showResults) {
+    const top = results[0];
+    const runners = results.slice(1, 3);
+    const rest = results.slice(3, 8);
+    const topBreakdown = top ? getTopicBreakdown(answers, top.candidate, resolvedQuestions) : [];
+    const topAgrees = countAgreements(topBreakdown);
+
+    // Ring gauge math
+    const ringSize = 180;
+    const ringStroke = 6;
+    const ringRadius = (ringSize - ringStroke) / 2;
+    const ringCircumference = 2 * Math.PI * ringRadius;
+    const ringOffset = ringCircumference - ((top?.compatibility ?? 0) / 100) * ringCircumference;
+
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+      <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
+        {/* ═══════════ ZONA A: SCREENSHOT CARD ═══════════ */}
+        <div className="quiz-result-bg rounded-2xl border border-border overflow-hidden glow-indigo">
+          {/* Classification header */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={revealStage >= 1 ? { opacity: 1 } : {}}
+            className="classification-header text-center"
+          >
+            CONDOR &nbsp;// &nbsp;QUIZ ELECTORAL &nbsp;// &nbsp;{countryName.toUpperCase()} {electionYear} &nbsp;// &nbsp;TUS RESULTADOS
+          </motion.div>
+
+          <div className="px-5 pt-5 pb-6 sm:px-8 sm:pt-6 sm:pb-8">
+            {/* CONDOR logo + name */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={revealStage >= 1 ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5 }}
+              className="flex items-center justify-center gap-2 mb-1"
+            >
+              <div
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black text-white"
+                style={{ background: `linear-gradient(135deg, ${primary}, ${primaryLight})` }}
+              >
+                C
+              </div>
+              <span className="font-mono text-xs font-bold tracking-widest text-muted-foreground">
+                CONDOR
+              </span>
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={revealStage >= 1 ? { opacity: 1 } : {}}
+              transition={{ delay: 0.2 }}
+              className="text-center text-xs text-muted-foreground mb-6"
+            >
+              Tu candidato más compatible
+            </motion.p>
+
+            {/* ── Hero: Ring gauge + candidate photo ── */}
+            {top && (
+              <div className="flex flex-col items-center">
+                {/* Ring container */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={revealStage >= 2 ? { opacity: 1, scale: 1 } : {}}
+                  transition={{ type: "spring", duration: 0.6 }}
+                  className="relative mb-4"
+                  style={{ width: ringSize, height: ringSize }}
+                >
+                  {/* SVG Ring */}
+                  <svg width={ringSize} height={ringSize} className="-rotate-90">
+                    {/* Background circle */}
+                    <circle
+                      cx={ringSize / 2}
+                      cy={ringSize / 2}
+                      r={ringRadius}
+                      fill="none"
+                      stroke="currentColor"
+                      className="text-muted/20"
+                      strokeWidth={ringStroke}
+                    />
+                    {/* Animated foreground circle */}
+                    <motion.circle
+                      cx={ringSize / 2}
+                      cy={ringSize / 2}
+                      r={ringRadius}
+                      fill="none"
+                      stroke={top.candidate.partyColor}
+                      strokeWidth={ringStroke}
+                      strokeLinecap="round"
+                      strokeDasharray={ringCircumference}
+                      initial={{ strokeDashoffset: ringCircumference }}
+                      animate={revealStage >= 2 ? { strokeDashoffset: ringOffset } : {}}
+                      transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                    />
+                  </svg>
+
+                  {/* Candidate photo centered in ring */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={revealStage >= 3 ? { opacity: 1, scale: 1 } : {}}
+                    transition={{ type: "spring", duration: 0.5 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    <div
+                      className="relative h-24 w-24 overflow-hidden rounded-full border-3"
+                      style={{ borderColor: top.candidate.partyColor }}
+                    >
+                      {top.candidate.photo ? (
+                        <Image
+                          src={top.candidate.photo}
+                          alt={top.candidate.name}
+                          fill
+                          className="object-cover"
+                          sizes="96px"
+                          priority
+                        />
+                      ) : (
+                        <div
+                          className="flex h-full w-full items-center justify-center"
+                          style={{ backgroundColor: top.candidate.partyColor + "20" }}
+                        >
+                          <User className="h-10 w-10" style={{ color: top.candidate.partyColor }} />
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </motion.div>
+
+                {/* Compatibility percentage */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={revealStage >= 2 ? { opacity: 1 } : {}}
+                  className="text-center mb-1"
+                >
+                  <span
+                    className={cn(
+                      "font-mono text-4xl sm:text-5xl font-black tabular-nums",
+                      top.compatibility >= 70
+                        ? "text-emerald"
+                        : top.compatibility >= 50
+                          ? "text-amber"
+                          : "text-muted-foreground"
+                    )}
+                  >
+                    <AnimatedNumber value={top.compatibility} delay={600} />%
+                  </span>
+                  <p className="text-[11px] text-muted-foreground font-mono mt-0.5">compatible</p>
+                </motion.div>
+
+                {/* Candidate name + party */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={revealStage >= 3 ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.4 }}
+                  className="text-center mt-2"
+                >
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                    {top.candidate.name}
+                  </h2>
+                  <div className="flex items-center justify-center gap-2 mt-1.5">
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                      style={{
+                        backgroundColor: top.candidate.partyColor + "20",
+                        color: top.candidate.partyColor,
+                      }}
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: top.candidate.partyColor }}
+                      />
+                      {top.candidate.party}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Coinciden en <span className="font-semibold text-foreground">{topAgrees} de {resolvedQuestions.length}</span> temas
+                  </p>
+                </motion.div>
+              </div>
+            )}
+
+            {/* ── Runners-up: #2 and #3 ── */}
+            {runners.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={revealStage >= 4 ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.4 }}
+                className="grid grid-cols-2 gap-2 sm:gap-3 mt-6"
+              >
+                {runners.map((r, i) => {
+                  const rAgrees = countAgreements(getTopicBreakdown(answers, r.candidate, resolvedQuestions));
+                  return (
+                    <div
+                      key={r.candidate.id}
+                      className="rounded-xl border border-border bg-card/50 p-3"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded font-mono text-[10px] font-bold bg-muted text-muted-foreground">
+                          {i + 2}
+                        </span>
+                        <div
+                          className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border-2"
+                          style={{ borderColor: r.candidate.partyColor }}
+                        >
+                          {r.candidate.photo ? (
+                            <Image
+                              src={r.candidate.photo}
+                              alt={r.candidate.shortName}
+                              fill
+                              className="object-cover"
+                              sizes="32px"
+                            />
+                          ) : (
+                            <div
+                              className="flex h-full w-full items-center justify-center"
+                              style={{ backgroundColor: r.candidate.partyColor + "20" }}
+                            >
+                              <User className="h-4 w-4" style={{ color: r.candidate.partyColor }} />
+                            </div>
+                          )}
+                        </div>
+                        <span
+                          className={cn(
+                            "ml-auto font-mono text-lg font-bold tabular-nums",
+                            r.compatibility >= 70
+                              ? "text-emerald"
+                              : r.compatibility >= 50
+                                ? "text-amber"
+                                : "text-muted-foreground"
+                          )}
+                        >
+                          {r.compatibility}%
+                        </span>
+                      </div>
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {r.candidate.shortName}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {r.candidate.party} · {rAgrees}/{resolvedQuestions.length} temas
+                      </p>
+                      {/* Mini progress bar */}
+                      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: r.candidate.partyColor }}
+                          initial={{ width: 0 }}
+                          animate={revealStage >= 4 ? { width: `${r.compatibility}%` } : {}}
+                          transition={{ duration: 0.8, delay: i * 0.15 }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
+
+            {/* ── Branded footer ── */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={revealStage >= 4 ? { opacity: 1 } : {}}
+              transition={{ delay: 0.3 }}
+              className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-border/50"
+            >
+              <div
+                className="flex h-4 w-4 items-center justify-center rounded text-[8px] font-black text-white"
+                style={{ background: `linear-gradient(135deg, ${primary}, ${primaryLight})` }}
+              >
+                C
+              </div>
+              <span className="font-mono text-[10px] text-muted-foreground tracking-wider">
+                condorlatam.com/{countryCode}/quiz
+              </span>
+            </motion.div>
+          </div>
+
+          {/* Bottom gradient accent */}
+          <div
+            className="h-1"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${primary}, ${primaryLight}, ${primary}, transparent)`,
+            }}
+          />
+        </div>
+
+        {/* ═══════════ SHARE BUTTON (primary CTA) ═══════════ */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
+          initial={{ opacity: 0, y: 10 }}
+          animate={revealStage >= 5 ? { opacity: 1, y: 0 } : {}}
         >
-          <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground">
-            Tus Resultados
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Basado en tus respuestas, estos son los candidatos más compatibles
-            contigo
-          </p>
+          <Button
+            size="lg"
+            onClick={handleShare}
+            className="w-full gap-2 text-base font-bold py-6 glow-indigo"
+          >
+            {shareState === "copied" ? (
+              <>
+                <Check className="h-5 w-5" />
+                Enlace copiado
+              </>
+            ) : (
+              <>
+                <Share2 className="h-5 w-5" />
+                Compartir mis resultados
+              </>
+            )}
+          </Button>
         </motion.div>
 
-        <div className="space-y-3">
-          {results.slice(0, 8).map((result, index) => {
-            const breakdown = getTopicBreakdown(answers, result.candidate, resolvedQuestions);
-            const agrees = countAgreements(breakdown);
-            const isTop = index === 0;
-            const isExpanded = isTop || expandedId === result.candidate.id;
-
-            return (
-              <motion.div
-                key={result.candidate.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <Card
-                  className={cn(
-                    "bg-card border-border overflow-hidden",
-                    isTop && "border-primary/30 glow-indigo"
-                  )}
-                >
-                  <CardContent className={cn("p-4", isTop && "p-5")}>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      {/* Rank */}
-                      <span
-                        className={cn(
-                          "flex shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold",
-                          isTop
-                            ? "h-9 w-9 bg-primary text-white"
-                            : "h-8 w-8 bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {index + 1}
+        {/* ═══════════ ZONA B: TOPIC BREAKDOWN (#1) ═══════════ */}
+        {top && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={revealStage >= 5 ? { opacity: 1 } : {}}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="bg-card border-border overflow-hidden">
+              <CardContent className="p-4 sm:p-5">
+                <p className="text-xs font-semibold text-foreground mb-3">
+                  ¿Por qué coincides con {top.candidate.shortName}?
+                </p>
+                <div className="space-y-1.5">
+                  {topBreakdown.map((topic) => (
+                    <div key={topic.topicId} className="flex items-center gap-2 text-xs">
+                      {topic.match === "agree" ? (
+                        <CircleCheck className="h-4 w-4 shrink-0 text-emerald" />
+                      ) : topic.match === "partial" ? (
+                        <CircleMinus className="h-4 w-4 shrink-0 text-amber" />
+                      ) : (
+                        <CircleX className="h-4 w-4 shrink-0 text-rose" />
+                      )}
+                      <span className="font-medium text-foreground w-24 shrink-0">
+                        {topic.topicLabel}
                       </span>
+                      <span className="text-muted-foreground truncate">
+                        {topic.match === "agree"
+                          ? `Ambos: ${positionLabel(topic.candidatePosition).toLowerCase()}`
+                          : `Tú: ${positionLabel(topic.userAnswer).toLowerCase()} · Candidato: ${positionLabel(topic.candidatePosition).toLowerCase()}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  href={`/${countryCode}/candidatos/${top.candidate.slug}`}
+                  className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+                >
+                  Ver perfil completo
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-                      {/* Photo */}
+        {/* ═══════════ REMAINING CANDIDATES (#4-#8) ═══════════ */}
+        {rest.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={revealStage >= 5 ? { opacity: 1 } : {}}
+            transition={{ delay: 0.2 }}
+            className="space-y-2"
+          >
+            <p className="text-xs font-medium text-muted-foreground px-1">Otros candidatos</p>
+            {rest.map((result, index) => {
+              const breakdown = getTopicBreakdown(answers, result.candidate, resolvedQuestions);
+              const agrees = countAgreements(breakdown);
+              const isExpanded = expandedId === result.candidate.id;
+
+              return (
+                <Card key={result.candidate.id} className="bg-card border-border overflow-hidden">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded font-mono text-[10px] font-bold bg-muted text-muted-foreground">
+                        {index + 4}
+                      </span>
                       <div
-                        className={cn(
-                          "relative shrink-0 overflow-hidden rounded-full border-2",
-                          isTop ? "h-14 w-14" : "h-10 w-10"
-                        )}
+                        className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border-2"
                         style={{ borderColor: result.candidate.partyColor }}
                       >
                         {result.candidate.photo ? (
                           <Image
                             src={result.candidate.photo}
-                            alt={result.candidate.name}
+                            alt={result.candidate.shortName}
                             fill
                             className="object-cover"
-                            sizes={isTop ? "56px" : "40px"}
+                            sizes="32px"
                           />
                         ) : (
                           <div
                             className="flex h-full w-full items-center justify-center"
-                            style={{
-                              backgroundColor: result.candidate.partyColor + "20",
-                            }}
+                            style={{ backgroundColor: result.candidate.partyColor + "20" }}
                           >
-                            <User
-                              className={cn(isTop ? "h-7 w-7" : "h-5 w-5")}
-                              style={{ color: result.candidate.partyColor }}
-                            />
+                            <User className="h-4 w-4" style={{ color: result.candidate.partyColor }} />
                           </div>
                         )}
                       </div>
-
-                      {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={cn(
-                            "font-semibold text-foreground truncate",
-                            isTop ? "text-base" : "text-sm"
-                          )}
-                        >
-                          {result.candidate.name}
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {result.candidate.shortName}
                         </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span
-                            className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium"
-                            style={{
-                              backgroundColor: result.candidate.partyColor + "20",
-                              color: result.candidate.partyColor,
-                            }}
-                          >
-                            {result.candidate.party}
-                          </span>
-                          {!isTop && (
-                            <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                              Coinciden en {agrees}/{resolvedQuestions.length}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Compatibility */}
-                      <div className="text-right shrink-0">
-                        <p
-                          className={cn(
-                            "font-mono font-bold tabular-nums",
-                            isTop ? "text-2xl" : "text-xl",
-                            result.compatibility >= 70
-                              ? "text-emerald"
-                              : result.compatibility >= 50
-                                ? "text-amber"
-                                : "text-muted-foreground"
-                          )}
-                        >
-                          {result.compatibility}%
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          compatible
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {result.candidate.party} · {agrees}/{resolvedQuestions.length} temas
                         </p>
                       </div>
-                    </div>
-
-                    {/* Compatibility bar */}
-                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{
-                          backgroundColor: result.candidate.partyColor,
-                        }}
-                        initial={{ width: 0 }}
-                        animate={{
-                          width: `${result.compatibility}%`,
-                        }}
-                        transition={{
-                          duration: 0.8,
-                          delay: index * 0.08,
-                        }}
-                      />
-                    </div>
-
-                    {/* Topic breakdown — always open for #1, expandable for others */}
-                    {!isTop && (
-                      <button
-                        onClick={() =>
-                          setExpandedId(
-                            expandedId === result.candidate.id
-                              ? null
-                              : result.candidate.id
-                          )
-                        }
-                        className="mt-3 flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      <span
+                        className={cn(
+                          "font-mono text-base font-bold tabular-nums shrink-0",
+                          result.compatibility >= 70
+                            ? "text-emerald"
+                            : result.compatibility >= 50
+                              ? "text-amber"
+                              : "text-muted-foreground"
+                        )}
                       >
-                        <span>
-                          Coinciden en {agrees} de {resolvedQuestions.length} temas
-                        </span>
-                        <ChevronDown
-                          className={cn(
-                            "h-4 w-4 transition-transform",
-                            isExpanded && "rotate-180"
-                          )}
-                        />
-                      </button>
-                    )}
+                        {result.compatibility}%
+                      </span>
+                    </div>
 
+                    {/* Expandable topic breakdown */}
+                    <button
+                      onClick={() =>
+                        setExpandedId(expandedId === result.candidate.id ? null : result.candidate.id)
+                      }
+                      className="mt-2 flex w-full items-center justify-between text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span>Ver detalle</span>
+                      <ChevronDown
+                        className={cn(
+                          "h-3.5 w-3.5 transition-transform",
+                          isExpanded && "rotate-180"
+                        )}
+                      />
+                    </button>
                     <AnimatePresence>
                       {isExpanded && (
                         <motion.div
-                          initial={isTop ? { opacity: 1, height: "auto" } : { opacity: 0, height: 0 }}
+                          initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.3 }}
                           className="overflow-hidden"
                         >
-                          <div className={cn("space-y-1.5", isTop ? "mt-4 pt-4 border-t border-border" : "mt-2")}>
-                            {isTop && (
-                              <p className="text-xs font-semibold text-foreground mb-2">
-                                ¿Por qué coincides con {result.candidate.shortName}?
-                              </p>
-                            )}
+                          <div className="space-y-1 mt-2 pt-2 border-t border-border">
                             {breakdown.map((topic) => (
-                              <div
-                                key={topic.topicId}
-                                className="flex items-center gap-2 text-xs"
-                              >
+                              <div key={topic.topicId} className="flex items-center gap-2 text-[11px]">
                                 {topic.match === "agree" ? (
-                                  <CircleCheck className="h-4 w-4 shrink-0 text-emerald" />
+                                  <CircleCheck className="h-3.5 w-3.5 shrink-0 text-emerald" />
                                 ) : topic.match === "partial" ? (
-                                  <CircleMinus className="h-4 w-4 shrink-0 text-amber" />
+                                  <CircleMinus className="h-3.5 w-3.5 shrink-0 text-amber" />
                                 ) : (
-                                  <CircleX className="h-4 w-4 shrink-0 text-rose" />
+                                  <CircleX className="h-3.5 w-3.5 shrink-0 text-rose" />
                                 )}
-                                <span className="font-medium text-foreground w-24 shrink-0">
-                                  {topic.topicLabel}
-                                </span>
-                                <span className="text-muted-foreground truncate">
-                                  {topic.match === "agree"
-                                    ? `Ambos: ${positionLabel(topic.candidatePosition).toLowerCase()}`
-                                    : topic.match === "partial"
-                                      ? `Tú: ${positionLabel(topic.userAnswer).toLowerCase()} · Candidato: ${positionLabel(topic.candidatePosition).toLowerCase()}`
-                                      : `Tú: ${positionLabel(topic.userAnswer).toLowerCase()} · Candidato: ${positionLabel(topic.candidatePosition).toLowerCase()}`}
-                                </span>
+                                <span className="font-medium text-foreground">{topic.topicLabel}</span>
                               </div>
                             ))}
                           </div>
-
-                          {/* Link to full profile for top candidate */}
-                          {isTop && (
-                            <Link
-                              href={`/${countryCode}/candidatos/${result.candidate.slug}`}
-                              className="mt-4 flex items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent transition-colors"
-                            >
-                              Ver perfil completo de {result.candidate.shortName}
-                              <ChevronRight className="h-4 w-4" />
-                            </Link>
-                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </CardContent>
                 </Card>
-              </motion.div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </motion.div>
+        )}
 
+        {/* ═══════════ ZONA C: ACTIONS ═══════════ */}
         <WhatsAppCTA context="quiz" />
 
-        {/* Actions */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-          <Button variant="outline" onClick={reset} className="gap-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={revealStage >= 5 ? { opacity: 1 } : {}}
+          transition={{ delay: 0.3 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-2"
+        >
+          <Button variant="outline" onClick={reset} className="w-full sm:w-auto gap-2">
             <RotateCcw className="h-4 w-4" />
             Repetir quiz
           </Button>
-          <Button className="gap-2">
-            <Share2 className="h-4 w-4" />
-            Compartir resultados
-          </Button>
-          <Link href={`/${countryCode}`}>
-            <Button variant="ghost" className="gap-2">
+          {top && (
+            <Link href={`/${countryCode}/candidatos/${top.candidate.slug}`} className="w-full sm:w-auto">
+              <Button variant="ghost" className="w-full gap-2">
+                Ver perfil de {top.candidate.shortName}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
+          <Link href={`/${countryCode}`} className="w-full sm:w-auto">
+            <Button variant="ghost" className="w-full gap-2">
               Ir al dashboard
               <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
-        </div>
+        </motion.div>
       </div>
     );
   }

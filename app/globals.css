@@ -604,4 +604,16 @@
   .dark .ai-prose tr:hover td {
     background: rgba(139, 26, 26, 0.05);
   }
+
+  /* Quiz results shareable card */
+  .quiz-result-bg {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(139, 26, 26, 0.06) 0%, transparent 50%),
+      var(--card);
+  }
+  .dark .quiz-result-bg {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(139, 26, 26, 0.12) 0%, transparent 50%),
+      var(--card);
+  }
 }
