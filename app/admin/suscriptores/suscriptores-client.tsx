@@ -30,8 +30,14 @@ const interestLabels: Record<string, { label: string; emoji: string }> = {
 
 export function SubscriptoresClient({
   subscribers,
+  countryName,
+  countryEmoji,
+  phonePrefix,
 }: {
   subscribers: Subscriber[];
+  countryName: string;
+  countryEmoji: string;
+  phonePrefix: string;
 }) {
   const activeCount = subscribers.filter((s) => s.is_active).length;
 
@@ -44,7 +50,10 @@ export function SubscriptoresClient({
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Suscriptores</h1>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <span>{countryEmoji}</span>
+            Suscriptores — {countryName}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {activeCount} activos de {subscribers.length} total
           </p>

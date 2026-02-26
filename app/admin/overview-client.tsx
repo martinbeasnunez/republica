@@ -31,6 +31,9 @@ import {
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
 interface AdminData {
+  country: string;
+  countryName: string;
+  countryEmoji: string;
   subscribers: number;
   viewsToday: number;
   visitorsToday: number;
@@ -355,7 +358,10 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <span>{data.countryEmoji}</span>
+          Dashboard — {data.countryName}
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Resumen general — datos sin bots
         </p>
@@ -933,7 +939,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           <span>Verificacion: 9am PET</span>
         </div>
         <span>·</span>
-        <span>Bots filtrados · Hora Peru</span>
+        <span>Bots filtrados · Hora {data.countryName}</span>
       </motion.div>
     </div>
   );

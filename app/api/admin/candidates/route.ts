@@ -11,17 +11,19 @@ async function checkAuth() {
   return true;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const isAuthed = await checkAuth();
     if (!isAuthed) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const country = request.nextUrl.searchParams.get("country") || "pe";
     const supabase = getSupabase();
     const { data: candidates, error } = await supabase
       .from("candidates")
       .select("*")
+      .eq("country_code", country)
       .order("sort_order", { ascending: true });
 
     if (error) {

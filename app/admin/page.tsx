@@ -1,5 +1,6 @@
 import { getSupabase } from "@/lib/supabase";
 import { AdminOverviewClient } from "./overview-client";
+import { COUNTRIES, type CountryCode } from "@/lib/config/countries";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ function isBot(ua: string | null | undefined): boolean {
 /* ── Fetch all page_views with pagination (Supabase default limit is 1000) ── */
 type PageView = { page: string; referrer: string | null; user_agent: string | null; session_id: string; created_at: string };
 
-async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since: string): Promise<PageView[]> {
+async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since: string, countryPrefix: string): Promise<PageView[]> {
   const PAGE_SIZE = 1000;
   const allRows: PageView[] = [];
   let offset = 0;
@@ -37,6 +38,7 @@ async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since
       .from("page_views")
       .select("page, referrer, user_agent, session_id, created_at")
       .gte("created_at", since)
+      .like("page", `${countryPrefix}%`)
       .order("created_at", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
 
@@ -49,15 +51,17 @@ async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since
   return allRows;
 }
 
-async function getAdminData() {
+async function getAdminData(country: CountryCode) {
   const supabase = getSupabase();
+  const countryConfig = COUNTRIES[country];
+  const countryPrefix = `/${country}`;
 
-  /* ── Use Peru timezone (UTC-5) for "today" boundaries ── */
-  const PERU_OFFSET = -5 * 60 * 60 * 1000; // UTC-5
+  /* ── Use country timezone (both PE and CO are UTC-5) ── */
+  const TZ_OFFSET = -5 * 60 * 60 * 1000; // UTC-5
   const now = new Date();
-  const peruNow = new Date(now.getTime() + PERU_OFFSET);
+  const localNow = new Date(now.getTime() + TZ_OFFSET);
   const todayStart = new Date(
-    Date.UTC(peruNow.getUTCFullYear(), peruNow.getUTCMonth(), peruNow.getUTCDate()) - PERU_OFFSET
+    Date.UTC(localNow.getUTCFullYear(), localNow.getUTCMonth(), localNow.getUTCDate()) - TZ_OFFSET
   ).toISOString();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -72,54 +76,61 @@ async function getAdminData() {
     latestFactCheckResult,
     candidatesResult,
   ] = await Promise.all([
-    // Active subscribers count
+    // Active subscribers count — filtered by country
     supabase
       .from("whatsapp_subscribers")
       .select("*", { count: "exact", head: true })
-      .eq("is_active", true),
+      .eq("is_active", true)
+      .eq("country_code", country),
 
-    // All views (30 days) — paginated to get ALL rows, not just 1000
-    fetchAllPageViews(supabase, thirtyDaysAgo),
+    // All views (30 days) — filtered by page URL prefix
+    fetchAllPageViews(supabase, thirtyDaysAgo, countryPrefix),
 
-    // Events 7 days
+    // Events 7 days — filtered by page URL prefix
     supabase
       .from("analytics_events")
       .select("id, event, page, target, metadata, created_at")
       .gte("created_at", sevenDaysAgo)
+      .like("page", `${countryPrefix}%`)
       .order("created_at", { ascending: false })
       .limit(500),
 
-    // Total active news articles
+    // Total active news articles — filtered by country
     supabase
       .from("news_articles")
       .select("*", { count: "exact", head: true })
-      .eq("is_active", true),
+      .eq("is_active", true)
+      .eq("country_code", country),
 
-    // Fact checks count + breakdown
+    // Fact checks count + breakdown — filtered by country
     supabase
       .from("fact_checks")
       .select("verdict, created_at")
+      .eq("country_code", country)
       .order("created_at", { ascending: false })
       .limit(500),
 
-    // Most recent news article (to show last scrape time)
+    // Most recent news article — filtered by country
     supabase
       .from("news_articles")
       .select("created_at")
+      .eq("country_code", country)
       .order("created_at", { ascending: false })
       .limit(1),
 
-    // Most recent fact check (to show last verify time)
+    // Most recent fact check — filtered by country
     supabase
       .from("fact_checks")
       .select("created_at")
+      .eq("country_code", country)
       .order("created_at", { ascending: false })
       .limit(1),
 
-    // Candidates with poll data
+    // Candidates with poll data — filtered by country
     supabase
       .from("candidates")
       .select("id, short_name, slug, poll_average, poll_trend, party")
+      .eq("country_code", country)
       .order("poll_average", { ascending: false })
       .limit(15),
   ]);
@@ -130,24 +141,25 @@ async function getAdminData() {
   const viewsToday = allViews.filter((v) => v.created_at >= todayStart);
   const events = events7dResult.data || [];
 
-  /* ── Daily views chart (30d) — grouped by Peru date ── */
+  /* ── Daily views chart (30d) — grouped by local date ── */
   const viewsByDay: Record<string, number> = {};
   for (const row of allViews) {
-    const peruDate = new Date(new Date(row.created_at).getTime() + PERU_OFFSET);
-    const day = peruDate.toISOString().split("T")[0];
+    const localDate = new Date(new Date(row.created_at).getTime() + TZ_OFFSET);
+    const day = localDate.toISOString().split("T")[0];
     viewsByDay[day] = (viewsByDay[day] || 0) + 1;
   }
   const dailyViews: { date: string; views: number }[] = [];
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(peruNow.getTime() - i * 24 * 60 * 60 * 1000);
+    const d = new Date(localNow.getTime() - i * 24 * 60 * 60 * 1000);
     const key = d.toISOString().split("T")[0];
     dailyViews.push({ date: key, views: viewsByDay[key] || 0 });
   }
 
-  /* ── Top pages (7d) ── */
+  /* ── Top pages (7d) — strip country prefix for readability ── */
   const pageCounts: Record<string, number> = {};
   for (const v of views7d) {
-    pageCounts[v.page] = (pageCounts[v.page] || 0) + 1;
+    const displayPage = v.page.replace(countryPrefix, "") || "/";
+    pageCounts[displayPage] = (pageCounts[displayPage] || 0) + 1;
   }
   const topPages = Object.entries(pageCounts)
     .sort((a, b) => b[1] - a[1])
@@ -157,7 +169,7 @@ async function getAdminData() {
   /* ── Candidate page traffic (7d) ── */
   const candidatePageViews: Record<string, number> = {};
   for (const v of views7d) {
-    const match = v.page.match(/^\/candidatos\/([^/]+)$/);
+    const match = v.page.match(new RegExp(`^/${country}/candidatos/([^/]+)$`));
     if (match) {
       const slug = match[1];
       candidatePageViews[slug] = (candidatePageViews[slug] || 0) + 1;
@@ -238,7 +250,7 @@ async function getAdminData() {
   for (const v of views7d) {
     const sid = extractSessionId(v.session_id);
     if (sid && !sessionFirstPage[sid]) {
-      sessionFirstPage[sid] = v.page;
+      sessionFirstPage[sid] = v.page.replace(countryPrefix, "") || "/";
     }
   }
   const entryPageCounts: Record<string, number> = {};
@@ -289,6 +301,9 @@ async function getAdminData() {
     }));
 
   return {
+    country,
+    countryName: countryConfig.name,
+    countryEmoji: countryConfig.emoji,
     subscribers: subscribersResult.count || 0,
     viewsToday: viewsToday.length,
     visitorsToday: uniqueVisitorsToday,
@@ -303,7 +318,6 @@ async function getAdminData() {
     referrers,
     topEvents,
     recentEvents: events.slice(0, 20),
-    // New data
     totalNews: newsCountResult.count || 0,
     totalFactChecks: factChecks.length,
     verdictBreakdown,
@@ -317,12 +331,22 @@ async function getAdminData() {
   };
 }
 
-export default async function AdminOverviewPage() {
+export default async function AdminOverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ country?: string }>;
+}) {
+  const { country: countryParam } = await searchParams;
+  const country = (countryParam === "co" ? "co" : "pe") as CountryCode;
+
   let data;
   try {
-    data = await getAdminData();
+    data = await getAdminData(country);
   } catch {
     data = {
+      country,
+      countryName: COUNTRIES[country].name,
+      countryEmoji: COUNTRIES[country].emoji,
       subscribers: 0,
       viewsToday: 0,
       visitorsToday: 0,

@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { Suspense } from "react";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -9,23 +10,53 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { COUNTRIES, type CountryCode } from "@/lib/config/countries";
 
 const adminNav = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Suscriptores", href: "/admin/suscriptores", icon: Users },
 ];
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function CountrySwitcher() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const pathname = usePathname();
+  const current = (searchParams.get("country") as CountryCode) || "pe";
 
-  // Don't show admin shell on login page
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
+  const switchCountry = (code: CountryCode) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("country", code);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
+      {(Object.values(COUNTRIES)).map((c) => (
+        <button
+          key={c.code}
+          onClick={() => switchCountry(c.code)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium transition-all",
+            current === c.code
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <span className="text-sm">{c.emoji}</span>
+          <span className="hidden sm:inline">{c.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function AdminShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Preserve country param in nav links
+  const country = searchParams.get("country") || "pe";
+  const navHref = (base: string) => `${base}?country=${country}`;
 
   const handleLogout = () => {
     document.cookie =
@@ -40,9 +71,9 @@ export default function AdminLayout({
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex h-14 items-center justify-between">
             {/* Left: logo + nav */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <Link
-                href="/admin"
+                href={navHref("/admin")}
                 className="flex items-center gap-2 text-sm font-bold text-foreground"
               >
                 <Shield className="h-4 w-4 text-primary" />
@@ -51,6 +82,9 @@ export default function AdminLayout({
                   ADMIN
                 </span>
               </Link>
+
+              {/* Country switcher */}
+              <CountrySwitcher />
 
               <nav className="hidden sm:flex items-center gap-1">
                 {adminNav.map((item) => {
@@ -61,7 +95,7 @@ export default function AdminLayout({
                   return (
                     <Link
                       key={item.href}
-                      href={item.href}
+                      href={navHref(item.href)}
                       className={cn(
                         "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                         isActive
@@ -80,7 +114,7 @@ export default function AdminLayout({
             {/* Right: actions */}
             <div className="flex items-center gap-3">
               <Link
-                href="/"
+                href={`/${country}`}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Ver sitio
@@ -106,7 +140,7 @@ export default function AdminLayout({
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={navHref(item.href)}
                   className={cn(
                     "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors flex-1 justify-center",
                     isActive
@@ -126,5 +160,24 @@ export default function AdminLayout({
       {/* Content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-6">{children}</main>
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+
+  // Don't show admin shell on login page
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <AdminShell>{children}</AdminShell>
+    </Suspense>
   );
 }
