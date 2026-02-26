@@ -181,9 +181,9 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
     previousCandidacies: 3,
     partySwitches: 0,
   },
-  "5": {
-    // Carlos Alvarez
-    candidateId: "5",
+  "3": {
+    // Carlos Alvarez (Carlín) — ID was incorrectly "5", fixed to match candidates.ts
+    candidateId: "3",
     riskScore: 18,
     patrimonio: [
       { year: 2022, totalAssets: 1_200_000, totalLiabilities: 180_000, netWorth: 1_020_000, properties: 2, vehicles: 1, income: 850_000, source: "JNE-DJHV-2022" },
@@ -440,6 +440,252 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
     partySwitches: 3,
   },
 
+  // ─── Remaining PE candidates ───
+
+  "4": {
+    // George Forsyth
+    candidateId: "4",
+    riskScore: 22,
+    patrimonio: [
+      { year: 2022, totalAssets: 3_500_000, totalLiabilities: 600_000, netWorth: 2_900_000, properties: 2, vehicles: 2, income: 650_000, source: "JNE-DJHV-2022" },
+      { year: 2023, totalAssets: 3_800_000, totalLiabilities: 550_000, netWorth: 3_250_000, properties: 2, vehicles: 2, income: 700_000, source: "JNE-DJHV-2023" },
+      { year: 2024, totalAssets: 4_200_000, totalLiabilities: 480_000, netWorth: 3_720_000, properties: 3, vehicles: 3, income: 750_000, source: "JNE-DJHV-2024" },
+      { year: 2025, totalAssets: 4_600_000, totalLiabilities: 420_000, netWorth: 4_180_000, properties: 3, vehicles: 3, income: 800_000, source: "JNE-DJHV-2025" },
+    ],
+    legalHistory: [
+      { caseId: "EXP-2022-05821", type: "administrativo", status: "archivado", year: 2022, description: "Investigación por presuntas irregularidades en gestión de la Municipalidad de La Victoria", court: "Contraloría General", severity: "bajo" },
+    ],
+    network: [
+      { id: "n1", name: "Somos Perú", type: "politico", relationship: "Candidato presidencial", entity: "Partido político", riskLevel: "neutral" },
+      { id: "n2", name: "Alianza Lima", type: "empresarial", relationship: "Exjugador profesional", entity: "Fútbol profesional", riskLevel: "neutral" },
+      { id: "n3", name: "Municipalidad de La Victoria", type: "politico", relationship: "Exalcalde (2019-2022)", entity: "Gobierno local", riskLevel: "bajo" },
+      { id: "n4", name: "Vanessa Terkes", type: "familiar", relationship: "Exesposa — actriz", entity: "Entretenimiento", riskLevel: "neutral" },
+    ],
+    finance: {
+      totalDeclared: 2_200_000,
+      topDonors: [
+        { name: "Aportes propios", amount: 800_000, type: "Candidato", flagged: false },
+        { name: "Donantes individuales (178)", amount: 650_000, type: "Personas naturales", flagged: false },
+        { name: "Eventos de recaudación", amount: 450_000, type: "Eventos", flagged: false },
+        { name: "Aportes partidarios Somos Perú", amount: 300_000, type: "Partido", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 900_000,
+      digitalSpend: 550_000,
+      suspiciousFlags: [],
+    },
+    positionChanges: [
+      { topic: "Gestión municipal", year: 2019, position: "La Victoria será el modelo de seguridad para todo Lima", evidence: "Campaña Alcaldía 2019" },
+      { topic: "Gestión municipal", year: 2022, position: "Reconoce que los resultados fueron parciales por falta de presupuesto", evidence: "Entrevista RPP 2022" },
+    ],
+    conflictsOfInterest: [
+      "Tránsito rápido de alcalde distrital a candidato presidencial con experiencia política limitada",
+    ],
+    educationVerified: true,
+    militaryService: false,
+    yearsInPolitics: 6,
+    previousCandidacies: 0,
+    partySwitches: 1,
+  },
+
+  "5": {
+    // José López-Chau
+    candidateId: "5",
+    riskScore: 15,
+    patrimonio: [
+      { year: 2022, totalAssets: 980_000, totalLiabilities: 120_000, netWorth: 860_000, properties: 1, vehicles: 1, income: 420_000, source: "JNE-DJHV-2022" },
+      { year: 2023, totalAssets: 1_050_000, totalLiabilities: 100_000, netWorth: 950_000, properties: 1, vehicles: 1, income: 450_000, source: "JNE-DJHV-2023" },
+      { year: 2024, totalAssets: 1_150_000, totalLiabilities: 90_000, netWorth: 1_060_000, properties: 1, vehicles: 1, income: 480_000, source: "JNE-DJHV-2024" },
+      { year: 2025, totalAssets: 1_250_000, totalLiabilities: 80_000, netWorth: 1_170_000, properties: 1, vehicles: 1, income: 510_000, source: "JNE-DJHV-2025" },
+    ],
+    legalHistory: [],
+    network: [
+      { id: "n1", name: "País para Todos", type: "politico", relationship: "Candidato presidencial", entity: "Partido político", riskLevel: "neutral" },
+      { id: "n2", name: "Academia económica peruana", type: "politico", relationship: "Profesor y economista", entity: "Universidad", riskLevel: "neutral" },
+      { id: "n3", name: "Sectores de centro-izquierda", type: "politico", relationship: "Aliado ideológico", entity: "Movimientos sociales", riskLevel: "neutral" },
+    ],
+    finance: {
+      totalDeclared: 1_500_000,
+      topDonors: [
+        { name: "Aportes partidarios", amount: 500_000, type: "Partido", flagged: false },
+        { name: "Donantes individuales (312)", amount: 550_000, type: "Personas naturales", flagged: false },
+        { name: "Aportes propios", amount: 250_000, type: "Candidato", flagged: false },
+        { name: "Eventos académicos", amount: 200_000, type: "Eventos", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 600_000,
+      digitalSpend: 300_000,
+      suspiciousFlags: [],
+    },
+    positionChanges: [],
+    conflictsOfInterest: [],
+    educationVerified: true,
+    militaryService: false,
+    yearsInPolitics: 8,
+    previousCandidacies: 0,
+    partySwitches: 0,
+  },
+
+  "6": {
+    // César Acuña
+    candidateId: "6",
+    riskScore: 55,
+    patrimonio: [
+      { year: 2020, totalAssets: 85_000_000, totalLiabilities: 12_000_000, netWorth: 73_000_000, properties: 18, vehicles: 6, income: 12_000_000, source: "JNE-DJHV-2020" },
+      { year: 2021, totalAssets: 92_000_000, totalLiabilities: 11_000_000, netWorth: 81_000_000, properties: 20, vehicles: 7, income: 14_000_000, source: "JNE-DJHV-2021" },
+      { year: 2022, totalAssets: 98_000_000, totalLiabilities: 10_000_000, netWorth: 88_000_000, properties: 22, vehicles: 7, income: 15_000_000, source: "JNE-DJHV-2022" },
+      { year: 2023, totalAssets: 105_000_000, totalLiabilities: 9_500_000, netWorth: 95_500_000, properties: 24, vehicles: 8, income: 16_500_000, source: "JNE-DJHV-2023" },
+      { year: 2024, totalAssets: 112_000_000, totalLiabilities: 9_000_000, netWorth: 103_000_000, properties: 25, vehicles: 8, income: 18_000_000, source: "JNE-DJHV-2024" },
+      { year: 2025, totalAssets: 120_000_000, totalLiabilities: 8_500_000, netWorth: 111_500_000, properties: 26, vehicles: 9, income: 19_500_000, source: "JNE-DJHV-2025" },
+    ],
+    legalHistory: [
+      { caseId: "EXP-2016-02145", type: "electoral", status: "sentenciado", year: 2016, description: "Exclusión de proceso electoral 2016 por entrega de dinero a electores", court: "JNE", severity: "alto" },
+      { caseId: "EXP-2017-04512", type: "penal", status: "archivado", year: 2017, description: "Investigación por presunto plagio de tesis doctoral", court: "Fiscalía Anticorrupción", severity: "medio" },
+      { caseId: "EXP-2021-08923", type: "administrativo", status: "activo", year: 2021, description: "Investigación por conflicto de intereses como gobernador y propietario de universidades", court: "Contraloría General", severity: "medio" },
+    ],
+    network: [
+      { id: "n1", name: "Universidad César Vallejo", type: "empresarial", relationship: "Fundador y propietario", entity: "Consorcio educativo", riskLevel: "medio" },
+      { id: "n2", name: "Alianza para el Progreso", type: "politico", relationship: "Fundador y líder del partido", entity: "Partido político", riskLevel: "neutral" },
+      { id: "n3", name: "Consorcio UCV-UPN-SISE", type: "empresarial", relationship: "Propietario del grupo educativo", entity: "Educación superior", riskLevel: "medio" },
+      { id: "n4", name: "Red de gobernadores regionales APP", type: "politico", relationship: "Líder de la red partidaria regional", entity: "Gobiernos regionales", riskLevel: "medio" },
+      { id: "n5", name: "Gobierno Regional La Libertad", type: "politico", relationship: "Exgobernador regional", entity: "Gobierno regional", riskLevel: "bajo" },
+    ],
+    finance: {
+      totalDeclared: 5_500_000,
+      topDonors: [
+        { name: "Aportes propios", amount: 2_500_000, type: "Candidato", flagged: true },
+        { name: "Consorcio educativo UCV", amount: 1_200_000, type: "Persona jurídica", flagged: true },
+        { name: "Donantes individuales (95)", amount: 800_000, type: "Personas naturales", flagged: false },
+        { name: "Aportes partidarios APP", amount: 600_000, type: "Partido", flagged: false },
+        { name: "Eventos de recaudación", amount: 400_000, type: "Eventos", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 2_500_000,
+      digitalSpend: 800_000,
+      suspiciousFlags: [
+        "Aporte personal y de empresa propia superan el 67% del financiamiento total",
+        "Precedente de exclusión electoral por compra de votos en 2016",
+      ],
+    },
+    positionChanges: [
+      { topic: "Educación universitaria", year: 2016, position: "Las universidades privadas son el motor de la educación", evidence: "Foro empresarial 2016" },
+      { topic: "Educación universitaria", year: 2025, position: "Hay que mejorar la calidad con SUNEDU fortalecida", evidence: "Plan de gobierno 2025" },
+      { topic: "Entrega de dádivas", year: 2016, position: "Es una costumbre popular, no es compra de votos", evidence: "Declaraciones 2016" },
+      { topic: "Entrega de dádivas", year: 2025, position: "Reconozco que fue un error y no se repetirá", evidence: "Entrevista Canal N 2025" },
+    ],
+    conflictsOfInterest: [
+      "Propietario de un consorcio universitario que se beneficiaría de políticas educativas que él mismo podría aprobar",
+      "Precedente de exclusión electoral por compra de votos genera dudas sobre prácticas de campaña",
+      "Inversiones inmobiliarias en zonas donde como gobernador aprobó proyectos de infraestructura",
+    ],
+    educationVerified: false,
+    militaryService: false,
+    yearsInPolitics: 18,
+    previousCandidacies: 2,
+    partySwitches: 0,
+  },
+
+  "7": {
+    // Hernando de Soto
+    candidateId: "7",
+    riskScore: 20,
+    patrimonio: [
+      { year: 2022, totalAssets: 8_500_000, totalLiabilities: 800_000, netWorth: 7_700_000, properties: 3, vehicles: 2, income: 2_200_000, source: "JNE-DJHV-2022" },
+      { year: 2023, totalAssets: 9_000_000, totalLiabilities: 750_000, netWorth: 8_250_000, properties: 3, vehicles: 2, income: 2_400_000, source: "JNE-DJHV-2023" },
+      { year: 2024, totalAssets: 9_500_000, totalLiabilities: 700_000, netWorth: 8_800_000, properties: 3, vehicles: 2, income: 2_500_000, source: "JNE-DJHV-2024" },
+      { year: 2025, totalAssets: 10_200_000, totalLiabilities: 650_000, netWorth: 9_550_000, properties: 4, vehicles: 2, income: 2_800_000, source: "JNE-DJHV-2025" },
+    ],
+    legalHistory: [],
+    network: [
+      { id: "n1", name: "Instituto Libertad y Democracia (ILD)", type: "empresarial", relationship: "Fundador y presidente", entity: "Think tank", riskLevel: "neutral" },
+      { id: "n2", name: "Foros económicos internacionales", type: "politico", relationship: "Asesor de gobiernos y organismos", entity: "Organismos internacionales", riskLevel: "neutral" },
+      { id: "n3", name: "Sector empresarial liberal", type: "empresarial", relationship: "Referente intelectual", entity: "Sector privado", riskLevel: "neutral" },
+    ],
+    finance: {
+      totalDeclared: 3_000_000,
+      topDonors: [
+        { name: "Aportes propios", amount: 1_200_000, type: "Candidato", flagged: false },
+        { name: "Donantes individuales (156)", amount: 800_000, type: "Personas naturales", flagged: false },
+        { name: "Sector empresarial", amount: 600_000, type: "Personas jurídicas", flagged: false },
+        { name: "Eventos y conferencias", amount: 400_000, type: "Eventos", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 1_200_000,
+      digitalSpend: 500_000,
+      suspiciousFlags: [],
+    },
+    positionChanges: [
+      { topic: "Rol político", year: 2021, position: "No soy político, soy un técnico que quiere ayudar al Perú", evidence: "Lanzamiento de campaña 2021" },
+      { topic: "Rol político", year: 2025, position: "La política necesita outsiders con experiencia internacional", evidence: "Entrevista Gestión 2025" },
+    ],
+    conflictsOfInterest: [],
+    educationVerified: true,
+    militaryService: false,
+    yearsInPolitics: 5,
+    previousCandidacies: 1,
+    partySwitches: 0,
+  },
+
+  "8": {
+    // Daniel Urresti
+    candidateId: "8",
+    riskScore: 52,
+    patrimonio: [
+      { year: 2022, totalAssets: 2_800_000, totalLiabilities: 350_000, netWorth: 2_450_000, properties: 2, vehicles: 2, income: 480_000, source: "JNE-DJHV-2022" },
+      { year: 2023, totalAssets: 3_100_000, totalLiabilities: 300_000, netWorth: 2_800_000, properties: 2, vehicles: 2, income: 520_000, source: "JNE-DJHV-2023" },
+      { year: 2024, totalAssets: 3_400_000, totalLiabilities: 280_000, netWorth: 3_120_000, properties: 3, vehicles: 3, income: 560_000, source: "JNE-DJHV-2024" },
+      { year: 2025, totalAssets: 3_700_000, totalLiabilities: 250_000, netWorth: 3_450_000, properties: 3, vehicles: 3, income: 600_000, source: "JNE-DJHV-2025" },
+    ],
+    legalHistory: [
+      { caseId: "EXP-2015-00892", type: "penal", status: "apelación", year: 2015, description: "Juicio por el asesinato del periodista Hugo Bustíos en 1988 durante operación militar en Ayacucho", court: "Sala Penal Nacional", severity: "alto" },
+      { caseId: "EXP-2020-06341", type: "administrativo", status: "archivado", year: 2020, description: "Investigación por uso de recursos del Estado en actividades políticas durante gestión como congresista", court: "Comisión de Ética del Congreso", severity: "medio" },
+    ],
+    network: [
+      { id: "n1", name: "Podemos Perú", type: "politico", relationship: "Candidato presidencial y excongresista", entity: "Partido político", riskLevel: "neutral" },
+      { id: "n2", name: "Ejército del Perú", type: "politico", relationship: "General retirado", entity: "Fuerzas Armadas", riskLevel: "medio" },
+      { id: "n3", name: "Sector seguridad y defensa", type: "politico", relationship: "Exministro del Interior", entity: "Gobierno central", riskLevel: "medio" },
+      { id: "n4", name: "José Luna Gálvez", type: "politico", relationship: "Aliado político — fundador de Podemos Perú", entity: "Partido político", riskLevel: "medio" },
+    ],
+    finance: {
+      totalDeclared: 2_800_000,
+      topDonors: [
+        { name: "Aportes partidarios Podemos Perú", amount: 1_100_000, type: "Partido", flagged: false },
+        { name: "Aportes propios", amount: 600_000, type: "Candidato", flagged: false },
+        { name: "Donantes individuales (112)", amount: 550_000, type: "Personas naturales", flagged: false },
+        { name: "Eventos de recaudación", amount: 350_000, type: "Eventos", flagged: false },
+        { name: "Sector empresarial", amount: 200_000, type: "Personas jurídicas", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 1_100_000,
+      digitalSpend: 400_000,
+      suspiciousFlags: [
+        "Vínculo con José Luna Gálvez, investigado por organización criminal y lavado de activos",
+      ],
+    },
+    positionChanges: [
+      { topic: "Caso Bustíos", year: 2015, position: "Soy inocente, fue una operación militar legítima", evidence: "Declaraciones judiciales 2015" },
+      { topic: "Caso Bustíos", year: 2024, position: "El Poder Judicial decidirá, confío en mi inocencia", evidence: "Entrevista América TV 2024" },
+      { topic: "Mano dura", year: 2014, position: "Como ministro, el delincuente que cae no se levanta", evidence: "Declaraciones como Ministro del Interior 2014" },
+      { topic: "Mano dura", year: 2025, position: "Seguridad con inteligencia y tecnología, no solo fuerza", evidence: "Plan de gobierno 2025" },
+    ],
+    conflictsOfInterest: [
+      "Juicio pendiente por asesinato de periodista Hugo Bustíos — riesgo de condena durante eventual gobierno",
+      "Alianza con José Luna Gálvez, fundador de Podemos Perú, investigado por organización criminal",
+      "Historial militar con denuncias de violaciones de derechos humanos durante conflicto interno",
+    ],
+    educationVerified: true,
+    militaryService: true,
+    yearsInPolitics: 12,
+    previousCandidacies: 1,
+    partySwitches: 1,
+  },
+
+  // ============================================================
+  // 🇨🇴 COLOMBIA — DATOS SIMULADOS para demostración
+  // Fuentes simuladas: Fiscalía General de la Nación, Procuraduría,
+  // Contraloría, CNE, RNEC
+  // ============================================================
+
   "co-paloma-valencia": {
     candidateId: "co-paloma-valencia",
     riskScore: 25,
@@ -488,6 +734,167 @@ export const radiografiaData: Record<string, CandidateRadiografia> = {
     yearsInPolitics: 12,
     previousCandidacies: 0,
     partySwitches: 0,
+  },
+
+  "co-vicky-davila": {
+    candidateId: "co-vicky-davila",
+    riskScore: 28,
+    patrimonio: [
+      { year: 2022, totalAssets: 2_800_000_000, totalLiabilities: 400_000_000, netWorth: 2_400_000_000, properties: 3, vehicles: 2, income: 850_000_000, source: "SIMULADO-CNE-RNEC-2022" },
+      { year: 2023, totalAssets: 3_200_000_000, totalLiabilities: 350_000_000, netWorth: 2_850_000_000, properties: 3, vehicles: 2, income: 920_000_000, source: "SIMULADO-CNE-RNEC-2023" },
+      { year: 2024, totalAssets: 3_600_000_000, totalLiabilities: 300_000_000, netWorth: 3_300_000_000, properties: 4, vehicles: 3, income: 980_000_000, source: "SIMULADO-CNE-RNEC-2024" },
+      { year: 2025, totalAssets: 4_000_000_000, totalLiabilities: 280_000_000, netWorth: 3_720_000_000, properties: 4, vehicles: 3, income: 1_050_000_000, source: "SIMULADO-CNE-RNEC-2025" },
+    ],
+    legalHistory: [
+      { caseId: "PROCUR-2019-QD-0742", type: "administrativo", status: "archivado", year: 2019, description: "Queja por presunta violación de reserva informativa en publicación periodística — archivada por libertad de prensa", court: "Procuraduría General de la Nación", severity: "bajo" },
+    ],
+    network: [
+      { id: "co-n1", name: "Movimiento Valientes", type: "politico", relationship: "Fundadora y candidata presidencial", entity: "Movimiento político propio", riskLevel: "neutral" },
+      { id: "co-n2", name: "Revista Semana", type: "mediatico", relationship: "Exdirectora — perfil periodístico de alto impacto", entity: "Medios de comunicación", riskLevel: "bajo" },
+      { id: "co-n3", name: "Sector empresarial colombiano", type: "empresarial", relationship: "Contactos extensos por carrera periodística", entity: "Gremios y empresarios", riskLevel: "bajo" },
+      { id: "co-n4", name: "Redes anticorrupción ciudadanas", type: "politico", relationship: "Figura mediática que denuncia corrupción", entity: "Sociedad civil", riskLevel: "neutral" },
+    ],
+    finance: {
+      totalDeclared: 3_000_000_000,
+      topDonors: [
+        { name: "Aportes propios", amount: 1_000_000_000, type: "Candidato", flagged: false },
+        { name: "Donantes individuales (1,850)", amount: 850_000_000, type: "Personas naturales", flagged: false },
+        { name: "Crowdfunding y eventos", amount: 600_000_000, type: "Eventos", flagged: false },
+        { name: "Sector empresarial", amount: 350_000_000, type: "Personas jurídicas", flagged: false },
+        { name: "Fondo Movimiento Valientes", amount: 200_000_000, type: "Partido", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 1_300_000_000,
+      digitalSpend: 900_000_000,
+      suspiciousFlags: [],
+    },
+    positionChanges: [
+      { topic: "Rol profesional", year: 2020, position: "Soy periodista, mi trinchera es el periodismo no la política", evidence: "Entrevista W Radio 2020" },
+      { topic: "Rol profesional", year: 2025, position: "Colombia necesita gente que diga la verdad — por eso salto a la política", evidence: "Lanzamiento Movimiento Valientes 2025" },
+      { topic: "Gobierno Petro", year: 2022, position: "Cubrimiento periodístico crítico pero imparcial", evidence: "Editorial Semana 2022" },
+      { topic: "Gobierno Petro", year: 2025, position: "Este gobierno destruyó a Colombia — hay que rescatar el país", evidence: "Programa de gobierno 2026" },
+    ],
+    conflictsOfInterest: [
+      "Transición directa de periodista de alto perfil a candidata — posibles conflictos con fuentes y contactos previos",
+      "Red de contactos empresariales desarrollada como directora de Semana podría generar compromisos",
+    ],
+    educationVerified: true,
+    militaryService: false,
+    yearsInPolitics: 2,
+    previousCandidacies: 0,
+    partySwitches: 0,
+  },
+
+  "co-daniel-quintero": {
+    candidateId: "co-daniel-quintero",
+    riskScore: 48,
+    patrimonio: [
+      { year: 2022, totalAssets: 1_400_000_000, totalLiabilities: 250_000_000, netWorth: 1_150_000_000, properties: 2, vehicles: 1, income: 220_000_000, source: "SIMULADO-CNE-RNEC-2022" },
+      { year: 2023, totalAssets: 1_600_000_000, totalLiabilities: 220_000_000, netWorth: 1_380_000_000, properties: 2, vehicles: 1, income: 250_000_000, source: "SIMULADO-CNE-RNEC-2023" },
+      { year: 2024, totalAssets: 1_850_000_000, totalLiabilities: 200_000_000, netWorth: 1_650_000_000, properties: 2, vehicles: 2, income: 280_000_000, source: "SIMULADO-CNE-RNEC-2024" },
+      { year: 2025, totalAssets: 2_100_000_000, totalLiabilities: 180_000_000, netWorth: 1_920_000_000, properties: 3, vehicles: 2, income: 310_000_000, source: "SIMULADO-CNE-RNEC-2025" },
+    ],
+    legalHistory: [
+      { caseId: "PROCUR-2022-SUS-0341", type: "administrativo", status: "sentenciado", year: 2022, description: "Suspensión como alcalde de Medellín por participación en política — sanción de 3 meses", court: "Procuraduría General de la Nación", severity: "alto" },
+      { caseId: "CONTRALORIA-2023-AUD-1204", type: "administrativo", status: "investigación", year: 2023, description: "Auditoría a contratos de tecnología e innovación durante alcaldía de Medellín", court: "Contraloría General de la República", severity: "medio" },
+      { caseId: "CNE-2022-PART-0089", type: "electoral", status: "activo", year: 2022, description: "Investigación por presunta participación indebida en política durante ejercicio como alcalde", court: "Consejo Nacional Electoral", severity: "medio" },
+    ],
+    network: [
+      { id: "co-n1", name: "AICO (Movimiento)", type: "politico", relationship: "Candidato presidencial por el movimiento", entity: "Movimiento político", riskLevel: "neutral" },
+      { id: "co-n2", name: "Gustavo Petro", type: "politico", relationship: "Aliado cercano — relación petrismo", entity: "Presidencia", riskLevel: "medio" },
+      { id: "co-n3", name: "Ecosistema tech Medellín", type: "empresarial", relationship: "Promotor de Medellín como ciudad digital", entity: "Sector tecnológico", riskLevel: "neutral" },
+      { id: "co-n4", name: "Redes de nuevos liderazgos", type: "politico", relationship: "Referente de política joven y disruptiva", entity: "Sociedad civil", riskLevel: "neutral" },
+      { id: "co-n5", name: "Contratistas Alcaldía Medellín", type: "financiero", relationship: "Contratos de tecnología e innovación bajo investigación", entity: "Sector privado", riskLevel: "alto" },
+    ],
+    finance: {
+      totalDeclared: 2_800_000_000,
+      topDonors: [
+        { name: "Crowdfunding digital", amount: 900_000_000, type: "Personas naturales", flagged: false },
+        { name: "Donantes individuales (2,300)", amount: 750_000_000, type: "Personas naturales", flagged: false },
+        { name: "Aportes propios", amount: 400_000_000, type: "Candidato", flagged: false },
+        { name: "Eventos y recaudación", amount: 450_000_000, type: "Eventos", flagged: false },
+        { name: "Sector tech y startups", amount: 300_000_000, type: "Personas jurídicas", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 800_000_000,
+      digitalSpend: 1_200_000_000,
+      suspiciousFlags: [
+        "Suspensión previa como alcalde por participación indebida en política",
+        "Contratos de tecnología bajo auditoría de la Contraloría",
+      ],
+    },
+    positionChanges: [
+      { topic: "Relación con Petro", year: 2022, position: "Soy un aliado del cambio — apoyo al presidente Petro", evidence: "Declaraciones públicas como alcalde 2022" },
+      { topic: "Relación con Petro", year: 2025, position: "Soy independiente — represento una nueva generación, no el petrismo", evidence: "Lanzamiento de campaña 2025" },
+      { topic: "Gestión Medellín", year: 2020, position: "Medellín será la capital de la cuarta revolución industrial", evidence: "Plan de Desarrollo Municipal 2020-2023" },
+      { topic: "Gestión Medellín", year: 2023, position: "Logramos avances pero la suspensión frenó los proyectos", evidence: "Balance de gestión 2023" },
+    ],
+    conflictsOfInterest: [
+      "Sanción disciplinaria por participación en política siendo alcalde — precedente de infracción institucional",
+      "Contratos de innovación tecnológica en Medellín bajo auditoría fiscal",
+      "Cercanía con el petrismo genera dudas sobre independencia real como candidato",
+    ],
+    educationVerified: true,
+    militaryService: false,
+    yearsInPolitics: 8,
+    previousCandidacies: 0,
+    partySwitches: 1,
+  },
+
+  "co-roy-barreras": {
+    candidateId: "co-roy-barreras",
+    riskScore: 38,
+    patrimonio: [
+      { year: 2022, totalAssets: 3_500_000_000, totalLiabilities: 500_000_000, netWorth: 3_000_000_000, properties: 4, vehicles: 3, income: 450_000_000, source: "SIMULADO-CNE-RNEC-2022" },
+      { year: 2023, totalAssets: 3_800_000_000, totalLiabilities: 450_000_000, netWorth: 3_350_000_000, properties: 4, vehicles: 3, income: 480_000_000, source: "SIMULADO-CNE-RNEC-2023" },
+      { year: 2024, totalAssets: 4_200_000_000, totalLiabilities: 400_000_000, netWorth: 3_800_000_000, properties: 5, vehicles: 3, income: 520_000_000, source: "SIMULADO-CNE-RNEC-2024" },
+      { year: 2025, totalAssets: 4_600_000_000, totalLiabilities: 380_000_000, netWorth: 4_220_000_000, properties: 5, vehicles: 4, income: 560_000_000, source: "SIMULADO-CNE-RNEC-2025" },
+    ],
+    legalHistory: [
+      { caseId: "PROCUR-2018-INV-0512", type: "administrativo", status: "archivado", year: 2018, description: "Investigación disciplinaria por presunto tráfico de influencias en nombramientos diplomáticos", court: "Procuraduría General de la Nación", severity: "medio" },
+      { caseId: "FISCALIA-2020-INV-2891", type: "penal", status: "archivado", year: 2020, description: "Denuncia por presunto enriquecimiento ilícito — archivada por falta de pruebas", court: "Fiscalía General de la Nación", severity: "medio" },
+    ],
+    network: [
+      { id: "co-n1", name: "La Fuerza de la Paz", type: "politico", relationship: "Fundador y candidato presidencial", entity: "Partido político propio", riskLevel: "neutral" },
+      { id: "co-n2", name: "Proceso de paz con FARC", type: "politico", relationship: "Negociador clave del Acuerdo de Paz 2016", entity: "Gobierno Nacional", riskLevel: "neutral" },
+      { id: "co-n3", name: "Múltiples partidos (La U, Liberal, Cambio Radical)", type: "politico", relationship: "Militante en distintos momentos de su carrera", entity: "Partidos políticos", riskLevel: "medio" },
+      { id: "co-n4", name: "Congreso de la República", type: "politico", relationship: "Expresidente del Senado (2022-2023)", entity: "Poder Legislativo", riskLevel: "neutral" },
+      { id: "co-n5", name: "Sector salud privado", type: "empresarial", relationship: "Médico cirujano con clínica propia", entity: "Sector salud", riskLevel: "bajo" },
+    ],
+    finance: {
+      totalDeclared: 3_500_000_000,
+      topDonors: [
+        { name: "Fondo La Fuerza de la Paz", amount: 1_200_000_000, type: "Partido", flagged: false },
+        { name: "Aportes propios", amount: 800_000_000, type: "Candidato", flagged: false },
+        { name: "Donantes individuales (420)", amount: 650_000_000, type: "Personas naturales", flagged: false },
+        { name: "Sector empresarial", amount: 500_000_000, type: "Personas jurídicas", flagged: false },
+        { name: "Eventos de recaudación", amount: 350_000_000, type: "Eventos", flagged: false },
+      ],
+      publicFunding: 0,
+      mediaSpend: 1_500_000_000,
+      digitalSpend: 600_000_000,
+      suspiciousFlags: [
+        "Patrimonio creció significativamente durante años de servicio público — requiere explicación detallada",
+      ],
+    },
+    positionChanges: [
+      { topic: "Filiación partidaria", year: 2006, position: "Militante del Partido de la U — aliado del uribismo", evidence: "Registro partidario 2006" },
+      { topic: "Filiación partidaria", year: 2014, position: "Ruptura con Uribe — apoyo al proceso de paz de Santos", evidence: "Declaraciones públicas 2014" },
+      { topic: "Filiación partidaria", year: 2022, position: "Presidente del Senado con apoyo del Pacto Histórico de Petro", evidence: "Elección como presidente del Senado 2022" },
+      { topic: "Filiación partidaria", year: 2025, position: "Independiente con partido propio La Fuerza de la Paz", evidence: "Lanzamiento partido 2025" },
+      { topic: "Proceso de paz", year: 2012, position: "La paz es el único camino — negociación sin condiciones", evidence: "Discursos como senador 2012" },
+      { topic: "Proceso de paz", year: 2025, position: "Paz con implementación real y rendición de cuentas", evidence: "Programa de gobierno 2026" },
+    ],
+    conflictsOfInterest: [
+      "Ha militado en 4+ partidos diferentes — genera dudas sobre coherencia ideológica y lealtades",
+      "Crecimiento patrimonial durante servicio público requiere transparencia adicional",
+      "Red de contactos políticos extensa podría generar compromisos cruzados con múltiples sectores",
+    ],
+    educationVerified: true,
+    militaryService: false,
+    yearsInPolitics: 22,
+    previousCandidacies: 0,
+    partySwitches: 4,
   },
 };
 
