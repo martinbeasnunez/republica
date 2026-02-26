@@ -34,13 +34,13 @@ export const colombiaBenchmarkCountries: BenchmarkCountry[] = [
     country: "Uruguay",
     region: "América Latina",
     relevance:
-      "Mejor gobernanza de América Latina. Lídera la región en transparencia (CPI: 72/100), democracia y estado de derecho. Modelo de institucionalidad sólida en un país pequeño.",
+      "Mejor gobernanza de América Latina. Lidera la región en transparencia (CPI: 72/100), democracia y estado de derecho. Modelo de institucionalidad sólida en un país pequeño.",
     keyReforms: [
       "Fortalecimiento de la Junta de Transparencia y Ética Pública (JUTEP)",
       "Sistema de partidos estable y democrático",
       "Inversión sostenida en educación pública",
       "Políticas sociales universales con amplia cobertura",
-      "Regulación innovadora (cannabis, energias renovables)",
+      "Regulación innovadora (cannabis, energías renovables)",
     ],
     gdpPerCapita: 22800,
     yearsOfTransformation: "2000-2020",
@@ -79,11 +79,11 @@ export const colombiaBenchmarkCountries: BenchmarkCountry[] = [
     country: "Estonia",
     region: "Europa del Este",
     relevance:
-      "Líder mundial en gobierno digital y digitalización. 100% de servicios gubernamentales en linea. Transformación post-sovietica exitosa con enfoque en tecnología e innovacion.",
+      "Líder mundial en gobierno digital y digitalización. 100% de servicios gubernamentales en línea. Transformación post-soviética exitosa con enfoque en tecnología e innovación.",
     keyReforms: [
       "Identidad digital (e-ID) para el 99% de la población",
       "Plataforma X-Road para intercambio seguro de datos gubernamentales",
-      "Principio de recoleccion única de datos del ciudadano",
+      "Principio de recolección única de datos del ciudadano",
       "Digitalización completa de servicios públicos",
       "Sector TIC contribuye ~7% del PIB",
     ],
@@ -107,7 +107,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "estable",
     sourceUrl: "https://www.weforum.org/publications/global-competitiveness-report-2019/",
-    notes: "Última edición públicada. Colombia se ubica en la mitad del ranking global, cuarto en LAC después de Chile (33), Mexico (48) y Uruguay (54).",
+    notes: "Última edición publicada. Colombia se ubica en la mitad del ranking global, cuarto en LAC después de Chile (33), México (48) y Uruguay (54).",
   },
   {
     indexName: "Corruption Perceptions Index",
@@ -119,7 +119,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "estable",
     sourceUrl: "https://www.transparency.org/en/cpi/2024/index/col",
-    notes: "Por encima de Peru (31/100, puesto 127) pero muy lejos de Chile (63/100, puesto 31) y Uruguay (72/100, puesto 18).",
+    notes: "Por encima de Perú (31/100, puesto 127) pero muy lejos de Chile (63/100, puesto 31) y Uruguay (72/100, puesto 18).",
   },
   {
     indexName: "Human Development Index",
@@ -131,7 +131,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 1.0,
     trend: "estable",
     sourceUrl: "https://hdr.undp.org/data-center/human-development-index",
-    notes: "Categoría 'desarrollo humano alto'. Chile lídera la región con 0.860 (puesto 44). Colombia está ligeramente por debajo del promedio LAC.",
+    notes: "Categoría 'desarrollo humano alto'. Chile lidera la región con 0.860 (puesto 44). Colombia está ligeramente por debajo del promedio LAC.",
   },
   {
     indexName: "Rule of Law Index",
@@ -155,7 +155,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "mejorando",
     sourceUrl: "https://archive.doingbusiness.org/en/rankings",
-    notes: "Última edición públicada (índice descontinuado en 2021). Colombia se ubicaba entre los mejores de LAC, con fortalezas en proteccion a inversiónistas.",
+    notes: "Última edición publicada (índice descontinuado en 2021). Colombia se ubicaba entre los mejores de LAC, con fortalezas en protección a inversionistas.",
   },
   {
     indexName: "PISA 2022 (Matemáticas)",
@@ -167,7 +167,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 600,
     trend: "estable",
     sourceUrl: "https://www.oecd.org/en/publications/pisa-2022-results-volume-i-and-ii-country-notes_ed6fbcc5-en/colombia_ed6fbcc5-en.html",
-    notes: "Promedio OCDE: 472 puntos. Chile lídera la región con 412 puntos. Solo ~35% de estudiantes colombianos alcanzan nivel 2 de competencia (vs 69% OCDE).",
+    notes: "Promedio OCDE: 472 puntos. Chile lidera la región con 412 puntos. Solo ~35% de estudiantes colombianos alcanzan nivel 2 de competencia (vs 69% OCDE).",
   },
   {
     indexName: "PISA 2022 (Lectura)",
@@ -179,7 +179,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 600,
     trend: "estable",
     sourceUrl: "https://www.oecd.org/en/publications/pisa-2022-results-volume-i-and-ii-country-notes_ed6fbcc5-en/colombia_ed6fbcc5-en.html",
-    notes: "Promedio OCDE: 476 puntos. Colombia está65 puntos por debajo del promedio OCDE. Mejor que Peru (408) pero lejos de Chile (448).",
+    notes: "Promedio OCDE: 476 puntos. Colombia está 65 puntos por debajo del promedio OCDE. Mejor que Perú (408) pero lejos de Chile (448).",
   },
   {
     indexName: "IMD World Competitiveness Ranking",
@@ -191,7 +191,7 @@ export const colombiaRankings: PeruRanking[] = [
     maxScore: 100,
     trend: "estable",
     sourceUrl: "https://www.imd.org/centers/wcc/world-competitiveness-center/rankings/world-competitiveness-ranking/",
-    notes: "Tercero en América Latina después de Chile (44) y Mexico (56). Mejor que Brasil (62) y Peru (63).",
+    notes: "Tercero en América Latina después de Chile (44) y México (56). Mejor que Brasil (62) y Perú (63).",
   },
 ];
 
@@ -201,7 +201,7 @@ export const colombiaRankings: PeruRanking[] = [
 
 export const colombiaEconomicIndicators: EconomicIndicator[] = [
   {
-    name: "PIB per capita",
+    name: "PIB per cápita",
     value: "USD 6,600",
     year: 2024,
     comparison: "Chile: USD 17,200 | OCDE: USD 46,000+",
@@ -220,7 +220,7 @@ export const colombiaEconomicIndicators: EconomicIndicator[] = [
     name: "Informalidad laboral",
     value: "58% del empleo total",
     year: 2023,
-    comparison: "Chile: ~27% | OCDE: ~15% | Peru: ~72%. Mejor que Peru pero lejos de Chile.",
+    comparison: "Chile: ~27% | OCDE: ~15% | Perú: ~72%. Mejor que Perú pero lejos de Chile.",
     source: "DANE",
     sourceUrl: "https://www.dane.gov.co/index.php/estadisticas-por-tema/mercado-laboral/empleo-informal-y-seguridad-social",
   },
@@ -228,7 +228,7 @@ export const colombiaEconomicIndicators: EconomicIndicator[] = [
     name: "Recaudación tributaria (% del PIB)",
     value: "~19.4%",
     year: 2023,
-    comparison: "Promedio LAC: 21.3% | OCDE: 33.8%. Por encima de Peru (17%) pero por debajo del promedio regional.",
+    comparison: "Promedio LAC: 21.3% | OCDE: 33.8%. Por encima de Perú (17%) pero por debajo del promedio regional.",
     source: "OECD Revenue Statistics LAC 2025",
     sourceUrl: "https://www.oecd.org/en/publications/2025/05/revenue-statistics-in-latin-america-and-the-caribbean-2025_2922daa3.html",
   },
@@ -244,7 +244,7 @@ export const colombiaEconomicIndicators: EconomicIndicator[] = [
     name: "Coeficiente de Gini",
     value: "51.5",
     year: 2023,
-    comparison: "Peru: 40.1 | Chile: 44.9 | OCDE promedio: ~32. Colombia es uno de los países más desiguales de LAC.",
+    comparison: "Perú: 40.1 | Chile: 44.9 | OCDE promedio: ~32. Colombia es uno de los países más desiguales de LAC.",
     source: "Banco Mundial / DANE",
     sourceUrl: "https://data.worldbank.org/indicator/SI.POV.GINI?locations=CO",
   },
@@ -294,7 +294,7 @@ export const colombiaPillars: DevelopmentPillar[] = [
     whyItMatters:
       "Sin instituciones que funcionen, nada más funciona. Colombia tiene una Constitución moderna (1991) y organismos de control como la Fiscalía, la Procuraduría y la Contraloría, pero la presencia del Estado en muchas regiones sigue siendo débil. El conflicto armado durante más de 50 años erosionó la institucionalidad en vastas zonas del país. Los países que salieron adelante (Chile, Uruguay, Corea) lo hicieron fortaleciendo sus instituciones primero.",
     dataPoints: [
-      "Colombia saca 39/100 en el Índice de Percepción de Corrupción — mejor que Peru (31) pero lejos de Chile (63)",
+      "Colombia saca 39/100 en el Índice de Percepción de Corrupción — mejor que Perú (31) pero lejos de Chile (63)",
       "El conflicto armado de más de 50 años debilitó la presencia estatal en regiones enteras",
       "Colombia tiene una Constitución moderna (1991) pero su implementación sigue siendo desigual",
       "Los países con instituciones fuertes crecen más y tienen menos pobreza, según el Banco Mundial",
@@ -314,7 +314,7 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.transparency.org/en/cpi/2024/index/col",
-          notes: "Mejor que Peru (31/100) pero lejos de Chile (63/100) y Uruguay (72/100).",
+          notes: "Mejor que Perú (31/100) pero lejos de Chile (63/100) y Uruguay (72/100).",
         },
         {
           indexName: "Rule of Law Index",
@@ -333,7 +333,7 @@ export const colombiaPillars: DevelopmentPillar[] = [
         "En muchas zonas rurales el Estado no existe — lo reemplazan grupos armados ilegales",
         "La corrupción permea todos los niveles de gobierno, especialmente el regional",
         "La implementación del Acuerdo de Paz avanza lentamente",
-        "La confíanza ciudadana en las instituciones es baja — menos del 20% confía en el Congreso",
+        "La confianza ciudadana en las instituciones es baja — menos del 20% confía en el Congreso",
       ],
     },
     benchmark: {
@@ -357,9 +357,9 @@ export const colombiaPillars: DevelopmentPillar[] = [
     icon: "ShieldCheck",
     color: "red",
     shortDescription:
-      "Que robar al Estado tenga consecuencias reales. Que los politicos corruptos vayan presos, no a otro cargo público.",
+      "Que robar al Estado tenga consecuencias reales. Que los políticos corruptos vayan presos, no a otro cargo público.",
     whyItMatters:
-      "La corrupción es uno de los principales frenos al desarrollo de Colombia. Cada peso robado es un hospital que no se construye, una escuela sin techo, una vía sin pavimentar. Colombia saca 39/100 en el índice de corrupción — Chile saca 63 y Uruguay 72. Los escándalos de Odebrecht, las regalías mal invertidas y la corrupción en la contratación pública son la norma. Pero Uruguay demostró que en América Latina si se puede tener instituciones limpias.",
+      "La corrupción es uno de los principales frenos al desarrollo de Colombia. Cada peso robado es un hospital que no se construye, una escuela sin techo, una vía sin pavimentar. Colombia saca 39/100 en el índice de corrupción — Chile saca 63 y Uruguay 72. Los escándalos de Odebrecht, las regalías mal invertidas y la corrupción en la contratación pública son la norma. Pero Uruguay demostró que en América Latina sí se puede tener instituciones limpias.",
     dataPoints: [
       "Colombia saca 39/100 en corrupción — Chile saca 63 y Uruguay 72",
       "El caso Odebrecht reveló corrupción sistemática en la contratación de infraestructura",
@@ -381,7 +381,7 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.transparency.org/en/cpi/2024/index/col",
-          notes: "Estancamiento en niveles medios-bajos. Uruguay lídera la región con 72/100.",
+          notes: "Estancamiento en niveles medios-bajos. Uruguay lidera la región con 72/100.",
         },
       ],
       keyProblems: [
@@ -418,8 +418,8 @@ export const colombiaPillars: DevelopmentPillar[] = [
     dataPoints: [
       "Colombia saca 383 en matemáticas PISA — el promedio OCDE es 472 (89 puntos abajo)",
       "En lectura: 411 puntos, 65 por debajo del promedio OCDE",
-      "La brecha entre colegios privados de Bogotá y escuelas rurales del Choco es abismal",
-      "Corea del Sur invirtió 5% del PIB en educación por 30 años y paso de pobre a potencia",
+      "La brecha entre colegios privados de Bogotá y escuelas rurales del Chocó es abismal",
+      "Corea del Sur invirtió 5% del PIB en educación por 30 años y pasó de pobre a potencia",
     ],
     peruStatus: {
       summary:
@@ -448,13 +448,13 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 600,
           trend: "estable",
           sourceUrl: "https://www.oecd.org/en/publications/pisa-2022-results-volume-i-and-ii-country-notes_ed6fbcc5-en/colombia_ed6fbcc5-en.html",
-          notes: "65 puntos por debajo del promedio OCDE. Mejor que Peru (408) pero lejos de Chile (448).",
+          notes: "65 puntos por debajo del promedio OCDE. Mejor que Perú (408) pero lejos de Chile (448).",
         },
       ],
       keyProblems: [
         "La mayoría de estudiantes no alcanza el nivel mínimo de competencia en matemáticas",
         "Estamos 89 puntos abajo del promedio OCDE en PISA matemáticas",
-        "Un joven de un colegio privado de Bogotá aprende el doble que uno rural del Choco",
+        "Un joven de un colegio privado de Bogotá aprende el doble que uno rural del Chocó",
         "La formación docente es débil y los salarios de maestros no son competitivos",
       ],
     },
@@ -481,10 +481,10 @@ export const colombiaPillars: DevelopmentPillar[] = [
     shortDescription:
       "Que llegue agua limpia a todos, que las carreteras conecten el país, y que internet no sea un lujo de las grandes ciudades.",
     whyItMatters:
-      "Colombia tiene una geografía retadora — tres cordilleras, selva, llanos. Pero eso no justifica que las vías 4G lleven años de retraso, que en el Choco no haya agua potable, o que en la Amazonia y el Pacífico el internet sea un sueño. Las concesiones viales de cuarta generación (4G) prometieron transformar el país pero los sobrecostos y retrasos son la constante. Mientras tanto, Chile tiene la mejor logística de América Latina.",
+      "Colombia tiene una geografía retadora — tres cordilleras, selva, llanos. Pero eso no justifica que las vías 4G lleven años de retraso, que en el Chocó no haya agua potable, o que en la Amazonia y el Pacífico el internet sea un sueño. Las concesiones viales de cuarta generación (4G) prometieron transformar el país pero los sobrecostos y retrasos son la constante. Mientras tanto, Chile tiene la mejor logística de América Latina.",
     dataPoints: [
       "Las concesiones viales 4G llevan años de retraso y sobrecostos millonarios",
-      "En el Choco y el Pacífico, muchas comunidades no tienen agua potable",
+      "En el Chocó y el Pacífico, muchas comunidades no tienen agua potable",
       "Solo 73% de colombianos tiene acceso a internet — en zonas rurales es mucho menos",
       "Chile tiene la mejor logística de transporte de América Latina — Colombia está atrasada",
     ],
@@ -503,12 +503,12 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.weforum.org/publications/global-competitiveness-report-2019/",
-          notes: "Infraestructura es una de las areas débiles de Colombia en el GCI. Score general 62.7/100.",
+          notes: "Infraestructura es una de las áreas débiles de Colombia en el GCI. Score general 62.7/100.",
         },
       ],
       keyProblems: [
         "Las concesiones viales 4G llevan años de retraso y sobrecostos enormes",
-        "El Pacífico colombiano (Choco, Buenaventura) carece de infraestructura básica",
+        "El Pacífico colombiano (Chocó, Buenaventura) carece de infraestructura básica",
         "La brecha digital rural es enorme — en zonas apartadas no hay conectividad",
         "Los proyectos de infraestructura son blanco constante de corrupción",
       ],
@@ -538,14 +538,14 @@ export const colombiaPillars: DevelopmentPillar[] = [
     whyItMatters:
       "En Estonia, el 100% de trámites del gobierno se hacen online — no hay filas, no hay mordidas, no hay papeles. Colombia ha avanzado con GOV.CO y la ventanilla única, pero todavía hay demasiados trámites presenciales. La digitalización reduce corrupción (todo queda registrado), ahorra plata al Estado y facilita la vida de la gente. Colombia está entre los líderes digitales de LAC pero aún lejos de los referentes mundiales.",
     dataPoints: [
-      "Colombia lanzo GOV.CO como portal unico del Estado — avance importante pero incompleto",
+      "Colombia lanzó GOV.CO como portal único del Estado — avance importante pero incompleto",
       "73% de colombianos tiene internet, pero en zonas rurales la cifra cae drásticamente",
       "Colombia está entre los líderes digitales de LAC junto con Chile y Brasil",
-      "Estonia paso de país pobre post-sovietico a tener el 7% de su economía en tecnología",
+      "Estonia pasó de país pobre post-soviético a tener el 7% de su economía en tecnología",
     ],
     peruStatus: {
       summary:
-        "Colombia ha avanzado en gobierno digital con GOV.CO y el MinTIC, pero la implementación es desigual. En Bogotá y Medellin los servicios digitales funcionan; en municipios rurales, el papel sigue mandando. La brecha digital entre ciudades principales y el campo es enorme.",
+        "Colombia ha avanzado en gobierno digital con GOV.CO y el MinTIC, pero la implementación es desigual. En Bogotá y Medellín los servicios digitales funcionan; en municipios rurales, el papel sigue mandando. La brecha digital entre ciudades principales y el campo es enorme.",
       score: "en_progreso",
       rankings: [
         {
@@ -571,7 +571,7 @@ export const colombiaPillars: DevelopmentPillar[] = [
     benchmark: {
       country: "Estonia",
       description:
-        "Estonia digitalizó el 100% de sus servicios gubernamentales, creó identidad digital para el 99% de la población, e implementó X-Road para intercambio seguro de datos. Su PIB per capita paso de USD 3,435 a USD 32,460 entre 1991 y 2023.",
+        "Estonia digitalizó el 100% de sus servicios gubernamentales, creó identidad digital para el 99% de la población, e implementó X-Road para intercambio seguro de datos. Su PIB per cápita pasó de USD 3,435 a USD 32,460 entre 1991 y 2023.",
       keyMetric: "100% servicios gubernamentales digitales / TIC = 7% del PIB",
     },
     frameworks: ["wef-gci", "imd-wcr"],
@@ -591,12 +591,12 @@ export const colombiaPillars: DevelopmentPillar[] = [
     shortDescription:
       "Colombia depende demasiado del petróleo y la minería. Si baja el precio del crudo, la economía sufre. Necesitamos más industrias y formalizar empleos.",
     whyItMatters:
-      "Cerca del 30% de lo que Colombia exporta es petróleo y carbón. Si manana baja el precio del crudo, se nos cae la balanza comercial. Ademas, casi 6 de cada 10 colombianos trabajan en la informalidad — sin seguro, sin pensión, sin derechos. Chile diversificó hacia servicios, agroindustria y tecnología. Colombia ha avanzado en agroindustria y servicios pero la dependencia de commodities sigue siendo alta.",
+      "Cerca del 30% de lo que Colombia exporta es petróleo y carbón. Si mañana baja el precio del crudo, se nos cae la balanza comercial. Además, casi 6 de cada 10 colombianos trabajan en la informalidad — sin seguro, sin pensión, sin derechos. Chile diversificó hacia servicios, agroindustria y tecnología. Colombia ha avanzado en agroindustria y servicios pero la dependencia de commodities sigue siendo alta.",
     dataPoints: [
       "~30% de las exportaciones colombianas son petróleo y carbón — alta dependencia de commodities",
       "Casi 6 de cada 10 colombianos trabajan sin contrato formal, sin seguro, sin pensión",
-      "El crecimiento se freno: de ~3.5% promedio histórico a 1.6% en 2023",
-      "Chile diversificó su economía y su PIB per capita es casi tres veces el de Colombia",
+      "El crecimiento se frenó: de ~3.5% promedio histórico a 1.6% en 2023",
+      "Chile diversificó su economía y su PIB per cápita es casi tres veces el de Colombia",
     ],
     peruStatus: {
       summary:
@@ -613,7 +613,7 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.imd.org/centers/wcc/world-competitiveness-center/rankings/world-competitiveness-ranking/",
-          notes: "Tercero en LAC después de Chile (44) y Mexico (56). Mejor que Brasil (62) y Peru (63).",
+          notes: "Tercero en LAC después de Chile (44) y México (56). Mejor que Brasil (62) y Perú (63).",
         },
         {
           indexName: "Global Competitiveness Index 4.0",
@@ -631,16 +631,16 @@ export const colombiaPillars: DevelopmentPillar[] = [
       keyProblems: [
         "~30% de las exportaciones son petróleo y carbón — si baja el crudo, sufrimos",
         "58% de los colombianos trabajan informal — sin contrato, sin seguro, sin futuro",
-        "El crecimiento económico se freno a 1.6% en 2023 — lejos del promedio histórico",
-        "Chile gana casi tres veces más que Colombia per capita",
+        "El crecimiento económico se frenó a 1.6% en 2023 — lejos del promedio histórico",
+        "Chile gana casi tres veces más que Colombia per cápita",
         "La productividad laboral es baja comparada con países OCDE",
       ],
     },
     benchmark: {
       country: "Chile",
       description:
-        "Chile diversificó más alla de la minería hacia servicios financieros, agroindustria, energia renovable y tecnología. Mantuvo apertura comercial con multiples TLCs y reformas pro-empresa.",
-      keyMetric: "PIB per capita Chile: USD 17,200 vs Colombia: USD 6,600",
+        "Chile diversificó más allá de la minería hacia servicios financieros, agroindustria, energía renovable y tecnología. Mantuvo apertura comercial con múltiples TLCs y reformas pro-empresa.",
+      keyMetric: "PIB per cápita Chile: USD 17,200 vs Colombia: USD 6,600",
     },
     frameworks: ["wef-gci", "imd-wcr", "oecd-bli"],
     relatedPillars: ["educacion", "infraestructura", "capacidad-fiscal"],
@@ -659,16 +659,16 @@ export const colombiaPillars: DevelopmentPillar[] = [
     shortDescription:
       "El 97% está afiliado al sistema de salud, pero las EPS están en crisis, las filas son eternas y la atención llega tarde. Eso no es salud.",
     whyItMatters:
-      "Colombia tiene un sistema de salud con cobertura casi universal en el papel — la Ley 100 de 1993 fue revolucionaria. Pero el sistema de EPS está en crisis: deudas billonarias, demoras en autorizaciones, pacientes que se mueren esperando una cita. En regiones como Choco, Guainia o Vaupes, la atención médica es prácticamente inexistente. La esperanza de vida es 73.7 años — un chileno vive 79, más de 5 años más.",
+      "Colombia tiene un sistema de salud con cobertura casi universal en el papel — la Ley 100 de 1993 fue revolucionaria. Pero el sistema de EPS está en crisis: deudas billonarias, demoras en autorizaciones, pacientes que se mueren esperando una cita. En regiones como Chocó, Guainía o Vaupés, la atención médica es prácticamente inexistente. La esperanza de vida es 73.7 años — un chileno vive 79, más de 5 años más.",
     dataPoints: [
       "97% de colombianos están afiliados al SGSSS — alta cobertura en papel",
       "Las EPS acumulan deudas billonarias y varias han sido liquidadas",
-      "En el Choco y la Amazonia, la atención médica es casi inexistente",
-      "Esperanza de vida: 73.7 años — un chileno vive 79, más de 5 años mas",
+      "En el Chocó y la Amazonia, la atención médica es casi inexistente",
+      "Esperanza de vida: 73.7 años — un chileno vive 79, más de 5 años más",
     ],
     peruStatus: {
       summary:
-        "Colombia tiene alta cobertura de afiliación pero el sistema de EPS está en crisis profunda. Deudas billonarias, demoras en autorizaciones, y desigualdad enorme entre las ciudades principales y las regiones apartadas. La Ley 100 fue visionaria pero su implementación fallo.",
+        "Colombia tiene alta cobertura de afiliación pero el sistema de EPS está en crisis profunda. Deudas billonarias, demoras en autorizaciones, y desigualdad enorme entre las ciudades principales y las regiones apartadas. La Ley 100 fue visionaria pero su implementación falló.",
       score: "en_progreso",
       rankings: [
         {
@@ -686,8 +686,8 @@ export const colombiaPillars: DevelopmentPillar[] = [
       ],
       keyProblems: [
         "Las EPS acumulan deudas billonarias y el sistema financiero del SGSSS está al borde del colapso",
-        "Las autorizaciones médicas tardan semanas — pacientes esperando cirugia o tratamientos críticos",
-        "En regiones como Choco, Guainia y Vaupes, la infraestructura de salud es mínima",
+        "Las autorizaciones médicas tardan semanas — pacientes esperando cirugía o tratamientos críticos",
+        "En regiones como Chocó, Guainía y Vaupés, la infraestructura de salud es mínima",
         "La tutela se convirtió en la vía principal para acceder a servicios de salud — eso no es normal",
         "Mortalidad materna e infantil sigue siendo alta en zonas rurales y comunidades étnicas",
       ],
@@ -713,18 +713,18 @@ export const colombiaPillars: DevelopmentPillar[] = [
     icon: "Users",
     color: "teal",
     shortDescription:
-      "Colombia es uno de los países más desiguales de América Latina. Un joven en Bogotá tiene oportunidades radicalmente distintas a uno en Choco o Guaviare.",
+      "Colombia es uno de los países más desiguales de América Latina. Un joven en Bogotá tiene oportunidades radicalmente distintas a uno en Chocó o Guaviare.",
     whyItMatters:
-      "Con un Gini de 51.5, Colombia es uno de los países más desiguales del mundo. Un tercio de los colombianos vive en pobreza y las brechas territoriales son inmensas. Si naciste en el Choco, tu esperanza de vida es años menor que si naciste en Bogotá. El conflicto armado desplazó a más de 8 millones de personas, creando una crisis humanitaria que aún no se resuelve. La pandemia agravó todo — la pobreza saltó varios puntos de un año a otro.",
+      "Con un Gini de 51.5, Colombia es uno de los países más desiguales del mundo. Un tercio de los colombianos vive en pobreza y las brechas territoriales son inmensas. Si naciste en el Chocó, tu esperanza de vida es años menor que si naciste en Bogotá. El conflicto armado desplazó a más de 8 millones de personas, creando una crisis humanitaria que aún no se resuelve. La pandemia agravó todo — la pobreza saltó varios puntos de un año a otro.",
     dataPoints: [
       "Gini de 51.5 — uno de los países más desiguales de América Latina y del mundo",
       "33.3% de colombianos son pobres según el DANE",
       "Más de 8 millones de desplazados internos por el conflicto armado",
-      "La brecha entre Bogotá y departamentos como Choco, La Guajira o Vaupes es abismal",
+      "La brecha entre Bogotá y departamentos como Chocó, La Guajira o Vaupés es abismal",
     ],
     peruStatus: {
       summary:
-        "Colombia es uno de los países más desiguales del mundo. La pobreza afecta a un tercio de la población y la desigualdad territorial es extrema. El conflicto armado genero más de 8 millones de desplazados cuya situacion sigue sin resolverse plenamente. Los programas sociales (Familias en Accion, Ingreso Solidario) ayudan pero no resuelven el problema estructural.",
+        "Colombia es uno de los países más desiguales del mundo. La pobreza afecta a un tercio de la población y la desigualdad territorial es extrema. El conflicto armado generó más de 8 millones de desplazados cuya situación sigue sin resolverse plenamente. Los programas sociales (Familias en Acción, Ingreso Solidario) ayudan pero no resuelven el problema estructural.",
       score: "deficiente",
       rankings: [
         {
@@ -744,14 +744,14 @@ export const colombiaPillars: DevelopmentPillar[] = [
         "Gini de 51.5 — desigualdad de las más altas del mundo",
         "33.3% vive en pobreza — y en regiones como La Guajira supera el 60%",
         "Más de 8 millones de desplazados internos — la mayor crisis de desplazamiento de LAC",
-        "Si naces en el Choco, tus oportunidades son radicalmente menores que si naces en Bogotá",
+        "Si naces en el Chocó, tus oportunidades son radicalmente menores que si naces en Bogotá",
         "Las comunidades indígenas y afrocolombianas sufren marginalidad sistemática",
       ],
     },
     benchmark: {
       country: "Uruguay",
       description:
-        "Uruguay implementó políticas sociales universales con amplia cobertura, un sistema de seguridad social robusto y políticas de inclusion efectivas. Tiene el Gini más bajo de América Latina (~39) y los menores niveles de pobreza de la región.",
+        "Uruguay implementó políticas sociales universales con amplia cobertura, un sistema de seguridad social robusto y políticas de inclusión efectivas. Tiene el Gini más bajo de América Latina (~39) y los menores niveles de pobreza de la región.",
       keyMetric: "Gini Uruguay: ~39 vs Colombia: 51.5",
     },
     frameworks: ["undp-hdi", "oecd-bli", "wb-wgi"],
@@ -769,18 +769,18 @@ export const colombiaPillars: DevelopmentPillar[] = [
     icon: "Wallet",
     color: "cyan",
     shortDescription:
-      "Colombia recauda más que Peru pero menos que el promedio regional. La informalidad, la evasión y la dependencia del petróleo limitan los ingresos del Estado.",
+      "Colombia recauda más que Perú pero menos que el promedio regional. La informalidad, la evasión y la dependencia del petróleo limitan los ingresos del Estado.",
     whyItMatters:
-      "El Estado colombiano recauda 19.4% del PIB en impuestos — mejor que Peru (17%) pero por debajo del promedio LAC (21.3%) y lejos de la OCDE (33.8%). Sin plata suficiente no puedes construir hospitales, pagar buenos profesores ni hacer vías. La informalidad (58% del empleo) y la evasión tributaria reducen la base fiscal. La dependencia de los ingresos petroleros hace que cuando baja el crudo, al Estado se le acaba la plata.",
+      "El Estado colombiano recauda 19.4% del PIB en impuestos — mejor que Perú (17%) pero por debajo del promedio LAC (21.3%) y lejos de la OCDE (33.8%). Sin plata suficiente no puedes construir hospitales, pagar buenos profesores ni hacer vías. La informalidad (58% del empleo) y la evasión tributaria reducen la base fiscal. La dependencia de los ingresos petroleros hace que cuando baja el crudo, al Estado se le acaba la plata.",
     dataPoints: [
       "Colombia recauda 19.4% del PIB — por debajo del promedio LAC (21.3%) y lejos de la OCDE (33.8%)",
-      "La reforma tributaria de 2022 busco aumentar la recaudación pero los resultados son mixtos",
+      "La reforma tributaria de 2022 buscó aumentar la recaudación pero los resultados son mixtos",
       "58% del empleo es informal — no genera impuestos directos",
-      "La dependencia de ingresos petroleros hace fragil la posicion fiscal",
+      "La dependencia de ingresos petroleros hace frágil la posición fiscal",
     ],
     peruStatus: {
       summary:
-        "Colombia recauda más que Peru pero todavía insuficiente para las necesidades del país. La evasión tributaria es alta, la informalidad limita la base fiscal, y la dependencia del petróleo hace los ingresos volátiles. La reforma tributaria de 2022 fue un esfuerzo pero no resuelve el problema estructural.",
+        "Colombia recauda más que Perú pero todavía insuficiente para las necesidades del país. La evasión tributaria es alta, la informalidad limita la base fiscal, y la dependencia del petróleo hace los ingresos volátiles. La reforma tributaria de 2022 fue un esfuerzo pero no resuelve el problema estructural.",
       score: "en_progreso",
       rankings: [
         {
@@ -793,14 +793,14 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 100,
           trend: "estable",
           sourceUrl: "https://www.oecd.org/en/publications/2025/05/revenue-statistics-in-latin-america-and-the-caribbean-2025_2922daa3.html",
-          notes: "Por encima de Peru (17%) pero debajo del promedio LAC (21.3%). OCDE promedio: 33.8%.",
+          notes: "Por encima de Perú (17%) pero debajo del promedio LAC (21.3%). OCDE promedio: 33.8%.",
         },
       ],
       keyProblems: [
         "Recaudamos menos que el promedio regional — 19.4% vs 21.3% de LAC",
         "La evasión tributaria es estimada en varios puntos del PIB",
         "58% del empleo es informal — no genera ingresos fiscales directos",
-        "Los ingresos petroleros son volátiles y representan una porcion importante del presupuesto",
+        "Los ingresos petroleros son volátiles y representan una porción importante del presupuesto",
         "El gasto público es ineficiente — los recursos no llegan donde más se necesitan",
       ],
     },
@@ -827,10 +827,10 @@ export const colombiaPillars: DevelopmentPillar[] = [
     shortDescription:
       "Que puedas caminar tranquilo por la calle. Que el conflicto armado sea realmente cosa del pasado. Que la justicia funcione para todos.",
     whyItMatters:
-      "Colombia ha vivido más de 50 años de conflicto armado que dejo más de 9 millones de victimas. El Acuerdo de Paz de 2016 fue histórico pero su implementación es lenta e incompleta. Hoy persisten grupos armados (ELN, disidencias de FARC, bandas criminales), el narcotráfico sigue siendo un motor de violencia, y la tasa de homicidios aunque ha bajado significativamente, sigue siendo alta. En las ciudades, la inseguridad urbana es la preocupacion principal. Colombia está en el puesto 89 de 143 en estado de derecho.",
+      "Colombia ha vivido más de 50 años de conflicto armado que dejó más de 9 millones de víctimas. El Acuerdo de Paz de 2016 fue histórico pero su implementación es lenta e incompleta. Hoy persisten grupos armados (ELN, disidencias de FARC, bandas criminales), el narcotráfico sigue siendo un motor de violencia, y la tasa de homicidios aunque ha bajado significativamente, sigue siendo alta. En las ciudades, la inseguridad urbana es la preocupación principal. Colombia está en el puesto 89 de 143 en estado de derecho.",
     dataPoints: [
       "Colombia está en el puesto 89 de 143 países en estado de derecho",
-      "Más de 9 millones de victimas del conflicto armado registradas",
+      "Más de 9 millones de víctimas del conflicto armado registradas",
       "La implementación del Acuerdo de Paz avanza pero con retrasos significativos",
       "El narcotráfico sigue siendo un motor principal de violencia en el país",
     ],
@@ -849,13 +849,13 @@ export const colombiaPillars: DevelopmentPillar[] = [
           maxScore: 1.0,
           trend: "estable",
           sourceUrl: "https://worldjusticeproject.org/rule-of-law-index/country/Colombia",
-          notes: "Debilidades en justicia penal, orden y seguridad. La JEP es un mecanismo innovador pero su efectividad aún se evalua.",
+          notes: "Debilidades en justicia penal, orden y seguridad. La JEP es un mecanismo innovador pero su efectividad aún se evalúa.",
         },
       ],
       keyProblems: [
         "Persisten grupos armados ilegales (ELN, disidencias FARC, bandas criminales)",
         "El narcotráfico sigue siendo motor de violencia — Colombia es primer productor mundial de coca",
-        "La tasa de homicidios ha bajado pero sigue siendo alta para estandares internacionales",
+        "La tasa de homicidios ha bajado pero sigue siendo alta para estándares internacionales",
         "La justicia es lenta — los procesos duran años y la impunidad supera el 90%",
         "Los líderes sociales y excombatientes son asesinados sistemáticamente",
       ],
