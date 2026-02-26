@@ -100,7 +100,7 @@ export function CountrySelector({
           transition={{ delay: 0.1 }}
           className="text-3xl sm:text-4xl font-bold text-center text-white mb-3"
         >
-          Elige tu pais
+          Elige tu país
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
@@ -108,7 +108,7 @@ export function CountrySelector({
           transition={{ delay: 0.2 }}
           className="text-sm text-slate-400 text-center mb-14 max-w-md"
         >
-          Selecciona tu pais para acceder a la plataforma de inteligencia
+          Selecciona tu país para acceder a la plataforma de inteligencia
           electoral con IA
         </motion.p>
 

@@ -3,14 +3,14 @@ import { COUNTRIES, COUNTRY_CODES } from "@/lib/config/countries";
 import { CountrySelector } from "@/components/landing/country-selector";
 
 export const metadata: Metadata = {
-  title: "CONDOR — Elige tu pais | Inteligencia Electoral LATAM",
+  title: "CONDOR — Elige tu país | Inteligencia Electoral LATAM",
   description:
-    "CONDOR es la plataforma de inteligencia electoral con IA para Latinoamerica. Selecciona tu pais para comenzar.",
+    "CONDOR es la plataforma de inteligencia electoral con IA para Latinoamérica. Selecciona tu país para comenzar.",
   alternates: { canonical: "https://condorlatam.com" },
   openGraph: {
-    title: "CONDOR — Elige tu pais",
+    title: "CONDOR — Elige tu país",
     description:
-      "Inteligencia electoral con IA para Latinoamerica. Analiza candidatos, verifica hechos y monitorea noticias.",
+      "Inteligencia electoral con IA para Latinoamérica. Analiza candidatos, verifica hechos y monitorea noticias.",
     type: "website",
   },
 };

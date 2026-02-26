@@ -22,19 +22,19 @@ import { useCountry } from "@/lib/config/country-context";
 
 const previewContent = {
   pe: {
-    chatResponse: "Segun las ultimas encuestas, los 3 candidatos con mayor intencion de voto son...",
+    chatResponse: "Según las últimas encuestas, los 3 candidatos con mayor intención de voto son...",
     factCheckFalse: "Elecciones se adelantan a marzo",
-    factCheckTrue: "Padron electoral supera 25 millones",
+    factCheckTrue: "Padrón electoral supera 25 millones",
     newsHeadline: "Candidato presenta plan de seguridad ciudadana...",
-    planCandidate: "Economia",
+    planCandidate: "Economía",
     planScore: "— /100",
   },
   co: {
-    chatResponse: "Segun las ultimas encuestas, los 3 candidatos con mayor intencion de voto son...",
+    chatResponse: "Según las últimas encuestas, los 3 candidatos con mayor intención de voto son...",
     factCheckFalse: "Reforma a la salud es inconstitucional",
     factCheckTrue: "Colombia tiene 39 millones de electores",
-    newsHeadline: "Candidato presenta plan contra la corrupcion...",
-    planCandidate: "Economia",
+    newsHeadline: "Candidato presenta plan contra la corrupción...",
+    planCandidate: "Economía",
     planScore: "— /100",
   },
 };
@@ -60,7 +60,7 @@ function MiniChat({ content }: { content: typeof previewContent.pe }) {
     <div className="space-y-1.5 mt-3">
       <div className="flex gap-1.5 justify-end">
         <div className="rounded-md bg-primary/20 px-2 py-1 text-[10px] text-primary-foreground/80 max-w-[80%]">
-          Quien lidera las encuestas?
+          Quién lidera las encuestas?
         </div>
         <div className="flex h-4 w-4 items-center justify-center rounded bg-muted flex-shrink-0">
           <User className="h-2.5 w-2.5 text-muted-foreground" />
@@ -164,13 +164,13 @@ export function AICapabilitiesGrid() {
       gradient: "from-primary via-primary/50 to-transparent",
       label: "CONDOR AI",
       preview: <MiniChat content={content} />,
-      cta: "Iniciar conversacion",
+      cta: "Iniciar conversación",
       href: `${cp}/verificador`,
     },
     {
       id: "factcheck",
       title: "Verificador de Hechos",
-      subtitle: "Verifica cualquier afirmacion electoral en segundos",
+      subtitle: "Verifica cualquier afirmación electoral en segundos",
       icon: ShieldCheck,
       sparkleOverlay: false,
       color: "text-emerald",
@@ -178,12 +178,12 @@ export function AICapabilitiesGrid() {
       gradient: "from-emerald via-emerald/50 to-transparent",
       label: "FACT-CHECK",
       preview: <MiniFactCheck content={content} />,
-      cta: "Verificar afirmacion",
+      cta: "Verificar afirmación",
       href: `${cp}/verificador`,
     },
     {
       id: "news",
-      title: "Analisis de Noticias IA",
+      title: "Análisis de Noticias IA",
       subtitle: "Detecta sesgo y separa hechos de opiniones",
       icon: Newspaper,
       sparkleOverlay: true,
@@ -197,8 +197,8 @@ export function AICapabilitiesGrid() {
     },
     {
       id: "plans",
-      title: "Analisis de Planes IA",
-      subtitle: "IA evalua viabilidad e impacto de cada propuesta",
+      title: "Análisis de Planes IA",
+      subtitle: "IA evalúa viabilidad e impacto de cada propuesta",
       icon: FileText,
       sparkleOverlay: true,
       color: "text-amber",

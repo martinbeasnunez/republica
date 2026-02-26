@@ -130,7 +130,7 @@ function WhatsAppCTAToast({ onDismiss }: { onDismiss: () => void }) {
               setError(null);
               setPhone(e.target.value.replace(/[^\d\s]/g, ""));
             }}
-            placeholder="Tu numero"
+            placeholder="Tu número"
             className="w-full rounded-lg border border-emerald/30 bg-background/80 pl-10 pr-2 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-emerald font-mono tabular-nums"
             maxLength={12}
             disabled={isSubmitting}

@@ -13,7 +13,7 @@ interface ChatMessage {
 }
 
 const SUGGESTED_PROMPTS = [
-  "Quien lidera las encuestas?",
+  "Quién lidera las encuestas?",
   "Es verdad que las elecciones se adelantan?",
   "Compara los planes de seguridad",
   "Analiza las noticias de hoy",
@@ -61,7 +61,7 @@ export function AIPromptBar() {
         }),
       });
 
-      if (!res.ok) throw new Error("Error de conexion");
+      if (!res.ok) throw new Error("Error de conexión");
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();

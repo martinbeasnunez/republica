@@ -75,7 +75,7 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // CONDOR INTELLIGENCE SYSTEM — MODULO RADIOGRAFIA — ACCESO AUTORIZADO //
+          // CONDOR INTELLIGENCE SYSTEM — MÓDULO RADIOGRAFÍA — ACCESO AUTORIZADO //
         </div>
       </motion.div>
 
@@ -95,6 +95,7 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
         </div>
         <p className="text-sm text-muted-foreground mt-1">
           Análisis profundo de patrimonio, historial legal, redes de contactos y financiamiento de campaña
+
         </p>
       </motion.div>
 
@@ -237,7 +238,7 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
                           )}
                           <span className="flex items-center gap-1">
                             <Shield className="h-3 w-3" />
-                            {radiografia.network.length} vinculos
+                            {radiografia.network.length} vínculos
                           </span>
                           {radiografia.conflictsOfInterest.length > 0 && (
                             <span className="flex items-center gap-1 text-amber">
@@ -261,7 +262,7 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
 
       {/* Bottom */}
       <div className="classification-header text-center">
-        // FIN DEL INDICE — {candidatesWithData.length} PERFILES DISPONIBLES //
+        // FIN DEL ÍNDICE — {candidatesWithData.length} PERFILES DISPONIBLES //
       </div>
     </div>
   );

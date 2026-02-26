@@ -50,12 +50,12 @@ interface NewsInsights {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  politica: "Politica",
-  economia: "Economia",
+  politica: "Política",
+  economia: "Economía",
   seguridad: "Seguridad",
   encuestas: "Encuestas",
-  corrupcion: "Corrupcion",
-  opinion: "Opinion",
+  corrupcion: "Corrupción",
+  opinion: "Opinión",
 };
 
 function computeInsights(
@@ -171,7 +171,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
           messages: [
             {
               role: "user",
-              content: `Genera un briefing ejecutivo de las noticias electorales de hoy en ${country.name}. Resume los temas principales, candidatos mencionados, y que deberia saber un ciudadano. Se conciso, maximo 3-4 parrafos. Incluye los enlaces de las fuentes.`,
+              content: `Genera un briefing ejecutivo de las noticias electorales de hoy en ${country.name}. Resume los temas principales, candidatos mencionados, y que deberia saber un ciudadano. Sé conciso, máximo 3-4 párrafos. Incluye los enlaces de las fuentes.`,
             },
           ],
           countryCode: country.code,
@@ -247,11 +247,11 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                 <div className="flex items-center gap-2 mb-1.5">
                   <Sparkles className="h-4 w-4 text-primary" />
                   <span className="text-[10px] font-mono uppercase tracking-widest text-primary">
-                    Analisis en tiempo real
+                    Análisis en tiempo real
                   </span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold">
-                  <span className="text-gradient">Briefing del Dia</span>
+                  <span className="text-gradient">Briefing del Día</span>
                 </h2>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -267,7 +267,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
               <div className="flex items-center gap-1.5">
                 <Vote className="h-3.5 w-3.5 text-primary" />
                 <span className="text-[11px] text-muted-foreground">
-                  Faltan <span className="font-bold text-foreground font-mono tabular-nums">{insights.daysToElection}</span> dias
+                  Faltan <span className="font-bold text-foreground font-mono tabular-nums">{insights.daysToElection}</span> días
                 </span>
               </div>
               <span className="text-border">|</span>
@@ -297,7 +297,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                 <div className="flex items-center gap-1.5">
                   <Newspaper className="h-3.5 w-3.5 text-rose" />
                   <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-                    Lo que paso hoy
+                    Lo que pasó hoy
                   </span>
                 </div>
                 {insights.featuredArticle ? (
@@ -306,7 +306,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                       <div className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-rose pulse-dot" />
                         <span className="text-[9px] font-bold uppercase tracking-wider text-rose">
-                          Ultima hora
+                          Última hora
                         </span>
                       </div>
                     )}
@@ -339,7 +339,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                     </div>
                     {insights.todayArticleCount > 1 && (
                       <p className="text-[10px] text-muted-foreground/60 pt-1 border-t border-border/50">
-                        y {insights.todayArticleCount - 1} noticia{insights.todayArticleCount - 1 > 1 ? "s" : ""} mas hoy
+                        y {insights.todayArticleCount - 1} noticia{insights.todayArticleCount - 1 > 1 ? "s" : ""} más hoy
                       </p>
                     )}
                   </>
@@ -385,7 +385,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                     </div>
                     <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border/50">
                       {insights.maxPollAverage < 15
-                        ? "Eleccion abierta — ningun candidato supera el 15%"
+                        ? "Elección abierta — ningún candidato supera el 15%"
                         : `${insights.topCandidates[0].shortName} lidera con ${insights.maxPollAverage.toFixed(1)}%`}
                     </p>
                   </>
@@ -417,7 +417,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                   <div className="flex items-center gap-1.5 rounded-lg bg-emerald/10 border border-emerald/20 px-2.5 py-1.5">
                     <CheckCircle className="h-3.5 w-3.5 text-emerald flex-shrink-0" />
                     <span className="text-[11px] text-emerald font-medium">
-                      Sin alertas de desinformacion
+                      Sin alertas de desinformación
                     </span>
                   </div>
                 )}
@@ -427,7 +427,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                   <div className="flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose pulse-dot" />
                     <span className="text-[10px] text-rose font-medium">
-                      {insights.breakingTodayCount} de ultima hora hoy
+                      {insights.breakingTodayCount} de última hora hoy
                     </span>
                   </div>
                 )}
@@ -462,7 +462,7 @@ export function NewsHeroInsight({ articles, candidates }: NewsHeroInsightProps) 
                 className="group flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition-all hover:bg-primary/10 hover:border-primary/50"
               >
                 <Sparkles className="h-4 w-4" />
-                Pedir analisis completo a CONDOR AI
+                Pedir análisis completo a CONDOR AI
                 <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
             ) : (

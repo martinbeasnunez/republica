@@ -16,11 +16,11 @@ export default async function Image({
   const config = getCountryConfig(country);
   const primary = config?.theme.primary ?? "#8B1A1A";
   const primaryLight = config?.theme.primaryLight ?? "#A52525";
-  const countryName = config?.name ?? "Peru";
+  const countryName = config?.name ?? "Perú";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
 
   let name = "Candidato";
-  let party = "Partido Politico";
+  let party = "Partido Político";
   let partyColor = primary;
   let pollAverage = 0;
   let profession = "";
@@ -200,7 +200,7 @@ export default async function Image({
                   letterSpacing: "0.1em",
                 }}
               >
-                INTENCION DE VOTO
+                INTENCIÓN DE VOTO
               </span>
               <span
                 style={{

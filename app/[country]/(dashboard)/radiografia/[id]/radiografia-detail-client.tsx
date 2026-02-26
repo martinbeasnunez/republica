@@ -57,8 +57,8 @@ const LAYERS: { id: Layer; label: string; icon: typeof Shield; color: string }[]
   { id: "legal", label: "LEGAL", icon: Scale, color: "text-rose" },
   { id: "network", label: "RED DE CONTACTOS", icon: Network, color: "text-indigo-glow" },
   { id: "finance", label: "FINANCIAMIENTO", icon: Building2, color: "text-amber" },
-  { id: "flipflops", label: "CAMBIOS DE POSICION", icon: GitBranch, color: "text-sky" },
-  { id: "conflicts", label: "CONFLICTOS DE INTERES", icon: AlertTriangle, color: "text-rose" },
+  { id: "flipflops", label: "CAMBIOS DE POSICIÓN", icon: GitBranch, color: "text-sky" },
+  { id: "conflicts", label: "CONFLICTOS DE INTERÉS", icon: AlertTriangle, color: "text-rose" },
 ];
 
 interface RadiografiaDetailClientProps {
@@ -69,13 +69,13 @@ interface RadiografiaDetailClientProps {
 // Country-aware institution labels
 const INSTITUTIONS = {
   pe: {
-    patrimonio: "JNE DECLARACION JURADA DE HOJA DE VIDA",
-    legal: "PODER JUDICIAL, FISCALIA, JNE",
+    patrimonio: "JNE DECLARACIÓN JURADA DE HOJA DE VIDA",
+    legal: "PODER JUDICIAL, FISCALÍA, JNE",
     finance: "ONPE, DECLARACIONES DE APORTES",
   },
   co: {
-    patrimonio: "CNE / RNEC DECLARACION JURADA DE BIENES Y RENTAS",
-    legal: "FISCALIA GENERAL, PROCURADURIA, CONSEJO SUPERIOR DE LA JUDICATURA",
+    patrimonio: "CNE / RNEC DECLARACIÓN JURADA DE BIENES Y RENTAS",
+    legal: "FISCALÍA GENERAL, PROCURADURÍA, CONSEJO SUPERIOR DE LA JUDICATURA",
     finance: "CNE, DECLARACIONES DE APORTES",
   },
 } as const;
@@ -323,7 +323,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
       {/* CLASSIFIED HEADER */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // CONDOR INTELLIGENCE SYSTEM — CANDIDATO RADIOGRAFIA — NIVEL DE ACCESO: PUBLICO //
+          // CONDOR INTELLIGENCE SYSTEM — CANDIDATO RADIOGRAFÍA — NIVEL DE ACCESO: PÚBLICO //
         </div>
       </motion.div>
 
@@ -439,7 +439,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                 {/* Quick stats grid */}
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <div className="rounded-lg bg-muted/30 border border-border p-3">
-                    <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Anos en politica</p>
+                    <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Años en política</p>
                     <p className="font-mono text-xl font-bold tabular-nums text-foreground">{radiografia.yearsInPolitics}</p>
                   </div>
                   <div className="rounded-lg bg-muted/30 border border-border p-3">
@@ -554,7 +554,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Car className="h-4 w-4 text-amber" />
-                      <span className="text-[10px] text-muted-foreground font-mono uppercase">Vehiculos</span>
+                      <span className="text-[10px] text-muted-foreground font-mono uppercase">Vehículos</span>
                     </div>
                     <p className="terminal-text-amber text-lg font-bold tabular-nums">
                       {latestPatrimonio?.vehicles || 0}
@@ -570,7 +570,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Activity className="h-3.5 w-3.5 text-emerald" />
-                    Evolucion Patrimonial — {firstPatrimonio?.year} a {latestPatrimonio?.year}
+                    Evolución Patrimonial — {firstPatrimonio?.year} a {latestPatrimonio?.year}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -591,7 +591,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Ano</th>
+                          <th className="text-left p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Año</th>
                           <th className="text-right p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Activos</th>
                           <th className="text-right p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Pasivos</th>
                           <th className="text-right p-3 text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Neto</th>
@@ -757,7 +757,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "network" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 2: RED DE CONTACTOS — ANALISIS DE VINCULOS POLITICOS, FAMILIARES Y EMPRESARIALES //
+                // CAPA 2: RED DE CONTACTOS — ANÁLISIS DE VÍNCULOS POLÍTICOS, FAMILIARES Y EMPRESARIALES //
               </div>
 
               {/* Network graph */}
@@ -825,7 +825,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "finance" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 3: FINANCIAMIENTO DE CAMPANA — FUENTE: {inst.finance} //
+                // CAPA 3: FINANCIAMIENTO DE CAMPAÑA — FUENTE: {inst.finance} //
               </div>
 
               {/* Finance summary */}
@@ -870,7 +870,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                   <div className="h-0.5 w-full bg-gradient-to-r from-amber via-amber/50 to-transparent" />
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                      Distribucion de Aportes
+                      Distribución de Aportes
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -942,7 +942,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "flipflops" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 4: CAMBIOS DE POSICION — DETECTOR DE CONTRADICCIONES EN DECLARACIONES PUBLICAS //
+                // CAPA 4: CAMBIOS DE POSICIÓN — DETECTOR DE CONTRADICCIONES EN DECLARACIONES PÚBLICAS //
               </div>
 
               {radiografia.positionChanges.length > 0 ? (
@@ -1006,7 +1006,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                 <Card className="bg-card border-border">
                   <CardContent className="p-8 text-center">
                     <Shield className="h-8 w-8 text-emerald mx-auto mb-2" />
-                    <p className="text-sm text-emerald font-medium">Sin cambios de posicion detectados</p>
+                    <p className="text-sm text-emerald font-medium">Sin cambios de posición detectados</p>
                     <p className="text-xs text-muted-foreground mt-1">Las posiciones del candidato se han mantenido consistentes</p>
                   </CardContent>
                 </Card>
@@ -1018,7 +1018,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
           {activeLayer === "conflicts" && (
             <div className="space-y-4">
               <div className="classification-header">
-                // CAPA 5: CONFLICTOS DE INTERES — ANALISIS DE INCOMPATIBILIDADES Y VINCULACIONES //
+                // CAPA 5: CONFLICTOS DE INTERÉS — ANÁLISIS DE INCOMPATIBILIDADES Y VINCULACIONES //
               </div>
 
               {radiografia.conflictsOfInterest.length > 0 ? (
@@ -1052,8 +1052,8 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                 <Card className="bg-card border-border">
                   <CardContent className="p-8 text-center">
                     <Shield className="h-8 w-8 text-emerald mx-auto mb-2" />
-                    <p className="text-sm text-emerald font-medium">Sin conflictos de interes identificados</p>
-                    <p className="text-xs text-muted-foreground mt-1">No se detectaron incompatibilidades entre intereses personales y funcion publica</p>
+                    <p className="text-sm text-emerald font-medium">Sin conflictos de interés identificados</p>
+                    <p className="text-xs text-muted-foreground mt-1">No se detectaron incompatibilidades entre intereses personales y función pública</p>
                   </CardContent>
                 </Card>
               )}
@@ -1064,7 +1064,7 @@ export default function RadiografiaDetailClient({ candidates, id }: RadiografiaD
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xs font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Fingerprint className="h-3.5 w-3.5 text-primary" />
-                    Verificación de Datos
+                    Verificación de datos
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

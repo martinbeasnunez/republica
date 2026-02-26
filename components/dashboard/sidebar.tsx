@@ -195,7 +195,7 @@ function CountrySwitcher({ collapsed }: { collapsed?: boolean }) {
         className="flex items-center justify-center gap-1.5 pt-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
       >
         <Globe className="h-3 w-3" />
-        Ver todos los paises
+        Ver todos los países
       </Link>
     </div>
   );

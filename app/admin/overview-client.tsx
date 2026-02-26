@@ -105,7 +105,7 @@ const EVENT_LABELS: Record<string, string> = {
   share: "Compartir",
   quiz_start: "Quiz iniciado",
   quiz_complete: "Quiz completado",
-  whatsapp_subscribe: "Suscripcion WA",
+  whatsapp_subscribe: "Suscripción WA",
 };
 
 const TARGET_LABELS: Record<string, string> = {
@@ -115,11 +115,11 @@ const TARGET_LABELS: Record<string, string> = {
   resumen_candidate_card: "Card de candidato",
   resumen_quiz_cta: "CTA del Quiz",
   whatsapp_cta: "CTA WhatsApp",
-  whatsapp_fab: "Boton flotante WA",
+  whatsapp_fab: "Botón flotante WA",
   candidate_profile: "Perfil candidato",
   quiz_result_share: "Compartir resultado quiz",
   news_article: "Noticia",
-  fact_check: "Verificacion",
+  fact_check: "Verificación",
   comparar_candidatos: "Comparar candidatos",
   comparar_planes: "Comparar planes",
   simulador: "Simulador",
@@ -144,7 +144,7 @@ function humanPage(page: string): string {
   if (page === "/planes") return "Planes";
   if (page === "/mapa") return "Mapa";
   if (page === "/simulador") return "Simulador";
-  if (page === "/radiografia") return "Radiografia";
+  if (page === "/radiografia") return "Radiografía";
   if (page === "/pilares") return "Pilares";
   if (page?.startsWith("/candidatos/")) {
     const slug = page.replace("/candidatos/", "");
@@ -161,11 +161,11 @@ function generateInsights(data: AdminData): string[] {
 
   // Mobile insight
   if (mobilePct >= 80) {
-    insights.push(`${mobilePct}% de tu trafico es mobile. Tu audiencia te visita desde el celular.`);
+    insights.push(`${mobilePct}% de tu tráfico es mobile. Tu audiencia te visita desde el celular.`);
   } else if (mobilePct >= 60) {
-    insights.push(`${mobilePct}% mobile vs ${desktopPct}% desktop. Mayoria en celular pero hay audiencia desktop.`);
+    insights.push(`${mobilePct}% mobile vs ${desktopPct}% desktop. Mayoría en celular pero hay audiencia desktop.`);
   } else {
-    insights.push(`Solo ${mobilePct}% mobile. Inusual — la mayoria de sitios electorales son 80%+ mobile.`);
+    insights.push(`Solo ${mobilePct}% mobile. Inusual — la mayoría de sitios electorales son 80%+ mobile.`);
   }
 
   // Top candidate insight
@@ -173,40 +173,40 @@ function generateInsights(data: AdminData): string[] {
     const top = data.candidateTraffic[0];
     const candidate = data.candidates.find(c => c.slug === top.slug);
     if (candidate) {
-      insights.push(`${candidate.name} es el candidato mas buscado con ${top.views} visitas esta semana.`);
+      insights.push(`${candidate.name} es el candidato más buscado con ${top.views} visitas esta semana.`);
     }
   }
 
   // Engagement insight
   if (data.avgPagesPerSession >= 3) {
-    insights.push(`Los usuarios ven ${data.avgPagesPerSession} paginas por sesion. Buen engagement.`);
+    insights.push(`Los usuarios ven ${data.avgPagesPerSession} páginas por sesión. Buen engagement.`);
   } else if (data.avgPagesPerSession >= 2) {
-    insights.push(`${data.avgPagesPerSession} paginas/sesion. Aceptable, pero se puede mejorar.`);
+    insights.push(`${data.avgPagesPerSession} páginas/sesión. Aceptable, pero se puede mejorar.`);
   } else {
-    insights.push(`Solo ${data.avgPagesPerSession} pagina/sesion. Los usuarios no exploran mas alla de la primera pagina.`);
+    insights.push(`Solo ${data.avgPagesPerSession} página/sesión. Los usuarios no exploran más allá de la primera página.`);
   }
 
   // Bounce rate insight
   if (data.bounceRate > 70) {
-    insights.push(`Bounce rate del ${data.bounceRate}%. La mayoria se va sin interactuar.`);
+    insights.push(`Bounce rate del ${data.bounceRate}%. La mayoría se va sin interactuar.`);
   } else if (data.bounceRate > 50) {
     insights.push(`Bounce rate ${data.bounceRate}% — dentro de lo normal.`);
   } else {
-    insights.push(`Bounce rate ${data.bounceRate}%. Excelente retencion.`);
+    insights.push(`Bounce rate ${data.bounceRate}%. Excelente retención.`);
   }
 
   // Top referrer
   if (data.referrers.length > 0) {
     const topRef = data.referrers[0];
-    insights.push(`Tu principal fuente de trafico es ${topRef.referrer} con ${topRef.count} visitas.`);
+    insights.push(`Tu principal fuente de tráfico es ${topRef.referrer} con ${topRef.count} visitas.`);
   } else {
-    insights.push("Todo tu trafico es directo o desde WhatsApp. No hay referrers externos.");
+    insights.push("Todo tu tráfico es directo o desde WhatsApp. No hay referrers externos.");
   }
 
   // Events insight
   if (data.events7d > 0 && data.views7d > 0) {
     const eventsPerVisit = (data.events7d / data.views7d).toFixed(1);
-    insights.push(`${eventsPerVisit} interacciones por visita. ${Number(eventsPerVisit) >= 1 ? "Los usuarios estan activos." : "Pocas interacciones."}`);
+    insights.push(`${eventsPerVisit} interacciones por visita. ${Number(eventsPerVisit) >= 1 ? "Los usuarios están activos." : "Pocas interacciones."}`);
   }
 
   // Growth insight
@@ -216,11 +216,11 @@ function generateInsights(data: AdminData): string[] {
     if (prevWeek > 0) {
       const growthPct = Math.round(((lastWeek - prevWeek) / prevWeek) * 100);
       if (growthPct > 0) {
-        insights.push(`Trafico crecio ${growthPct}% vs semana anterior.`);
+        insights.push(`Tráfico creció ${growthPct}% vs semana anterior.`);
       } else if (growthPct < -10) {
-        insights.push(`Trafico bajo ${Math.abs(growthPct)}% vs semana anterior.`);
+        insights.push(`Tráfico bajó ${Math.abs(growthPct)}% vs semana anterior.`);
       } else {
-        insights.push("Trafico estable vs semana anterior.");
+        insights.push("Tráfico estable vs semana anterior.");
       }
     }
   }
@@ -378,7 +378,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
                 <Lightbulb className="h-4 w-4" />
-                Insights rapidos
+                Insights rápidos
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -506,7 +506,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                 <div className="rounded-lg border border-border p-3">
                   <p className="text-[10px] font-mono uppercase text-muted-foreground">Noticias</p>
                   <p className="text-xl font-bold font-mono tabular-nums text-foreground">{data.totalNews}</p>
-                  <p className="text-[10px] text-muted-foreground">articulos activos</p>
+                  <p className="text-[10px] text-muted-foreground">artículos activos</p>
                 </div>
                 <div className="rounded-lg border border-border p-3">
                   <p className="text-[10px] font-mono uppercase text-muted-foreground">Verificaciones</p>
@@ -523,7 +523,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                     ) : (
                       <AlertTriangle className="h-3 w-3 text-amber" />
                     )}
-                    <span className="text-[10px] text-muted-foreground">Ultimo scrape</span>
+                    <span className="text-[10px] text-muted-foreground">Último scrape</span>
                   </div>
                   <span className="text-[10px] font-mono text-foreground">
                     {timeAgo(data.lastScrape)}
@@ -536,7 +536,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                     ) : (
                       <AlertTriangle className="h-3 w-3 text-amber" />
                     )}
-                    <span className="text-[10px] text-muted-foreground">Ultima verificacion</span>
+                    <span className="text-[10px] text-muted-foreground">Última verificación</span>
                   </div>
                   <span className="text-[10px] font-mono text-foreground">
                     {timeAgo(data.lastVerify)}
@@ -572,7 +572,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                     {[
                       { label: "Verdadero", count: data.verdictBreakdown.verdadero, color: "bg-emerald" },
                       { label: "Falso", count: data.verdictBreakdown.falso, color: "bg-rose" },
-                      { label: "Enganoso", count: data.verdictBreakdown.enganoso, color: "bg-amber" },
+                      { label: "Engañoso", count: data.verdictBreakdown.enganoso, color: "bg-amber" },
                       { label: "Parcial", count: data.verdictBreakdown.parcial, color: "bg-sky" },
                     ].filter((v) => v.count > 0).map((v) => (
                       <div key={v.label} className="flex items-center gap-1">
@@ -605,21 +605,21 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border border-border p-3">
-                  <p className="text-[10px] font-mono uppercase text-muted-foreground">Paginas/sesion</p>
+                  <p className="text-[10px] font-mono uppercase text-muted-foreground">Páginas/sesión</p>
                   <p className="text-xl font-bold font-mono tabular-nums text-foreground">{data.avgPagesPerSession}</p>
                   <p className="text-[10px] text-muted-foreground">promedio</p>
                 </div>
                 <div className="rounded-lg border border-border p-3">
                   <p className="text-[10px] font-mono uppercase text-muted-foreground">Bounce rate</p>
                   <p className="text-xl font-bold font-mono tabular-nums text-foreground">{data.bounceRate}%</p>
-                  <p className="text-[10px] text-muted-foreground">1 sola pagina</p>
+                  <p className="text-[10px] text-muted-foreground">1 sola página</p>
                 </div>
               </div>
               {/* Entry pages */}
               {data.entryPages.length > 0 && (
                 <div>
                   <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Paginas de entrada
+                    Páginas de entrada
                   </p>
                   <div className="space-y-1">
                     {data.entryPages.slice(0, 5).map((ep) => (
@@ -704,7 +704,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <ArrowRight className="h-3.5 w-3.5" />
-                Trafico a candidatos (7d)
+                Tráfico a candidatos (7d)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -732,7 +732,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                   })}
                   {data.candidateTraffic.length > 0 && (
                     <p className="text-[9px] text-muted-foreground/40 mt-2 italic">
-                      Compara trafico web vs encuestas — si un candidato tiene mucho trafico pero baja encuesta, hay interes organico
+                      Compara tráfico web vs encuestas — si un candidato tiene mucho tráfico pero baja encuesta, hay interés orgánico
                     </p>
                   )}
                 </div>
@@ -756,7 +756,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Visitas por dia (30d)
+                Visitas por día (30d)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -777,7 +777,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Top paginas (7d)
+                Top páginas (7d)
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -789,7 +789,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                 />
               ) : (
                 <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">
-                  Sin datos aun
+                  Sin datos aún
                 </div>
               )}
             </CardContent>
@@ -813,7 +813,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           <CardContent>
             {data.referrers.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Sin referrers (trafico directo)
+                Sin referrers (tráfico directo)
               </p>
             ) : (
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
@@ -852,7 +852,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           <CardContent>
             {data.recentEvents.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No hay eventos registrados aun
+                No hay eventos registrados aún
               </p>
             ) : (
               <div className="space-y-2">
@@ -896,7 +896,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
             {data.topEvents.length > 0 && (
               <div className="mt-4 pt-4 border-t border-border">
                 <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
-                  Acciones mas populares (7d)
+                  Acciones más populares (7d)
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {data.topEvents.slice(0, 8).map((e) => (
@@ -936,7 +936,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
         <span>·</span>
         <div className="flex items-center gap-1">
           <ShieldCheck className="h-2.5 w-2.5" />
-          <span>Verificacion: 9am PET</span>
+          <span>Verificación: 9am PET</span>
         </div>
         <span>·</span>
         <span>Bots filtrados · Hora {data.countryName}</span>

@@ -20,7 +20,7 @@ export function OrganizationJsonLd() {
       "Plataforma de inteligencia electoral con IA para elecciones en Latinoamérica. Análisis de candidatos, verificación de hechos y monitoreo de noticias en tiempo real.",
     foundingDate: "2025",
     areaServed: [
-      { "@type": "Country", name: "Peru" },
+      { "@type": "Country", name: "Perú" },
       { "@type": "Country", name: "Colombia" },
     ],
     knowsAbout: [
@@ -114,6 +114,7 @@ export function CandidateJsonLd({
       name: party,
     },
     knowsAbout: [profession, `Política de ${config.name}`, `Elecciones ${config.name} ${year}`],
+
   };
 
   return (

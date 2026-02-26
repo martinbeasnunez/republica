@@ -60,7 +60,7 @@ export default function DashboardClient({ candidates, topCandidates, articles, f
       <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <QuickAction
           href={`${cp}/quiz`}
-          title="¿A quien votar?"
+          title="¿A quién votar?"
           description="Descubre tu candidato ideal"
           gradient="from-primary/20 to-purple-500/20"
         />
@@ -160,7 +160,7 @@ function SimuladorHighlight({ candidates }: { candidates: Candidate[] }) {
           {!result ? (
             <div className="flex-1 flex flex-col items-center justify-center py-4 sm:py-6">
               <p className="text-xs text-muted-foreground text-center mb-4">
-                Ejecuta 5,000 {isColombia ? "escenarios" : "simulaciones"} para proyectar quien ganaria hoy
+                Ejecuta 5,000 {isColombia ? "escenarios" : "simulaciones"} para proyectar quién ganaría hoy
               </p>
               <Button
                 onClick={handleQuickSim}
@@ -256,7 +256,7 @@ function VerificadorHighlight({ factChecks }: { factChecks: FactCheck[] }) {
           </div>
 
           <p className="text-xs text-muted-foreground mb-3">
-            Verifica cualquier afirmacion electoral con IA en tiempo real
+            Verifica cualquier afirmación electoral con IA en tiempo real
           </p>
 
           {/* Real fact-checks from DB */}
@@ -286,7 +286,7 @@ function VerificadorHighlight({ factChecks }: { factChecks: FactCheck[] }) {
 
           <Link href={`/${country.code}/verificador`} className="mt-3">
             <Button variant="ghost" size="sm" className="w-full gap-2 text-xs text-muted-foreground hover:text-primary">
-              Verificar una afirmacion
+              Verificar una afirmación
               <ArrowRight className="h-3 w-3" />
             </Button>
           </Link>
@@ -341,7 +341,7 @@ function pickDiverseChecks(checks: FactCheck[], n: number): FactCheck[] {
 function PlanesHighlight({ topCandidates }: { topCandidates: Candidate[] }) {
   const country = useCountry();
   const categories = [
-    { key: "economia", label: "Economia", icon: TrendingUp, color: "text-emerald" },
+    { key: "economia", label: "Economía", icon: TrendingUp, color: "text-emerald" },
     { key: "seguridad", label: "Seguridad", icon: Shield, color: "text-rose" },
     { key: "salud", label: "Salud", icon: Activity, color: "text-sky" },
   ];

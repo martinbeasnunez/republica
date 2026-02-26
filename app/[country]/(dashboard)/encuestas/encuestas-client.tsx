@@ -13,7 +13,7 @@ const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
 const POLLSTER_INFO: Record<string, { name: string; reliability: number; methodology: string; sampleSize: string }[]> = {
   pe: [
-    { name: "Ipsos Peru", reliability: 92, methodology: "Presencial + telefónica", sampleSize: "1,500" },
+    { name: "Ipsos Perú", reliability: 92, methodology: "Presencial + telefónica", sampleSize: "1,500" },
     { name: "CPI", reliability: 88, methodology: "Presencial", sampleSize: "1,200" },
     { name: "Datum", reliability: 90, methodology: "Presencial + online", sampleSize: "1,400" },
     { name: "IEP", reliability: 91, methodology: "Presencial + telefónica", sampleSize: "1,300" },
@@ -250,6 +250,7 @@ export default function EncuestasClient({ candidates }: { candidates: Candidate[
         </h1>
         <p className="text-sm text-muted-foreground">
           Promedio ponderado de las principales encuestadoras de {country.name}
+
         </p>
       </motion.div>
 

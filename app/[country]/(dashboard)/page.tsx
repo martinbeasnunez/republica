@@ -17,11 +17,11 @@ export async function generateMetadata({
 
   return {
     title: `Elecciones ${name} ${year} — Candidatos, Encuestas y Noticias`,
-    description: `Resumen rapido elecciones ${name} ${year}. ¿Quien va ganando? Conoce a los candidatos, mira las encuestas y descubre por quien votar. Informacion verificada con IA.`,
+    description: `Resumen rápido elecciones ${name} ${year}. ¿Quién va ganando? Conoce a los candidatos, mira las encuestas y descubre por quién votar. Información verificada con IA.`,
     alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}` },
     openGraph: {
       title: `Elecciones ${name} ${year} — Candidatos, Encuestas y Noticias`,
-      description: `¿Quien va ganando? Conoce a los candidatos, mira las encuestas y descubre por quien votar. CONDOR — Inteligencia Electoral.`,
+      description: `¿Quién va ganando? Conoce a los candidatos, mira las encuestas y descubre por quién votar. CONDOR — Inteligencia Electoral.`,
       type: "website",
     },
   };
