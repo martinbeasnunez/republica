@@ -4,28 +4,28 @@ import { getSupabase } from "@/lib/supabase";
 /**
  * POST /api/setup/update-colombia-photos
  *
- * Updates Colombian candidate photos from placeholder local paths
- * to external URLs from candidatos.colombia2026.com.
+ * Updates Colombian candidate photos to verified Wikimedia Commons images.
+ * Source: Wikidata P18 property → Wikimedia Commons thumbnails (400px).
  * Auth: Bearer CRON_SECRET
  */
 
 const PHOTO_MAP: Record<string, string> = {
   "co-ivan-cepeda":
-    "https://candidatos.colombia2026.com/candidates/webp/ivan-cepeda.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Ivan_Cepeda_Congreso.jpg/400px-Ivan_Cepeda_Congreso.jpg",
   "co-abelardo-de-la-espriella":
-    "https://candidatos.colombia2026.com/candidates/webp/abelardo-de-la-espriella.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/ADLE_OFICIAL.webp/400px-ADLE_OFICIAL.webp",
   "co-claudia-lopez":
-    "https://candidatos.colombia2026.com/candidates/webp/claudia-lopez.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Claudia_L%C3%B3pez.png/400px-Claudia_L%C3%B3pez.png",
   "co-sergio-fajardo":
-    "https://candidatos.colombia2026.com/candidates/webp/sergio-fajardo.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/SergioFajardo.jpg/400px-SergioFajardo.jpg",
   "co-paloma-valencia":
-    "https://candidatos.colombia2026.com/candidates/webp/paloma-valencia.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Paloma_Valencia.png/400px-Paloma_Valencia.png",
   "co-vicky-davila":
-    "https://candidatos.colombia2026.com/candidates/webp/vicky-davila.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Vicky_Davila_2025.jpg/400px-Vicky_Davila_2025.jpg",
   "co-daniel-quintero":
-    "https://candidatos.colombia2026.com/candidates/webp/daniel-quintero.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Daniel_Quintero.jpg/400px-Daniel_Quintero.jpg",
   "co-roy-barreras":
-    "https://candidatos.colombia2026.com/candidates/webp/roy-barreras.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/RoyBarreras.jpg/400px-RoyBarreras.jpg",
 };
 
 export async function POST(request: NextRequest) {
