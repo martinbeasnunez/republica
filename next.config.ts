@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // ─── Images: allow external candidate photos ─────────
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "mpesije.jne.gob.pe",
+        pathname: "/apidocs/**",
+      },
+    ],
+  },
+
   // ─── SEO: Redirect old routes ──────────────────────────
   async redirects() {
     return [
