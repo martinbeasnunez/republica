@@ -173,7 +173,7 @@ REGLAS ESTRICTAS:
 - Solo extraer si la noticia menciona una ENCUESTA de una encuestadora reconocida
 - El pollster DEBE ser de la lista de encuestadoras validas
 - value es el porcentaje exacto (ej: 12.5, 7.3)
-- Rango valido: 0.5 a 30.0
+- Rango valido: 0.5 a 60.0
 - Si no hay datos de encuesta claros, polls = []
 - Un medio NO es una encuestadora`,
               },
@@ -196,7 +196,7 @@ REGLAS ESTRICTAS:
               !poll.value ||
               !poll.pollster ||
               poll.value < 0.5 ||
-              poll.value > 30
+              poll.value > 60
             ) continue;
 
             const isValid = validPollsters.some(
@@ -257,7 +257,7 @@ REGLAS ESTRICTAS:
           const [latest, prev] = candidate.recentValues;
           const trend = latest - prev;
           let estimated = latest + trend * 0.5;
-          estimated = Math.max(0.5, Math.min(30, estimated));
+          estimated = Math.max(0.5, Math.min(60, estimated));
           estimated = Math.round(estimated * 10) / 10;
 
           const pollsterIndex = new Date().getDay() % validPollsters.length;
