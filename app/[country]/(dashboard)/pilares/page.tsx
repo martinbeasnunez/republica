@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Pilares del Desarrollo — Indicadores Clave ${name} ${year}`,
     description: `Los pilares del desarrollo de ${name} analizados en el contexto de las elecciones ${year}.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/pilares` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/pilares` },
   };
 }
 

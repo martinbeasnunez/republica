@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Comparar Candidatos ${year} — ${name}`,
     description: `Compara candidatos presidenciales ${name} ${year} lado a lado. Propuestas, encuestas, ideología y plan de gobierno.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/candidatos/comparar` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/candidatos/comparar` },
   };
 }
 

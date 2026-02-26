@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Cobertura en Vivo — Elecciones ${name} ${year}`,
     description: `Seguimiento en vivo de las elecciones ${name} ${year}. Datos en tiempo real y tendencias de encuestas.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/en-vivo` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/en-vivo` },
   };
 }
 

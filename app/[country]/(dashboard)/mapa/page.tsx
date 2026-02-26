@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Mapa Electoral — Distribución Regional ${name} ${year}`,
     description: `Mapa electoral interactivo de ${name} ${year}. Distribución regional de preferencias electorales.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/mapa` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/mapa` },
   };
 }
 

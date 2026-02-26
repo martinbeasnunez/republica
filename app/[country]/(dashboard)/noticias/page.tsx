@@ -17,7 +17,7 @@ export async function generateMetadata({
   return {
     title: `Noticias Electorales — ${name} ${year} en Tiempo Real`,
     description: `Noticias electorales verificadas sobre las elecciones ${name} ${year}.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/noticias` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/noticias` },
   };
 }
 

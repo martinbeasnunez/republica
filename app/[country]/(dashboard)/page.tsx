@@ -18,7 +18,7 @@ export async function generateMetadata({
   return {
     title: `Elecciones ${name} ${year} — Candidatos, Encuestas y Noticias`,
     description: `Resumen rapido elecciones ${name} ${year}. ¿Quien va ganando? Conoce a los candidatos, mira las encuestas y descubre por quien votar. Informacion verificada con IA.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}` },
     openGraph: {
       title: `Elecciones ${name} ${year} — Candidatos, Encuestas y Noticias`,
       description: `¿Quien va ganando? Conoce a los candidatos, mira las encuestas y descubre por quien votar. CONDOR — Inteligencia Electoral.`,

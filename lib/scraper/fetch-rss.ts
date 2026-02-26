@@ -25,7 +25,7 @@ export async function fetchRSSFeed(
     const response = await fetch(config.feedUrl, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; CondorBot/1.0; +https://condorperu.vercel.app)",
+          "Mozilla/5.0 (compatible; CondorBot/1.0; +https://condorlatam.com)",
       },
       signal: AbortSignal.timeout(8000),
     });

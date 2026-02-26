@@ -156,7 +156,7 @@ const PERU_CONFIG: CountryConfig = {
     { name: "IDL Reporteros", domain: "idl-reporteros.pe", type: "factcheck" },
   ],
 
-  domain: "condorperu.vercel.app",
+  domain: "condorlatam.com",
 };
 
 // =============================================================================
@@ -252,7 +252,7 @@ const COLOMBIA_CONFIG: CountryConfig = {
     { name: "Razón Pública", domain: "razonpublica.com", type: "digital" },
   ],
 
-  domain: "condorcolombia.vercel.app",
+  domain: "condorlatam.com",
 };
 
 // =============================================================================

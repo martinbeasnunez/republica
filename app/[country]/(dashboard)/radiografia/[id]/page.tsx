@@ -8,7 +8,7 @@ import RadiografiaDetailClient from "./radiografia-detail-client";
 export async function generateMetadata({ params }: { params: Promise<{ country: string; id: string }> }): Promise<Metadata> {
   const { country, id } = await params;
   const config = getCountryConfig(country);
-  const domain = config?.domain ?? "condorperu.vercel.app";
+  const domain = config?.domain ?? "condorlatam.com";
   const candidates = await fetchCandidates(country);
   const candidate = candidates.find((c) => c.id === id);
   if (!candidate) return { title: "Candidato no encontrado" };

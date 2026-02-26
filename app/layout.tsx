@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s | CONDOR",
   },
   description:
-    "CONDOR analiza candidatos, verifica hechos y monitorea encuestas en tiempo real con IA. Plataforma de inteligencia electoral para elecciones en Latinoamérica. Compara propuestas, planes de gobierno y simulaciones electorales.",
+    "CONDOR analiza candidatos, verifica hechos y monitorea encuestas en tiempo real con IA. Plataforma de inteligencia electoral para elecciones en Latinoamérica. Compara propuestas, planes de gobierno y escenarios electorales.",
   keywords: [
     "elecciones latinoamerica",
     "elecciones peru 2026",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     "planes de gobierno",
     "verificador de hechos elecciones",
     "quiz electoral",
-    "simulador electoral",
+    "escenarios electorales",
     "inteligencia artificial elecciones",
     "CONDOR",
     "voto informado",
@@ -46,9 +46,9 @@ export const metadata: Metadata = {
     "mapa electoral",
     "fact check elecciones",
   ],
-  metadataBase: new URL("https://condorperu.vercel.app"),
+  metadataBase: new URL("https://condorlatam.com"),
   alternates: {
-    canonical: "https://condorperu.vercel.app",
+    canonical: "https://condorlatam.com",
   },
   openGraph: {
     title: "CONDOR — Inteligencia Electoral con IA",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es",
     siteName: "CONDOR",
-    url: "https://condorperu.vercel.app",
+    url: "https://condorlatam.com",
   },
   twitter: {
     card: "summary_large_image",

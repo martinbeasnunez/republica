@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Radiografía de Candidatos — Análisis Profundo ${name} ${year}`,
     description: `Radiografía completa de los candidatos presidenciales ${name} ${year}. Patrimonio, procesos legales y financiamiento.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/radiografia` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/radiografia` },
   };
 }
 

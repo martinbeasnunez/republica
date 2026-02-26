@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getSupabase } from "@/lib/supabase";
 import { COUNTRIES } from "@/lib/config/countries";
 
-const BASE_URL = "https://condorperu.vercel.app";
+const BASE_URL = "https://condorlatam.com";
 
 const COUNTRY_CODES = Object.keys(COUNTRIES) as (keyof typeof COUNTRIES)[];
 

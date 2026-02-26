@@ -9,7 +9,7 @@ import { getCountryConfig } from "@/lib/config/countries";
 export async function generateMetadata({ params }: { params: Promise<{ country: string; slug: string }> }): Promise<Metadata> {
   const { country, slug } = await params;
   const config = getCountryConfig(country);
-  const domain = config?.domain ?? "condorperu.vercel.app";
+  const domain = config?.domain ?? "condorlatam.com";
   const countryName = config?.name ?? "Perú";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
   const candidate = await fetchCandidateBySlug(slug, country);
@@ -47,7 +47,7 @@ export default async function CandidateProfilePage({
   }
 
   const config = getCountryConfig(country);
-  const domain = config?.domain ?? "condorperu.vercel.app";
+  const domain = config?.domain ?? "condorlatam.com";
   const countryName = config?.name ?? "Perú";
 
   return (

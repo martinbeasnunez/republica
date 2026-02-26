@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Última Encuesta Presidencial ${year} — Intención de Voto ${name}`,
     description: `Última encuesta presidencial ${name} ${year}. Quién lidera la intención de voto. Promedio actualizado.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/encuestas` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/encuestas` },
   };
 }
 

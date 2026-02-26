@@ -221,10 +221,11 @@ export default function MetodologiaClient() {
                   sources: m.radiografiaSources,
                 },
                 {
-                  title: "Simulador Electoral",
+                  title: country.code === "co" ? "Análisis de Escenarios" : "Simulador Electoral",
                   page: "/simulador",
-                  description:
-                    "Ejecutamos simulaciones Monte Carlo (hasta 10,000 iteraciones) basadas en promedios de encuestas, volatilidad histórica, porcentaje de indecisos y variación de participación. No son predicciones: son escenarios probabilísticos.",
+                  description: country.code === "co"
+                    ? "Ejecutamos análisis de escenarios con modelos Monte Carlo (hasta 10,000 iteraciones) basados en promedios de encuestas, volatilidad histórica, porcentaje de indecisos y variación de participación. No son predicciones: son escenarios probabilísticos."
+                    : "Ejecutamos simulaciones Monte Carlo (hasta 10,000 iteraciones) basadas en promedios de encuestas, volatilidad histórica, porcentaje de indecisos y variación de participación. No son predicciones: son escenarios probabilísticos.",
                   sources: m.pollSources,
                 },
                 {
@@ -484,7 +485,7 @@ export default function MetodologiaClient() {
           <CardContent>
             <div className="space-y-3">
               {[
-                "CONDOR es una herramienta informativa, no un organismo electoral oficial. Los resultados del simulador son escenarios probabilísticos, no predicciones.",
+                `CONDOR es una herramienta informativa, no un organismo electoral oficial. Los resultados del ${country.code === "co" ? "análisis de escenarios" : "simulador"} son escenarios probabilísticos, no predicciones.`,
                 "Las encuestas tienen márgenes de error inherentes (típicamente ±2-3%). El promedio ponderado reduce pero no elimina esta incertidumbre.",
                 "La verificación por IA tiene limitaciones: no puede acceder a información no pública y sus resultados deben considerarse como orientativos, no definitivos.",
                 "Los puntajes de confiabilidad son asignados por CONDOR en base a criterios públicos, no por las fuentes mismas. Son indicativos y actualizables.",

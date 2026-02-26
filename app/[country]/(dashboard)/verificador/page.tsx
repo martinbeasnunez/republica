@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Verificador de Hechos — Fact Check Elecciones ${name} ${year}`,
     description: `Verificador de hechos con inteligencia artificial para las elecciones ${name} ${year}.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/verificador` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/verificador` },
   };
 }
 

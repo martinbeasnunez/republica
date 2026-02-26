@@ -16,7 +16,7 @@ export async function generateMetadata({
   return {
     title: `Planes de Gobierno ${year} — Propuestas de Todos los Candidatos`,
     description: `Planes de gobierno elecciones ${name} ${year}: propuestas de todos los candidatos. Compara por economía, seguridad, salud y educación.`,
-    alternates: { canonical: `https://${config?.domain ?? "condorperu.vercel.app"}/${country}/planes` },
+    alternates: { canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/planes` },
   };
 }
 
