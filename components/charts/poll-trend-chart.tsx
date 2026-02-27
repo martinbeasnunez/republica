@@ -19,6 +19,32 @@ function toYearMonth(dateStr: string): string {
   return dateStr.substring(0, 7);
 }
 
+/** Generate a dynamic insight based on real poll data */
+function generateInsight(
+  leaderName: string,
+  leaderPct: number,
+  gapPP: number,
+  undecidedPct: string,
+  daysLeft: number
+): string {
+  const days = `${daysLeft} días de campaña`;
+  const indecisos = `~${undecidedPct}% de indecisos`;
+
+  if (gapPP >= 20) {
+    return `${leaderName} lidera con amplia ventaja de ${gapPP.toFixed(1)}pp. Con ${indecisos} y ${days}, la distancia es considerable.`;
+  }
+  if (gapPP >= 10) {
+    return `${leaderName} encabeza con ${gapPP.toFixed(1)}pp sobre el segundo. Con ${indecisos} y ${days}, la ventaja es sólida pero la carrera continúa.`;
+  }
+  if (gapPP >= 5) {
+    return `${leaderName} lidera por ${gapPP.toFixed(1)}pp. Con ${indecisos} y ${days}, la competencia se mantiene abierta.`;
+  }
+  if (leaderPct < 15) {
+    return `Ningún candidato supera el 15%. Con ${indecisos} y ${days}, la carrera sigue completamente abierta.`;
+  }
+  return `Solo ${gapPP.toFixed(1)}pp separan al 1° del 2°. Con ${indecisos} y ${days}, todo puede cambiar.`;
+}
+
 export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
   const ct = useChartTheme();
   const country = useCountry();
@@ -191,8 +217,7 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
 
         {/* Context message */}
         <p className="mt-2.5 text-[10px] text-muted-foreground/70 text-center leading-relaxed">
-          Ningún candidato supera el 15%. Con ~{undecidedApprox}% de indecisos y {daysLeft} días
-          de campaña, la carrera sigue completamente abierta.
+          {generateInsight(leader?.shortName ?? "", leader?.pollAverage ?? 0, parseFloat(gap), undecidedApprox, daysLeft)}
         </p>
       </div>
     );
