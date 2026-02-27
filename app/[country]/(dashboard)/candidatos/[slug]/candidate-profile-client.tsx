@@ -311,7 +311,7 @@ export function CandidateProfileClient({ candidate }: CandidateProfileClientProp
       </Tabs>
 
       {/* Radiografia CTA */}
-      <Link href={`/radiografia/${candidate.id}`}>
+      <Link href={`/${country.code}/radiografia/${candidate.id}`}>
         <Card className="bg-card border-primary/20 hover:border-primary/40 transition-all cursor-pointer group overflow-hidden">
           <div className="h-0.5 w-full bg-gradient-to-r from-primary via-primary/50 to-transparent" />
           <CardContent className="p-4">
