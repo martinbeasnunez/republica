@@ -24,32 +24,42 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CONDOR — Inteligencia Electoral con IA | Elecciones LATAM",
+    default: "CONDOR — Inteligencia Electoral con IA | Elecciones Perú y Colombia 2026",
     template: "%s | CONDOR",
   },
   description:
-    "CONDOR analiza candidatos, verifica hechos y monitorea encuestas en tiempo real con IA. Plataforma de inteligencia electoral para elecciones en Latinoamérica. Compara propuestas, planes de gobierno y escenarios electorales.",
+    "Plataforma de inteligencia electoral con IA para Perú y Colombia 2026. Encuestas en tiempo real, verificador de hechos, quiz electoral, simulador de escenarios, comparador de candidatos y análisis de planes de gobierno. Todo en un solo lugar.",
   keywords: [
-    "elecciones latinoamerica",
     "elecciones peru 2026",
     "elecciones colombia 2026",
-    "candidatos presidenciales",
-    "encuestas electorales",
-    "encuestas colombia 2026",
+    "candidatos presidenciales peru 2026",
+    "candidatos presidenciales colombia 2026",
+    "encuestas electorales peru",
+    "encuestas electorales colombia",
     "encuestas peru 2026",
-    "planes de gobierno",
+    "encuestas colombia 2026",
+    "por quien votar peru 2026",
+    "por quien votar colombia 2026",
+    "quiz electoral 2026",
+    "comparar candidatos peru",
+    "comparar candidatos colombia",
     "verificador de hechos elecciones",
-    "quiz electoral",
-    "por quien votar",
-    "escenarios electorales",
-    "inteligencia artificial elecciones",
-    "CONDOR",
-    "voto informado",
-    "comparar candidatos",
-    "mapa electoral",
     "fact check elecciones",
-    "primera vuelta colombia 2026",
+    "planes de gobierno peru 2026",
+    "planes de gobierno colombia 2026",
+    "simulador electoral 2026",
+    "quien va ganando encuestas peru",
+    "quien va ganando encuestas colombia",
     "primera vuelta peru 2026",
+    "primera vuelta colombia 2026",
+    "mapa electoral peru",
+    "mapa electoral colombia",
+    "propuestas candidatos peru 2026",
+    "propuestas candidatos colombia 2026",
+    "voto informado 2026",
+    "CONDOR",
+    "inteligencia artificial elecciones",
+    "elecciones latinoamerica 2026",
   ],
   metadataBase: new URL("https://condorlatam.com"),
   alternates: {
@@ -61,9 +71,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "CONDOR — Inteligencia Electoral con IA",
+    title: "CONDOR — Inteligencia Electoral con IA | Perú y Colombia 2026",
     description:
-      "Analiza candidatos, verifica hechos y monitorea encuestas con IA. Plataforma de inteligencia electoral para Latinoamérica.",
+      "Encuestas, verificador de hechos, quiz electoral, simulador, comparador de candidatos y más. La plataforma más completa para las elecciones 2026.",
     type: "website",
     locale: "es_ES",
     siteName: "CONDOR",
@@ -73,7 +83,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CONDOR — Inteligencia Electoral con IA",
     description:
-      "Analiza candidatos, verifica hechos y monitorea encuestas con IA para elecciones en Latinoamérica.",
+      "Encuestas, fact-check, quiz electoral, simulador y más para elecciones Perú y Colombia 2026.",
   },
   robots: {
     index: true,
@@ -87,6 +97,9 @@ export const metadata: Metadata = {
     },
   },
   category: "politics",
+  other: {
+    "theme-color": "#8B1A1A",
+  },
 };
 
 export default function RootLayout({

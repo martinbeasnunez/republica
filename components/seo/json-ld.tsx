@@ -15,7 +15,7 @@ export function OrganizationJsonLd() {
     name: "CONDOR",
     alternateName: "CONDOR — Inteligencia Electoral con IA",
     url: BASE_URL,
-    logo: `${BASE_URL}/favicon.ico`,
+    logo: `${BASE_URL}/icon`,
     description:
       "Plataforma de inteligencia electoral con IA para elecciones en Latinoamérica. Análisis de candidatos, verificación de hechos y monitoreo de noticias en tiempo real.",
     foundingDate: "2025",
@@ -208,6 +208,110 @@ export function FAQPageJsonLd({
         "@type": "Answer",
         text: q.answer,
       },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+/**
+ * ClaimReview schema — enables Google's Fact Check rich results.
+ * See: https://developers.google.com/search/docs/data-types/factcheck
+ */
+interface ClaimReviewJsonLdProps {
+  claim: string;
+  verdict: string;
+  explanation: string;
+  url: string;
+  datePublished: string;
+  countryCode?: CountryCode;
+}
+
+export function ClaimReviewJsonLd({
+  claim,
+  verdict,
+  explanation,
+  url,
+  datePublished,
+  countryCode = "pe",
+}: ClaimReviewJsonLdProps) {
+  // Map internal verdicts to schema.org alternateName ratings
+  const ratingMap: Record<string, { name: string; best: number; worst: number; value: number }> = {
+    VERDADERO: { name: "Verdadero", best: 5, worst: 1, value: 5 },
+    PARCIALMENTE_VERDADERO: { name: "Parcialmente verdadero", best: 5, worst: 1, value: 3 },
+    ENGANOSO: { name: "Engañoso", best: 5, worst: 1, value: 2 },
+    FALSO: { name: "Falso", best: 5, worst: 1, value: 1 },
+    NO_VERIFICABLE: { name: "No verificable", best: 5, worst: 1, value: 0 },
+  };
+
+  const rating = ratingMap[verdict] ?? ratingMap.NO_VERIFICABLE;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ClaimReview",
+    url,
+    claimReviewed: claim,
+    author: {
+      "@type": "Organization",
+      name: "CONDOR",
+      url: BASE_URL,
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: rating.value,
+      bestRating: rating.best,
+      worstRating: rating.worst,
+      alternateName: rating.name,
+    },
+    itemReviewed: {
+      "@type": "Claim",
+      author: {
+        "@type": "Organization",
+        name: `Fuentes electorales de ${getCountryConfig(countryCode)?.name ?? "Perú"}`,
+      },
+      datePublished,
+      appearance: {
+        "@type": "CreativeWork",
+        url,
+      },
+    },
+    datePublished,
+    reviewBody: explanation,
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+/**
+ * ItemList schema — for pages that list items (candidatos, encuestas, etc.)
+ * Enables Google's rich list snippets.
+ */
+interface ItemListJsonLdProps {
+  items: { name: string; url: string; position?: number }[];
+  name: string;
+}
+
+export function ItemListJsonLd({ items, name }: ItemListJsonLdProps) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: item.position ?? index + 1,
+      name: item.name,
+      url: item.url,
     })),
   };
 
