@@ -26,11 +26,13 @@ export const POLLSTER_COLORS: Record<string, Record<string, string>> = {
   },
   co: {
     Invamer: "#6366f1",
-    Datexco: "#f59e0b",
-    "Cifras y Conceptos": "#10b981",
     Guarumo: "#ec4899",
+    CELAG: "#10b981",
+    GAD3: "#f59e0b",
+    Datexco: "#f97316",
     CNC: "#8b5cf6",
-    YanHaas: "#f97316",
+    "Cifras y Conceptos": "#14b8a6",
+    YanHaas: "#a78bfa",
   },
 };
 
@@ -47,10 +49,12 @@ export const POLLSTER_META: Record<
   },
   co: {
     Invamer: { reliability: 91, methodology: "Presencial + telefónica", sampleSize: "1,600" },
+    Guarumo: { reliability: 87, methodology: "Presencial", sampleSize: "4,245" },
+    CELAG: { reliability: 85, methodology: "Presencial + telefónica", sampleSize: "1,200" },
+    GAD3: { reliability: 88, methodology: "Telefónica", sampleSize: "2,108" },
     Datexco: { reliability: 89, methodology: "Presencial + telefónica", sampleSize: "1,400" },
-    "Cifras y Conceptos": { reliability: 90, methodology: "Presencial + online", sampleSize: "1,200" },
-    Guarumo: { reliability: 87, methodology: "Online + telefónica", sampleSize: "1,000" },
     CNC: { reliability: 88, methodology: "Telefónica + online", sampleSize: "1,100" },
+    "Cifras y Conceptos": { reliability: 90, methodology: "Presencial + online", sampleSize: "1,200" },
     YanHaas: { reliability: 86, methodology: "Presencial + telefónica", sampleSize: "1,300" },
   },
 };
