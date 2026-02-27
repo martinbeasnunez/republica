@@ -58,6 +58,13 @@ interface BrainBriefing {
   created_at: string;
 }
 
+export interface HealthCheck {
+  system: string;
+  ok: boolean;
+  lastRun: string | null;
+  detail: string;
+}
+
 export interface BrainData {
   countryName: string;
   countryEmoji: string;
@@ -77,6 +84,7 @@ export interface BrainData {
     totalBriefings: number;
     lastRunTime: string | null;
     actionsToday: number;
+    pollAnomalies: number;
   };
   // Actions by job
   actionsByJob: Record<string, number>;
@@ -87,6 +95,13 @@ export interface BrainData {
     runId: string;
     actionsCount: number;
     createdAt: string;
+  }>;
+  // System health
+  healthChecks: HealthCheck[];
+  healthAlerts: Array<{
+    severity: string;
+    system: string;
+    message: string;
   }>;
 }
 
@@ -184,11 +199,106 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
       totalBriefings: briefings.length,
       lastRunTime,
       actionsToday,
+      pollAnomalies: actions.filter(
+        (a) => a.entity_type === "poll" && a.action_type === "flag"
+      ).length,
     },
     actionsByJob,
     actionsByType,
     recentRuns,
+    healthChecks: await getHealthChecks(supabase, country),
+    healthAlerts: actions
+      .filter((a) => a.description.startsWith("[HEALTH"))
+      .slice(0, 10)
+      .map((a) => ({
+        severity: a.description.includes("CRITICAL") ? "critical" : "warning",
+        system: a.entity_id || "unknown",
+        message: a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, ""),
+      })),
   };
+}
+
+/**
+ * Build health checks from latest data freshness.
+ */
+async function getHealthChecks(
+  supabase: ReturnType<typeof getSupabase>,
+  country: CountryCode
+): Promise<HealthCheck[]> {
+  const checks: HealthCheck[] = [];
+  const now = Date.now();
+
+  // Scraper health
+  const { data: latestArticle } = await supabase
+    .from("news_articles")
+    .select("created_at")
+    .eq("country_code", country)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const lastScrape = latestArticle?.[0]?.created_at || null;
+  const scrapeAge = lastScrape ? Math.round((now - new Date(lastScrape).getTime()) / 3600000) : 999;
+  checks.push({
+    system: "Scraper de Noticias",
+    ok: scrapeAge < 36,
+    lastRun: lastScrape,
+    detail: lastScrape ? `Hace ${scrapeAge}h` : "Nunca",
+  });
+
+  // Verifier health
+  const { data: latestCheck } = await supabase
+    .from("fact_checks")
+    .select("created_at")
+    .eq("country_code", country)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const lastVerify = latestCheck?.[0]?.created_at || null;
+  const verifyAge = lastVerify ? Math.round((now - new Date(lastVerify).getTime()) / 3600000) : 999;
+  checks.push({
+    system: "Verificador de Hechos",
+    ok: verifyAge < 72,
+    lastRun: lastVerify,
+    detail: lastVerify ? `Hace ${verifyAge}h` : "Nunca",
+  });
+
+  // Polls health
+  const { data: latestPoll } = await supabase
+    .from("poll_data_points")
+    .select("date")
+    .eq("country_code", country)
+    .order("date", { ascending: false })
+    .limit(1);
+
+  const lastPoll = latestPoll?.[0]?.date || null;
+  const pollAgeDays = lastPoll
+    ? Math.round((now - new Date(lastPoll).getTime()) / (24 * 3600000))
+    : 999;
+  checks.push({
+    system: "Datos de Encuestas",
+    ok: pollAgeDays < 10,
+    lastRun: lastPoll,
+    detail: lastPoll ? `Hace ${pollAgeDays}d` : "Nunca",
+  });
+
+  // Brain health
+  const { data: latestBrain } = await supabase
+    .from("brain_actions")
+    .select("created_at")
+    .eq("country_code", country)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const lastBrain = latestBrain?.[0]?.created_at || null;
+  const brainAge = lastBrain ? Math.round((now - new Date(lastBrain).getTime()) / 3600000) : 999;
+  checks.push({
+    system: "CONDOR Brain",
+    ok: brainAge < 36,
+    lastRun: lastBrain,
+    detail: lastBrain ? `Hace ${brainAge}h` : "Nunca",
+  });
+
+  return checks;
 }
 
 // =============================================================================
@@ -224,10 +334,13 @@ export default async function AdminBrainPage({
         totalBriefings: 0,
         lastRunTime: null,
         actionsToday: 0,
+        pollAnomalies: 0,
       },
       actionsByJob: {},
       actionsByType: {},
       recentRuns: [],
+      healthChecks: [],
+      healthAlerts: [],
     };
   }
 

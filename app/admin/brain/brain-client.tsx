@@ -44,14 +44,18 @@ function formatDate(dateStr: string): string {
 
 const jobLabels: Record<string, string> = {
   "data-integrity": "Integridad de Datos",
+  "poll-verifier": "Verificador de Encuestas",
   "news-curator": "Curador de Noticias",
   "briefing-generator": "Generador de Briefing",
+  "health-monitor": "Monitor de Salud",
 };
 
 const jobIcons: Record<string, typeof Brain> = {
   "data-integrity": Database,
+  "poll-verifier": Shield,
   "news-curator": Newspaper,
   "briefing-generator": FileText,
+  "health-monitor": Activity,
 };
 
 const actionTypeConfig: Record<
@@ -164,6 +168,94 @@ export function BrainClient({ data }: { data: BrainData }) {
           delay={0.25}
         />
       </div>
+
+      {/* ── System Health ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.28 }}
+      >
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Activity className="h-3.5 w-3.5" />
+              Estado del Sistema
+              {data.healthChecks.length > 0 && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] font-mono ml-auto",
+                    data.healthChecks.every((c) => c.ok)
+                      ? "text-emerald border-emerald/30"
+                      : data.healthChecks.some((c) => !c.ok)
+                        ? "text-rose border-rose/30"
+                        : "text-amber border-amber/30"
+                  )}
+                >
+                  {data.healthChecks.every((c) => c.ok) ? "HEALTHY" : "DEGRADED"}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {data.healthChecks.map((check) => (
+                <div
+                  key={check.system}
+                  className={cn(
+                    "rounded-lg border p-3 transition-colors",
+                    check.ok
+                      ? "border-emerald/20 bg-emerald/5"
+                      : "border-rose/20 bg-rose/5"
+                  )}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {check.ok ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-rose" />
+                    )}
+                    <span className="text-xs font-medium text-foreground">
+                      {check.system}
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                    {check.detail}
+                  </p>
+                </div>
+              ))}
+              {data.healthChecks.length === 0 && (
+                <p className="text-xs text-muted-foreground col-span-4">
+                  Sin datos de salud. Ejecuta el Brain para ver el estado.
+                </p>
+              )}
+            </div>
+
+            {/* Health Alerts */}
+            {data.healthAlerts.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border space-y-1.5">
+                <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
+                  Alertas
+                </p>
+                {data.healthAlerts.map((alert, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex items-center gap-2 text-xs rounded px-2 py-1",
+                      alert.severity === "critical"
+                        ? "bg-rose/10 text-rose"
+                        : "bg-amber/10 text-amber"
+                    )}
+                  >
+                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{alert.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* ── Row: Latest Briefing + Jobs Breakdown ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

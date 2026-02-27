@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { type Candidate } from "@/lib/data/candidates";
 import { type NewsArticle } from "@/lib/data/news";
 import { type FactCheck } from "@/lib/data/fact-checks";
+import { type PublicBriefing } from "./page";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 import { useAnalytics } from "@/hooks/use-analytics";
 import Link from "next/link";
@@ -37,6 +38,7 @@ interface HomeClientProps {
   topCandidates: Candidate[];
   articles: NewsArticle[];
   factChecks: FactCheck[];
+  briefing?: PublicBriefing | null;
 }
 
 export default function HomeClient({
@@ -44,6 +46,7 @@ export default function HomeClient({
   topCandidates,
   articles,
   factChecks,
+  briefing,
 }: HomeClientProps) {
   const { trackEvent } = useAnalytics();
   const country = useCountry();
@@ -121,6 +124,7 @@ export default function HomeClient({
               trackEvent={trackEvent}
             />
             <QuizCTABlock trackEvent={trackEvent} />
+            {briefing && <BriefingBlock briefing={briefing} />}
             <NoticiasBlock articles={articles.slice(0, 3)} />
             <WhatsAppCTA context="default" />
           </motion.div>
@@ -400,6 +404,83 @@ function QuizCTABlock({
           </Button>
         </div>
       </Link>
+    </motion.section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BLOQUE: BRIEFING DEL DÍA (CONDOR Brain)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function BriefingBlock({ briefing }: { briefing: PublicBriefing }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Format date
+  const dateStr = new Date(briefing.briefing_date + "T12:00:00").toLocaleDateString(
+    "es-PE",
+    { weekday: "long", day: "numeric", month: "long" }
+  );
+
+  // Truncate summary for collapsed state
+  const summary = briefing.editorial_summary;
+  const isLong = summary.length > 280;
+  const displaySummary = expanded || !isLong ? summary : summary.slice(0, 280) + "...";
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.35 }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-base">🧠</span>
+        <h2 className="text-lg font-bold text-foreground">Briefing del día</h2>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+          {dateStr}
+        </p>
+
+        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+          {displaySummary}
+        </p>
+
+        {isLong && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            {expanded ? "Ver menos" : "Leer más"}
+          </button>
+        )}
+
+        {/* Top stories pills */}
+        {briefing.top_stories && briefing.top_stories.length > 0 && (
+          <div className="pt-2 border-t border-border space-y-2">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              Historias clave
+            </p>
+            {briefing.top_stories.slice(0, 3).map((story, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-xs text-primary font-bold mt-0.5">{i + 1}</span>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground line-clamp-1">
+                    {story.title}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground line-clamp-1">
+                    {story.summary}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="text-[10px] text-muted-foreground/60 pt-1">
+          Generado por CONDOR Brain — IA editorial autónoma
+        </p>
+      </div>
     </motion.section>
   );
 }
