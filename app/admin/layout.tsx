@@ -9,12 +9,14 @@ import {
   LogOut,
   Shield,
   ClipboardList,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COUNTRIES, type CountryCode } from "@/lib/config/countries";
 
 const adminNav = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Brain", href: "/admin/brain", icon: Brain },
   { name: "Quiz", href: "/admin/quiz", icon: ClipboardList },
   { name: "Suscriptores", href: "/admin/suscriptores", icon: Users },
 ];
