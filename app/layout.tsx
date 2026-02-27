@@ -97,6 +97,9 @@ export const metadata: Metadata = {
     },
   },
   category: "politics",
+  verification: {
+    google: "PWbiCsuWmckjsI3vwzjJdumPPSjTPLZUBd6D4g_dASI",
+  },
   other: {
     "theme-color": "#8B1A1A",
   },
