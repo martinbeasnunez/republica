@@ -207,14 +207,24 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
     actionsByType,
     recentRuns,
     healthChecks: await getHealthChecks(supabase, country),
-    healthAlerts: actions
-      .filter((a) => a.description.startsWith("[HEALTH"))
-      .slice(0, 10)
-      .map((a) => ({
-        severity: a.description.includes("CRITICAL") ? "critical" : "warning",
-        system: a.entity_id || "unknown",
-        message: a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, ""),
-      })),
+    // Deduplicate health alerts by message (each run logs the same ones)
+    healthAlerts: (() => {
+      const seen = new Set<string>();
+      return actions
+        .filter((a) => a.description.startsWith("[HEALTH"))
+        .filter((a) => {
+          const msg = a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, "");
+          if (seen.has(msg)) return false;
+          seen.add(msg);
+          return true;
+        })
+        .slice(0, 10)
+        .map((a) => ({
+          severity: a.description.includes("CRITICAL") ? "critical" : "warning",
+          system: a.entity_id || "unknown",
+          message: a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, ""),
+        }));
+    })(),
   };
 }
 

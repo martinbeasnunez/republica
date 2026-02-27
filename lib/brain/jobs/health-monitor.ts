@@ -166,21 +166,26 @@ export async function runHealthMonitor(
     }
 
     // ─── 3. Check Poll Data Freshness ───────────────────────
+    // Only checks candidates who have EVER had poll data (minor candidates without
+    // polls are normal and should not trigger alerts)
     try {
       const pollStaleDate = new Date(now - POLL_STALE_DAYS * 24 * 60 * 60 * 1000)
         .toISOString()
         .split("T")[0];
 
-      const { data: candidates } = await supabase
+      // Get candidates who have at least one poll data point
+      const { data: candidatesWithPolls } = await supabase
         .from("candidates")
-        .select("id, short_name")
+        .select("id, short_name, poll_average")
         .eq("is_active", true)
-        .eq("country_code", countryCode);
+        .eq("country_code", countryCode)
+        .gt("poll_average", 0);
 
+      const polledCandidates = candidatesWithPolls || [];
       let staleCandidates = 0;
       let lastPollDate: string | null = null;
 
-      for (const c of candidates || []) {
+      for (const c of polledCandidates) {
         const { data: latestPoll } = await supabase
           .from("poll_data_points")
           .select("date")
@@ -200,12 +205,12 @@ export async function runHealthMonitor(
       result.checks.polls.lastUpdate = lastPollDate;
       result.checks.polls.staleCandidates = staleCandidates;
 
-      if (staleCandidates > (candidates?.length || 0) / 2) {
+      if (polledCandidates.length > 0 && staleCandidates > polledCandidates.length / 2) {
         result.checks.polls.ok = false;
         alerts.push({
           severity: "warning",
           system: "polls",
-          message: `${staleCandidates} de ${candidates?.length || 0} candidatos sin encuestas recientes (>${POLL_STALE_DAYS} dias)`,
+          message: `${staleCandidates} de ${polledCandidates.length} candidatos con encuestas tienen datos desactualizados (>${POLL_STALE_DAYS} dias)`,
         });
       }
     } catch (err) {
@@ -220,19 +225,23 @@ export async function runHealthMonitor(
     }
 
     // ─── 4. Check Candidate Data Quality ────────────────────
+    // Only checks top candidates (those with poll_average > 0) for critical fields.
+    // Minor candidates with placeholder data are expected and not alarming.
     try {
       const { data: allCandidates } = await supabase
         .from("candidates")
-        .select("id, short_name, bio, age, party, profession, photo, is_active")
+        .select("id, short_name, bio, age, party, profession, photo, is_active, poll_average")
         .eq("country_code", countryCode);
 
       const active = (allCandidates || []).filter((c) => c.is_active);
       const inactive = (allCandidates || []).filter((c) => !c.is_active);
+      const topCandidates = active.filter((c) => (c.poll_average || 0) > 0);
 
       let missingFields = 0;
       const issues: string[] = [];
 
-      for (const c of active) {
+      // Only check top candidates (those who appear in polls)
+      for (const c of topCandidates) {
         if (!c.bio || c.bio.length < 20) {
           missingFields++;
           issues.push(`${c.short_name}: bio vacia o muy corta`);
@@ -259,7 +268,7 @@ export async function runHealthMonitor(
         alerts.push({
           severity: missingFields > 3 ? "warning" : "info",
           system: "candidates",
-          message: `${missingFields} campos faltantes en datos de candidatos`,
+          message: `${missingFields} campos faltantes en candidatos principales`,
           details: issues.slice(0, 5).join("; "),
         });
       }

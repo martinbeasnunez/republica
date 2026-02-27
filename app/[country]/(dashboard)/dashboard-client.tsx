@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Brain,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -31,6 +32,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { type Candidate } from "@/lib/data/candidates";
 import { type NewsArticle } from "@/lib/data/news";
 import { type FactCheck } from "@/lib/data/fact-checks";
+import { type PublicBriefing } from "./page";
 import { runSimulation, DEFAULT_CONFIG, type SimulationResult } from "@/lib/data/simulador";
 import { cn } from "@/lib/utils";
 import { useCountry } from "@/lib/config/country-context";
@@ -40,9 +42,10 @@ interface DashboardClientProps {
   topCandidates: Candidate[];
   articles: NewsArticle[];
   factChecks: FactCheck[];
+  briefing?: PublicBriefing | null;
 }
 
-export default function DashboardClient({ candidates, topCandidates, articles, factChecks }: DashboardClientProps) {
+export default function DashboardClient({ candidates, topCandidates, articles, factChecks, briefing }: DashboardClientProps) {
   const country = useCountry();
   const cp = `/${country.code}`; // country prefix for links
   return (
@@ -86,6 +89,9 @@ export default function DashboardClient({ candidates, topCandidates, articles, f
 
       {/* === SECTION 5: Election Strip === */}
       <ElectionCountdownStrip />
+
+      {/* === SECTION 5.5: AI Briefing === */}
+      {briefing && <BriefingCard briefing={briefing} />}
 
       {/* === SECTION 6+7: Feature Highlights + Analytics (unified grid) === */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
@@ -439,5 +445,75 @@ function QuickAction({
         <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-muted-foreground">{description}</p>
       </motion.div>
     </Link>
+  );
+}
+
+// ─── BRIEFING CARD ───
+
+function BriefingCard({ briefing }: { briefing: PublicBriefing }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const dateStr = new Date(briefing.briefing_date + "T12:00:00").toLocaleDateString(
+    "es-PE",
+    { weekday: "long", day: "numeric", month: "long" }
+  );
+
+  const summary = briefing.editorial_summary;
+  const isLong = summary.length > 300;
+  const displaySummary = expanded || !isLong ? summary : summary.slice(0, 300) + "...";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.05 }}
+    >
+      <Card className="bg-card border-border overflow-hidden">
+        <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-purple-500 to-transparent" />
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
+              <Brain className="h-4 w-4 text-violet-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Resumen IA del día</h3>
+              <p className="text-[10px] text-muted-foreground font-mono uppercase">{dateStr}</p>
+            </div>
+            <Badge variant="secondary" className="text-[9px] font-mono">CONDOR BRAIN</Badge>
+          </div>
+
+          <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
+            {displaySummary}
+          </p>
+
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-xs font-medium text-primary hover:text-primary/80 transition-colors mt-2"
+            >
+              {expanded ? "Ver menos" : "Leer más"}
+            </button>
+          )}
+
+          {briefing.top_stories && briefing.top_stories.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {briefing.top_stories.slice(0, 3).map((story, i) => (
+                <div key={i} className="flex items-start gap-2 rounded-lg bg-muted/50 p-2.5">
+                  <span className="text-xs text-primary font-bold font-mono mt-0.5">{i + 1}</span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium text-foreground line-clamp-2">
+                      {story.title}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {story.source}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

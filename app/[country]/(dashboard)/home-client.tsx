@@ -141,6 +141,7 @@ export default function HomeClient({
               topCandidates={topCandidates}
               articles={articles}
               factChecks={factChecks}
+              briefing={briefing}
             />
           </motion.div>
         )}
@@ -434,7 +435,7 @@ function BriefingBlock({ briefing }: { briefing: PublicBriefing }) {
     >
       <div className="flex items-center gap-2 mb-3">
         <span className="text-base">🧠</span>
-        <h2 className="text-lg font-bold text-foreground">Briefing del día</h2>
+        <h2 className="text-lg font-bold text-foreground">Resumen IA del día</h2>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
