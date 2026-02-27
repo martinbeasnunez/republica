@@ -4,10 +4,19 @@ import dynamic from "next/dynamic";
 import type { Candidate } from "@/lib/data/candidates";
 import { useChartTheme } from "@/lib/echarts-theme";
 import { useCountry } from "@/lib/config/country-context";
+import { AlertTriangle } from "lucide-react";
+import {
+  getSourceInfo,
+  getPollsterColor,
+  POLLSTER_META,
+  DEFAULT_MOE,
+  type SourceInfo,
+} from "@/lib/data/poll-utils";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
-// Format "2026-02" → "Feb 2026"
+// ─── Helpers ───
+
 function formatMonth(dateStr: string): string {
   const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   const [yearStr, monthStr] = dateStr.split("-");
@@ -19,42 +28,61 @@ function toYearMonth(dateStr: string): string {
   return dateStr.substring(0, 7);
 }
 
-/** Generate a dynamic insight based on real poll data */
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("es", { day: "numeric", month: "short" });
+}
+
+/** Generate dynamic insight with empate técnico support */
 function generateInsight(
   leaderName: string,
+  secondName: string,
   leaderPct: number,
   gapPP: number,
   undecidedPct: string,
-  daysLeft: number
+  daysLeft: number,
+  sourceInfo: SourceInfo
 ): string {
   const days = `${daysLeft} días de campaña`;
   const indecisos = `~${undecidedPct}% de indecisos`;
+  const sourceNote = sourceInfo.isSingleSource
+    ? ` Dato de fuente única (${sourceInfo.sourceName}).`
+    : "";
 
+  // Empate técnico: gap within margin of error
+  if (gapPP < DEFAULT_MOE * 2 && gapPP > 0 && secondName) {
+    return `Empate técnico entre ${leaderName} y ${secondName} — solo ${gapPP.toFixed(1)}pp de diferencia (margen de error ±${DEFAULT_MOE}pp). Con ${indecisos} y ${days}, todo puede cambiar.${sourceNote}`;
+  }
   if (gapPP >= 20) {
-    return `${leaderName} lidera con amplia ventaja de ${gapPP.toFixed(1)}pp. Con ${indecisos} y ${days}, la distancia es considerable.`;
+    return `${leaderName} lidera con amplia ventaja de ${gapPP.toFixed(1)}pp. Con ${indecisos} y ${days}, la distancia es considerable.${sourceNote}`;
   }
   if (gapPP >= 10) {
-    return `${leaderName} encabeza con ${gapPP.toFixed(1)}pp sobre el segundo. Con ${indecisos} y ${days}, la ventaja es sólida pero la carrera continúa.`;
+    return `${leaderName} encabeza con ${gapPP.toFixed(1)}pp sobre el segundo. Con ${indecisos} y ${days}, la ventaja es sólida pero la carrera continúa.${sourceNote}`;
   }
   if (gapPP >= 5) {
-    return `${leaderName} lidera por ${gapPP.toFixed(1)}pp. Con ${indecisos} y ${days}, la competencia se mantiene abierta.`;
+    return `${leaderName} lidera por ${gapPP.toFixed(1)}pp. Con ${indecisos} y ${days}, la competencia se mantiene abierta.${sourceNote}`;
   }
   if (leaderPct < 15) {
-    return `Ningún candidato supera el 15%. Con ${indecisos} y ${days}, la carrera sigue completamente abierta.`;
+    return `Ningún candidato supera el 15%. Con ${indecisos} y ${days}, la carrera sigue completamente abierta.${sourceNote}`;
   }
-  return `Solo ${gapPP.toFixed(1)}pp separan al 1° del 2°. Con ${indecisos} y ${days}, todo puede cambiar.`;
+  return `Solo ${gapPP.toFixed(1)}pp separan al 1° del 2°. Con ${indecisos} y ${days}, todo puede cambiar.${sourceNote}`;
 }
+
+// ─── Component ───
 
 export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
   const ct = useChartTheme();
   const country = useCountry();
 
-  // Only candidates with real poll data
   const withData = candidates
     .filter((c) => c.pollHistory.length > 0 && c.pollHistory.some((p) => p.value > 0))
     .sort((a, b) => b.pollAverage - a.pollAverage);
 
   if (withData.length === 0) return null;
+
+  // Collect all polls for source detection
+  const allPolls = withData.flatMap((c) => c.pollHistory);
+  const sourceInfo = getSourceInfo(allPolls);
 
   // Collect all unique months
   const monthSet = new Set<string>();
@@ -93,6 +121,44 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
   const gap = leader && second ? (leader.pollAverage - second.pollAverage).toFixed(1) : "0";
   const totalTopVote = withData.reduce((sum, c) => sum + c.pollAverage, 0);
   const undecidedApprox = Math.max(0, 100 - totalTopVote).toFixed(0);
+  const isEmpateTecnico = parseFloat(gap) < DEFAULT_MOE * 2 && second;
+
+  // Source header text
+  const headerSubtitle = sourceInfo.isSingleSource
+    ? `Según ${sourceInfo.sourceName} · Faltan ${daysLeft} días`
+    : `Promedio de ${sourceInfo.sourceCount} encuestadoras · Faltan ${daysLeft} días`;
+
+  // ─── Build scatter dots for individual polls (used in both modes) ───
+  const scatterData: Array<{
+    value: [number, number];
+    pollster: string;
+    date: string;
+    candidateName: string;
+  }> = [];
+
+  for (const c of withData) {
+    for (const p of c.pollHistory) {
+      const monthIdx = sortedMonths.indexOf(toYearMonth(p.date));
+      if (monthIdx >= 0) {
+        scatterData.push({
+          value: [monthIdx, p.value],
+          pollster: p.pollster,
+          date: p.date,
+          candidateName: c.shortName,
+        });
+      }
+    }
+  }
+
+  // ─── Ficha técnica strip data ───
+  const pollsterMeta = POLLSTER_META[country.code] || {};
+  const activePollsters = sourceInfo.pollsterNames
+    .map((name) => ({
+      name,
+      meta: pollsterMeta[name],
+      color: getPollsterColor(name, country.code),
+    }))
+    .filter((p) => p.meta);
 
   // === Single month: contextual bar chart + insights ===
   if (!hasMultipleMonths) {
@@ -120,13 +186,7 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
             .join("");
         },
       },
-      grid: {
-        top: 10,
-        right: 50,
-        bottom: 10,
-        left: 90,
-        containLabel: false,
-      },
+      grid: { top: 10, right: 50, bottom: 10, left: 90, containLabel: false },
       xAxis: {
         type: "value" as const,
         axisLine: { show: false },
@@ -157,74 +217,67 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
             fontSize: 11,
             fontFamily: "monospace",
           },
+          markArea: isEmpateTecnico ? {
+            silent: true,
+            data: [[
+              { yAxis: leader?.shortName, itemStyle: { color: "rgba(251,191,36,0.08)" } },
+              { yAxis: second?.shortName },
+            ]],
+          } : undefined,
         },
       ],
     };
 
     return (
       <div className="rounded-xl border border-border bg-card p-4">
-        {/* Header */}
+        {/* Header with source mode */}
         <div className="mb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-foreground">
               Intención de Voto
             </h3>
-            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-mono font-medium text-primary">
-              {monthLabels[0]}
-            </span>
+            <div className="flex items-center gap-1.5">
+              {sourceInfo.isSingleSource && (
+                <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-mono font-medium text-amber-400">
+                  <AlertTriangle className="h-2.5 w-2.5" />
+                  FUENTE ÚNICA
+                </span>
+              )}
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-mono font-medium text-primary">
+                {monthLabels[0]}
+              </span>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Promedio de encuestadoras · Faltan {daysLeft} días
-          </p>
+          <p className="text-xs text-muted-foreground">{headerSubtitle}</p>
         </div>
 
-        {/* Chart */}
         <div className="h-[220px] sm:h-[260px]">
-          <ReactECharts
-            option={option}
-            style={{ height: "100%" }}
-            opts={{ renderer: "canvas" }}
-          />
+          <ReactECharts option={option} style={{ height: "100%" }} opts={{ renderer: "canvas" }} />
         </div>
 
         {/* Insight strip */}
-        <div className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-muted/50 p-2.5">
-          <div className="text-center">
-            <p className="font-mono text-sm font-bold tabular-nums text-foreground">
-              {leader?.pollAverage.toFixed(1)}%
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-tight">
-              Puntero
-            </p>
-          </div>
-          <div className="text-center border-x border-border">
-            <p className="font-mono text-sm font-bold tabular-nums text-amber">
-              {gap}pp
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-tight">
-              Brecha 1° - 2°
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="font-mono text-sm font-bold tabular-nums text-sky">
-              ~{undecidedApprox}%
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-tight">
-              Indecisos
-            </p>
-          </div>
-        </div>
+        <InsightStrip
+          leader={leader}
+          gap={gap}
+          undecidedApprox={undecidedApprox}
+          isEmpateTecnico={!!isEmpateTecnico}
+        />
 
         {/* Context message */}
         <p className="mt-2.5 text-[10px] text-muted-foreground/70 text-center leading-relaxed">
-          {generateInsight(leader?.shortName ?? "", leader?.pollAverage ?? 0, parseFloat(gap), undecidedApprox, daysLeft)}
+          {generateInsight(leader?.shortName ?? "", second?.shortName ?? "", leader?.pollAverage ?? 0, parseFloat(gap), undecidedApprox, daysLeft, sourceInfo)}
         </p>
+
+        {/* Ficha técnica */}
+        <FichaTecnica pollsters={activePollsters} isSingleSource={sourceInfo.isSingleSource} />
       </div>
     );
   }
 
-  // === Multiple months → line trend chart ===
-  const series = candidateMonthlyData.map((d) => ({
+  // === Multiple months → line trend chart with scatter dots & MoE ===
+
+  // Line series (monthly averages per candidate)
+  const lineSeries = candidateMonthlyData.map((d) => ({
     name: d.candidate.shortName,
     type: "line" as const,
     smooth: true,
@@ -235,7 +288,71 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
     itemStyle: { color: d.candidate.partyColor },
     data: d.values,
     emphasis: { focus: "series" as const },
+    z: 2,
   }));
+
+  // MoE band for top 2 candidates (upper & lower bounds)
+  const moeBands = candidateMonthlyData.slice(0, 2).flatMap((d) => {
+    const upper = d.values.map((v) => (v != null ? parseFloat((v + DEFAULT_MOE).toFixed(1)) : null));
+    const lower = d.values.map((v) => (v != null ? parseFloat((v - DEFAULT_MOE).toFixed(1)) : null));
+    return [
+      {
+        name: `${d.candidate.shortName} +MoE`,
+        type: "line" as const,
+        smooth: true,
+        symbol: "none" as const,
+        lineStyle: { width: 0 },
+        areaStyle: { color: d.candidate.partyColor, opacity: 0.06 },
+        data: upper,
+        stack: `moe-${d.candidate.id}`,
+        silent: true,
+        z: 1,
+      },
+      {
+        name: `${d.candidate.shortName} -MoE`,
+        type: "line" as const,
+        smooth: true,
+        symbol: "none" as const,
+        lineStyle: { width: 0 },
+        areaStyle: { color: d.candidate.partyColor, opacity: 0.06 },
+        data: lower,
+        stack: `moe-${d.candidate.id}`,
+        silent: true,
+        z: 1,
+      },
+    ];
+  });
+
+  // Scatter series: individual poll dots
+  const scatterSeries = {
+    name: "Polls individuales",
+    type: "scatter" as const,
+    symbolSize: 7,
+    z: 10,
+    data: scatterData.map((d) => ({
+      value: d.value,
+      itemStyle: { color: getPollsterColor(d.pollster, country.code), opacity: 0.7 },
+    })),
+    tooltip: {
+      formatter: (p: { dataIndex: number }) => {
+        const d = scatterData[p.dataIndex];
+        if (!d) return "";
+        const meta = pollsterMeta[d.pollster.replace(/\s*\(estimado\)/i, "")];
+        return `<div style="font-size:11px">
+          <b>${d.pollster}</b> · ${formatShortDate(d.date)}<br/>
+          <span style="font-family:monospace;font-weight:bold">${d.value[1].toFixed(1)}%</span> — ${d.candidateName}
+          ${meta ? `<br/><span style="color:${ct.text.muted};font-size:10px">${meta.methodology} · n=${meta.sampleSize}</span>` : ""}
+        </div>`;
+      },
+    },
+  };
+
+  // Build all series — only show candidate lines in legend
+  const allSeries = [
+    ...lineSeries,
+    ...moeBands,
+    scatterSeries,
+  ];
 
   const option = {
     backgroundColor: "transparent",
@@ -247,16 +364,18 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
       formatter: (
         params: Array<{
           seriesName: string;
+          seriesType: string;
           value: number;
           color: string;
           marker: string;
           axisValueLabel: string;
         }>
       ) => {
-        const valid = params.filter((p) => p.value != null);
-        if (valid.length === 0) return "";
-        let html = `<div style="font-size:11px;color:${ct.text.muted};margin-bottom:4px">${valid[0].axisValueLabel}</div>`;
-        const sorted = [...valid].sort((a, b) => (b.value as number) - (a.value as number));
+        // Only show line series in axis tooltip (scatter has its own tooltip)
+        const lineParams = params.filter((p) => p.seriesType === "line" && !p.seriesName.includes("MoE") && p.value != null);
+        if (lineParams.length === 0) return "";
+        let html = `<div style="font-size:11px;color:${ct.text.muted};margin-bottom:4px">${lineParams[0].axisValueLabel}</div>`;
+        const sorted = [...lineParams].sort((a, b) => (b.value as number) - (a.value as number));
         sorted.forEach((p) => {
           html += `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">
             ${p.marker}
@@ -264,6 +383,7 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
             <span style="font-family:monospace;font-weight:bold">${(p.value as number).toFixed(1)}%</span>
           </div>`;
         });
+        html += `<div style="font-size:9px;color:${ct.text.muted};margin-top:4px;border-top:1px solid rgba(255,255,255,0.1);padding-top:2px">±${DEFAULT_MOE}pp margen de error</div>`;
         return html;
       },
     },
@@ -273,6 +393,8 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
       itemWidth: 10,
       itemHeight: 6,
       itemGap: 8,
+      // Only show candidate lines in legend, not MoE bands or scatter
+      data: lineSeries.map((s) => s.name),
     },
     grid: { top: 20, right: 8, bottom: 60, left: 35 },
     xAxis: {
@@ -290,52 +412,140 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
       min: 0,
       max: yMax,
     },
-    series,
+    series: allSeries,
   };
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">
             Tendencia de Encuestas
           </h3>
-          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-mono font-medium text-primary">
-            Faltan {daysLeft} días
-          </span>
+          <div className="flex items-center gap-1.5">
+            {sourceInfo.isSingleSource && (
+              <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[9px] font-mono font-medium text-amber-400">
+                <AlertTriangle className="h-2.5 w-2.5" />
+                FUENTE ÚNICA
+              </span>
+            )}
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-mono font-medium text-primary">
+              Faltan {daysLeft} días
+            </span>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          {monthLabels[0]} — {monthLabels[monthLabels.length - 1]} · Promedio ponderado
+          {sourceInfo.isSingleSource
+            ? `Según ${sourceInfo.sourceName} · ${monthLabels[0]} — ${monthLabels[monthLabels.length - 1]}`
+            : `${monthLabels[0]} — ${monthLabels[monthLabels.length - 1]} · Promedio de ${sourceInfo.sourceCount} encuestadoras`}
         </p>
       </div>
+
       <div className="h-[220px] sm:h-[280px]">
-        <ReactECharts
-          option={option}
-          style={{ height: "100%" }}
-          opts={{ renderer: "canvas" }}
+        <ReactECharts option={option} style={{ height: "100%" }} opts={{ renderer: "canvas" }} />
+      </div>
+
+      {/* Insight strip */}
+      <InsightStrip
+        leader={leader}
+        gap={gap}
+        undecidedApprox={undecidedApprox}
+        isEmpateTecnico={!!isEmpateTecnico}
+      />
+
+      {/* Ficha técnica */}
+      <FichaTecnica pollsters={activePollsters} isSingleSource={sourceInfo.isSingleSource} />
+    </div>
+  );
+}
+
+// ─── Sub-components ───
+
+function InsightStrip({
+  leader,
+  gap,
+  undecidedApprox,
+  isEmpateTecnico,
+}: {
+  leader: Candidate | undefined;
+  gap: string;
+  undecidedApprox: string;
+  isEmpateTecnico: boolean;
+}) {
+  return (
+    <div className="mt-3 grid grid-cols-4 gap-2 rounded-lg bg-muted/50 p-2.5">
+      <div className="text-center">
+        <p className="font-mono text-sm font-bold tabular-nums text-foreground">
+          {leader?.pollAverage.toFixed(1)}%
+        </p>
+        <p className="text-[10px] text-muted-foreground leading-tight">Puntero</p>
+      </div>
+      <div className="text-center border-x border-border">
+        <p className={`font-mono text-sm font-bold tabular-nums ${isEmpateTecnico ? "text-amber" : "text-amber"}`}>
+          {gap}pp
+        </p>
+        <p className="text-[10px] text-muted-foreground leading-tight">
+          {isEmpateTecnico ? "Empate Tec." : "Brecha 1°-2°"}
+        </p>
+      </div>
+      <div className="text-center border-r border-border">
+        <p className="font-mono text-sm font-bold tabular-nums text-sky">
+          ~{undecidedApprox}%
+        </p>
+        <p className="text-[10px] text-muted-foreground leading-tight">Indecisos</p>
+      </div>
+      <div className="text-center">
+        <p className="font-mono text-sm font-bold tabular-nums text-muted-foreground">
+          ±{DEFAULT_MOE}pp
+        </p>
+        <p className="text-[10px] text-muted-foreground leading-tight">MoE</p>
+      </div>
+    </div>
+  );
+}
+
+function FichaTecnica({
+  pollsters,
+  isSingleSource,
+}: {
+  pollsters: Array<{ name: string; meta: { reliability: number; methodology: string; sampleSize: string } | undefined; color: string }>;
+  isSingleSource: boolean;
+}) {
+  if (pollsters.length === 0) return null;
+
+  if (isSingleSource && pollsters[0]?.meta) {
+    const p = pollsters[0];
+    return (
+      <div className="mt-2.5 flex items-center justify-center gap-2 text-[10px] text-muted-foreground/70">
+        <span
+          className="inline-block h-2 w-2 rounded-full flex-shrink-0"
+          style={{ backgroundColor: p.color }}
         />
+        <span className="font-medium">{p.name}</span>
+        <span>·</span>
+        <span>{p.meta!.methodology}</span>
+        <span>·</span>
+        <span className="font-mono tabular-nums">n={p.meta!.sampleSize}</span>
+        <span>·</span>
+        <span className="font-mono tabular-nums">{p.meta!.reliability}% confiabilidad</span>
       </div>
-      {/* Insight strip for multi-month too */}
-      <div className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-muted/50 p-2.5">
-        <div className="text-center">
-          <p className="font-mono text-sm font-bold tabular-nums text-foreground">
-            {leader?.pollAverage.toFixed(1)}%
-          </p>
-          <p className="text-[10px] text-muted-foreground leading-tight">Puntero</p>
-        </div>
-        <div className="text-center border-x border-border">
-          <p className="font-mono text-sm font-bold tabular-nums text-amber">
-            {gap}pp
-          </p>
-          <p className="text-[10px] text-muted-foreground leading-tight">Brecha 1° - 2°</p>
-        </div>
-        <div className="text-center">
-          <p className="font-mono text-sm font-bold tabular-nums text-sky">
-            ~{undecidedApprox}%
-          </p>
-          <p className="text-[10px] text-muted-foreground leading-tight">Indecisos</p>
-        </div>
-      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2.5 flex items-center justify-center gap-1 flex-wrap text-[10px] text-muted-foreground/60">
+      <span className="mr-0.5">Fuentes:</span>
+      {pollsters.map((p, i) => (
+        <span key={p.name} className="flex items-center gap-0.5">
+          {i > 0 && <span className="mx-0.5">·</span>}
+          <span
+            className="inline-block h-1.5 w-1.5 rounded-full flex-shrink-0"
+            style={{ backgroundColor: p.color }}
+          />
+          <span>{p.name}</span>
+          {p.meta && <span className="font-mono tabular-nums">({p.meta.sampleSize})</span>}
+        </span>
+      ))}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { getOpenAI } from "@/lib/ai/openai";
 import { COUNTRY_CODES, getCountryConfig, type CountryCode } from "@/lib/config/countries";
+import { recalculatePollStats } from "@/lib/data/poll-utils";
 
 /**
  * CRON: /api/cron/update-polls
@@ -314,42 +315,4 @@ REGLAS ESTRICTAS:
   }
 }
 
-/**
- * Recalculate poll_average and poll_trend for a candidate.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function recalculatePollStats(supabase: any, candidateId: string) {
-  const { data: recentPolls, error: fetchError } = await supabase
-    .from("poll_data_points")
-    .select("value")
-    .eq("candidate_id", candidateId)
-    .order("date", { ascending: false })
-    .limit(3);
-
-  if (fetchError) throw fetchError;
-  if (!recentPolls || recentPolls.length === 0) return;
-
-  const poll_average =
-    recentPolls.reduce(
-      (sum: number, p: { value: number }) => sum + p.value,
-      0
-    ) / recentPolls.length;
-
-  let poll_trend: "up" | "down" | "stable" = "stable";
-  if (recentPolls.length >= 2) {
-    const latest = recentPolls[0].value;
-    const secondLatest = recentPolls[1].value;
-    if (latest > secondLatest) poll_trend = "up";
-    else if (latest < secondLatest) poll_trend = "down";
-  }
-
-  const { error: updateError } = await supabase
-    .from("candidates")
-    .update({
-      poll_average: Math.round(poll_average * 100) / 100,
-      poll_trend,
-    })
-    .eq("id", candidateId);
-
-  if (updateError) throw updateError;
-}
+// recalculatePollStats is now imported from @/lib/data/poll-utils
