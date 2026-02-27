@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/update-polls",
       "schedule": "0 13 * * 1,4"
+    },
+    {
+      "path": "/api/cron/condor-brain",
+      "schedule": "0 10 * * *"
     }
   ]
 }
