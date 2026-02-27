@@ -56,6 +56,36 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Dynamic pages: short cache + always revalidate on deploy
+        source: "/:country(pe|co)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=60, stale-while-revalidate=30",
+          },
+        ],
+      },
+      {
+        // Admin pages: never cache
+        source: "/admin/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, must-revalidate",
+          },
+        ],
+      },
+      {
+        // API routes: never cache
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store",
+          },
+        ],
+      },
     ];
   },
 };
