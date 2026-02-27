@@ -83,6 +83,19 @@ const tagConfig: Record<
 
 const CHANGELOG: ChangelogDay[] = [
   {
+    date: "26 feb 2026",
+    version: "0.10.0",
+    entries: [
+      { tag: "ui", text: "Quiz electoral rediseñado: resultados tipo Spotify Wrapped con foto del candidato, ring gauge animado y card compartible" },
+      { tag: "data", text: "Datos de candidatos PE verificados: López Aliaga (ex alcalde), Keiko (4ta candidatura, muerte de Alberto), Álvarez/López-Chau (partidos corregidos)" },
+      { tag: "data", text: "Datos de candidatos CO verificados: Cepeda (exsenador), Claudia López (Imparables), Valencia (exsenadora), Dávila (ex Semana)" },
+      { tag: "fix", text: "Algoritmo del quiz: labels de afinidad coherentes con el porcentaje en vez de conteo confuso de temas" },
+      { tag: "fix", text: "Radiografía accesible desde cada perfil de candidato (link corregido)" },
+      { tag: "ai", text: "Chat con IA: respuestas se renderizan con formato Markdown (negritas, listas, código)" },
+      { tag: "feature", text: "Botón de compartir resultados del quiz con Web Share API + clipboard fallback" },
+    ],
+  },
+  {
     date: "25 feb 2026",
     version: "0.9.0",
     entries: [

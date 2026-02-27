@@ -13,6 +13,16 @@ interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    date: "26 feb",
+    items: [
+      "Quiz electoral rediseñado: resultados tipo Spotify Wrapped con foto, animaciones y card compartible",
+      "Datos de candidatos verificados y actualizados (PE y CO): bios, edades, partidos y roles corregidos",
+      "Algoritmo del quiz mejorado: labels de afinidad coherentes con el porcentaje",
+      "Radiografía de candidatos accesible desde cada perfil (link corregido)",
+      "Chat con IA: respuestas ahora se renderizan con formato (negritas, listas, etc.)",
+    ],
+  },
+  {
     date: "23 feb",
     items: [
       "SEO optimizado: sitemap dinámico, metadata por página y datos estructurados",
