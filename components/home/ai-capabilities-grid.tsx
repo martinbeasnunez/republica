@@ -165,7 +165,7 @@ export function AICapabilitiesGrid() {
       label: "CONDOR AI",
       preview: <MiniChat content={content} />,
       cta: "Iniciar conversación",
-      href: `${cp}/verificador`,
+      href: `${cp}/candidatos`,
     },
     {
       id: "factcheck",
