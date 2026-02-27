@@ -291,37 +291,42 @@ export function PollTrendChart({ candidates }: { candidates: Candidate[] }) {
     z: 2,
   }));
 
-  // MoE band for top 2 candidates (upper & lower bounds)
-  const moeBands = candidateMonthlyData.slice(0, 2).flatMap((d) => {
-    const upper = d.values.map((v) => (v != null ? parseFloat((v + DEFAULT_MOE).toFixed(1)) : null));
-    const lower = d.values.map((v) => (v != null ? parseFloat((v - DEFAULT_MOE).toFixed(1)) : null));
-    return [
-      {
-        name: `${d.candidate.shortName} +MoE`,
-        type: "line" as const,
-        smooth: true,
-        symbol: "none" as const,
-        lineStyle: { width: 0 },
-        areaStyle: { color: d.candidate.partyColor, opacity: 0.06 },
-        data: upper,
-        stack: `moe-${d.candidate.id}`,
-        silent: true,
-        z: 1,
-      },
-      {
-        name: `${d.candidate.shortName} -MoE`,
-        type: "line" as const,
-        smooth: true,
-        symbol: "none" as const,
-        lineStyle: { width: 0 },
-        areaStyle: { color: d.candidate.partyColor, opacity: 0.06 },
-        data: lower,
-        stack: `moe-${d.candidate.id}`,
-        silent: true,
-        z: 1,
-      },
-    ];
-  });
+  // MoE band for #1 candidate only (proper band: lower base + bandwidth overlay)
+  const topCandidate = candidateMonthlyData[0];
+  const moeBands = topCandidate
+    ? [
+        // Lower base: fills from 0 to (value - MoE), transparent
+        {
+          name: `${topCandidate.candidate.shortName} base`,
+          type: "line" as const,
+          smooth: true,
+          symbol: "none" as const,
+          lineStyle: { width: 0 },
+          areaStyle: { color: "transparent", opacity: 0 },
+          data: topCandidate.values.map((v) =>
+            v != null ? parseFloat((v - DEFAULT_MOE).toFixed(1)) : null
+          ),
+          stack: "moe-band",
+          silent: true,
+          z: 0,
+        },
+        // Band: fills from (value - MoE) to (value + MoE), colored
+        {
+          name: `${topCandidate.candidate.shortName} MoE`,
+          type: "line" as const,
+          smooth: true,
+          symbol: "none" as const,
+          lineStyle: { width: 0 },
+          areaStyle: { color: topCandidate.candidate.partyColor, opacity: 0.1 },
+          data: topCandidate.values.map((v) =>
+            v != null ? parseFloat((DEFAULT_MOE * 2).toFixed(1)) : null
+          ),
+          stack: "moe-band",
+          silent: true,
+          z: 0,
+        },
+      ]
+    : [];
 
   // Scatter series: individual poll dots
   const scatterSeries = {

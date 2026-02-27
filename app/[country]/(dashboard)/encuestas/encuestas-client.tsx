@@ -127,33 +127,40 @@ export default function EncuestasClient({ candidates }: { candidates: Candidate[
           z: 2,
         }));
 
-        // MoE bands for top 2
-        const moeBands = candidateMonthlyData.slice(0, 2).flatMap((d) => [
-          {
-            name: `${d.candidate.shortName} +MoE`,
-            type: "line" as const,
-            smooth: true,
-            symbol: "none" as const,
-            lineStyle: { width: 0 },
-            areaStyle: { color: d.candidate.partyColor, opacity: 0.06 },
-            data: d.values.map((v) => (v != null ? parseFloat((v + DEFAULT_MOE).toFixed(1)) : null)),
-            stack: `moe-${d.candidate.id}`,
-            silent: true,
-            z: 1,
-          },
-          {
-            name: `${d.candidate.shortName} -MoE`,
-            type: "line" as const,
-            smooth: true,
-            symbol: "none" as const,
-            lineStyle: { width: 0 },
-            areaStyle: { color: d.candidate.partyColor, opacity: 0.06 },
-            data: d.values.map((v) => (v != null ? parseFloat((v - DEFAULT_MOE).toFixed(1)) : null)),
-            stack: `moe-${d.candidate.id}`,
-            silent: true,
-            z: 1,
-          },
-        ]);
+        // MoE band for #1 candidate only (proper band technique)
+        const topC = candidateMonthlyData[0];
+        const moeBands = topC
+          ? [
+              {
+                name: `${topC.candidate.shortName} base`,
+                type: "line" as const,
+                smooth: true,
+                symbol: "none" as const,
+                lineStyle: { width: 0 },
+                areaStyle: { color: "transparent", opacity: 0 },
+                data: topC.values.map((v) =>
+                  v != null ? parseFloat((v - DEFAULT_MOE).toFixed(1)) : null
+                ),
+                stack: "moe-band",
+                silent: true,
+                z: 0,
+              },
+              {
+                name: `${topC.candidate.shortName} MoE`,
+                type: "line" as const,
+                smooth: true,
+                symbol: "none" as const,
+                lineStyle: { width: 0 },
+                areaStyle: { color: topC.candidate.partyColor, opacity: 0.1 },
+                data: topC.values.map((v) =>
+                  v != null ? parseFloat((DEFAULT_MOE * 2).toFixed(1)) : null
+                ),
+                stack: "moe-band",
+                silent: true,
+                z: 0,
+              },
+            ]
+          : [];
 
         // Scatter dots
         const scatterSeries = {
