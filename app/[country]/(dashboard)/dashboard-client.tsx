@@ -80,10 +80,10 @@ export default function DashboardClient({ candidates, topCandidates, articles, f
           gradient="from-sky/20 to-cyan-500/20"
         />
         <QuickAction
-          href={`${cp}/verificador`}
-          title="Verificar noticia"
-          description="¿Es verdad o falso?"
-          gradient="from-emerald/20 to-green-500/20"
+          href={`${cp}/radiografia`}
+          title="Radiografía"
+          description="Análisis completo"
+          gradient="from-violet-500/20 to-purple-500/20"
         />
       </div>
 

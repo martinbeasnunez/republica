@@ -6,7 +6,7 @@ import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, countryCode = "pe" } = await req.json();
+    const { messages, countryCode = "pe", mode = "electoral" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -17,35 +17,42 @@ export async function POST(req: NextRequest) {
 
     const cc = countryCode as CountryCode;
 
-    const [candidates, newsContext] = await Promise.all([
-      fetchCandidates(cc),
-      fetchNewsContext(cc),
-    ]);
+    // Build system prompt based on mode
+    let systemContent: string;
 
-    const candidateContext = candidates
-      .map((c) => {
-        // Get the latest poll data point for context
-        const latestPoll = c.pollHistory.length > 0
-          ? c.pollHistory[c.pollHistory.length - 1]
-          : null;
-        const latestPollInfo = latestPoll
-          ? ` Ultima encuesta: ${latestPoll.value}% (${latestPoll.pollster}, ${latestPoll.date}).`
-          : "";
-        return `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años, región ${c.region}. Promedio encuestas recientes: ${c.pollAverage}%.${latestPollInfo} Tendencia: ${c.pollTrend}. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`;
-      })
-      .join("\n");
+    if (mode === "feedback") {
+      // Feedback mode: no need to load candidates/news (saves tokens)
+      systemContent = SYSTEM_PROMPTS.feedbackCollector(cc);
+    } else {
+      // Electoral assistant mode: load full context
+      const [candidates, newsContext] = await Promise.all([
+        fetchCandidates(cc),
+        fetchNewsContext(cc),
+      ]);
+
+      const candidateContext = candidates
+        .map((c) => {
+          const latestPoll = c.pollHistory.length > 0
+            ? c.pollHistory[c.pollHistory.length - 1]
+            : null;
+          const latestPollInfo = latestPoll
+            ? ` Ultima encuesta: ${latestPoll.value}% (${latestPoll.pollster}, ${latestPoll.date}).`
+            : "";
+          return `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años, región ${c.region}. Promedio encuestas recientes: ${c.pollAverage}%.${latestPollInfo} Tendencia: ${c.pollTrend}. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`;
+        })
+        .join("\n");
+
+      systemContent = `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`;
+    }
 
     const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`,
-        },
+        { role: "system", content: systemContent },
         ...messages,
       ],
       temperature: 0.7,
-      max_tokens: 1500,
+      max_tokens: mode === "feedback" ? 500 : 1500,
       stream: true,
     });
 

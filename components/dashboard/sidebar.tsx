@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Menu,
   Globe,
+  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { Changelog } from "@/components/dashboard/changelog";
@@ -57,6 +58,7 @@ const navigation = [
   // ─── Extras ───
   { name: "Metodología", href: "/metodologia", icon: BookOpen },
   { name: "En Vivo", href: "/en-vivo", icon: Radio, badge: "LIVE" as const },
+  { name: "Feedback", href: "/feedback", icon: MessageSquare },
 ];
 
 // ─── Country-aware href ───
