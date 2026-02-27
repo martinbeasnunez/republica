@@ -83,6 +83,25 @@ const tagConfig: Record<
 
 const CHANGELOG: ChangelogDay[] = [
   {
+    date: "27 feb 2026",
+    version: "0.11.0",
+    entries: [
+      { tag: "ai", text: "CONDOR Brain: sistema autónomo de inteligencia editorial que opera sin intervención humana" },
+      { tag: "ai", text: "Job 1 — Integridad de Datos: verifica bios, edades y partidos cruzando con noticias recientes. Auto-corrige con confianza ≥85%" },
+      { tag: "ai", text: "Job 2 — Verificador de Encuestas: detecta anomalías estadísticas (saltos >5pp, outliers, duplicados, encuestadoras no reconocidas)" },
+      { tag: "ai", text: "Job 3 — Curador de Noticias: puntúa artículos por impacto electoral (1-10), marca breaking y desactiva spam" },
+      { tag: "ai", text: "Job 4 — Briefing Editorial: genera resumen diario con historias clave, movimientos en encuestas y verificaciones" },
+      { tag: "ai", text: "Job 5 — Monitor de Salud: vigila scraper, verificador, encuestas y datos de candidatos con alertas automáticas" },
+      { tag: "feature", text: "\"Resumen IA del día\" visible en la página principal (modos Resumen y Dashboard)" },
+      { tag: "feature", text: "Panel admin /admin/brain con KPIs, estado del sistema, briefings y audit trail completo" },
+      { tag: "feature", text: "Sección CONDOR Brain en la página de Metodología explicando cómo funciona el sistema autónomo" },
+      { tag: "data", text: "Audit trail: cada acción del Brain registrada con valores antes/después, confianza y timestamp" },
+      { tag: "infra", text: "Cron diario condor-brain ejecuta los 5 jobs para Perú y Colombia automáticamente" },
+      { tag: "fix", text: "Monitor de salud mejorado: ignora candidatos menores sin encuestas (condición normal, no alarma)" },
+      { tag: "fix", text: "Alertas de salud deduplicadas en admin (ya no se repiten entre runs)" },
+    ],
+  },
+  {
     date: "26 feb 2026",
     version: "0.10.0",
     entries: [
