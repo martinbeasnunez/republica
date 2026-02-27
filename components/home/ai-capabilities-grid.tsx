@@ -3,14 +3,13 @@
 import { motion } from "framer-motion";
 import {
   Sparkles,
-  ShieldCheck,
+  Target,
   Newspaper,
   FileText,
   ArrowRight,
-  CheckCircle2,
-  XCircle,
   Bot,
   User,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -23,16 +22,16 @@ import { useCountry } from "@/lib/config/country-context";
 const previewContent = {
   pe: {
     chatResponse: "Según las últimas encuestas, los 3 candidatos con mayor intención de voto son...",
-    factCheckFalse: "Elecciones se adelantan a marzo",
-    factCheckTrue: "Padrón electoral supera 25 millones",
+    quizQuestion: "¿Qué prioridad tiene para ti la seguridad ciudadana?",
+    quizOptions: ["Alta prioridad", "Media", "Baja prioridad"],
     newsHeadline: "Candidato presenta plan de seguridad ciudadana...",
     planCandidate: "Economía",
     planScore: "— /100",
   },
   co: {
     chatResponse: "Según las últimas encuestas, los 3 candidatos con mayor intención de voto son...",
-    factCheckFalse: "Reforma a la salud es inconstitucional",
-    factCheckTrue: "Colombia tiene 39 millones de electores",
+    quizQuestion: "¿Qué tan importante es la reforma agraria?",
+    quizOptions: ["Muy importante", "Importante", "Poco importante"],
     newsHeadline: "Candidato presenta plan contra la corrupción...",
     planCandidate: "Economía",
     planScore: "— /100",
@@ -78,26 +77,32 @@ function MiniChat({ content }: { content: typeof previewContent.pe }) {
   );
 }
 
-function MiniFactCheck({ content }: { content: typeof previewContent.pe }) {
+function MiniQuiz({ content }: { content: typeof previewContent.pe }) {
   return (
     <div className="space-y-1.5 mt-3">
-      <div className="flex items-center gap-1.5">
-        <XCircle className="h-3 w-3 text-rose flex-shrink-0" />
-        <span className="text-[10px] text-muted-foreground truncate">
-          &ldquo;{content.factCheckFalse}&rdquo;
-        </span>
-        <Badge variant="outline" className="text-[8px] h-4 px-1 border-rose/30 text-rose ml-auto flex-shrink-0">
-          FALSO
-        </Badge>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <CheckCircle2 className="h-3 w-3 text-emerald flex-shrink-0" />
-        <span className="text-[10px] text-muted-foreground truncate">
-          &ldquo;{content.factCheckTrue}&rdquo;
-        </span>
-        <Badge variant="outline" className="text-[8px] h-4 px-1 border-emerald/30 text-emerald ml-auto flex-shrink-0">
-          VERDADERO
-        </Badge>
+      <p className="text-[10px] text-muted-foreground">
+        {content.quizQuestion}
+      </p>
+      <div className="space-y-1">
+        {content.quizOptions.map((opt, i) => (
+          <div
+            key={opt}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px]",
+              i === 0
+                ? "border-violet-500/40 bg-violet-500/10 text-violet-300"
+                : "border-border text-muted-foreground"
+            )}
+          >
+            <div className={cn(
+              "h-3 w-3 rounded-full border flex items-center justify-center flex-shrink-0",
+              i === 0 ? "border-violet-500 bg-violet-500" : "border-muted-foreground/30"
+            )}>
+              {i === 0 && <Check className="h-2 w-2 text-white" />}
+            </div>
+            {opt}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -168,18 +173,18 @@ export function AICapabilitiesGrid() {
       href: `${cp}/candidatos`,
     },
     {
-      id: "factcheck",
-      title: "Verificador de Hechos",
-      subtitle: "Verifica cualquier afirmación electoral en segundos",
-      icon: ShieldCheck,
+      id: "quiz",
+      title: "Quiz Electoral IA",
+      subtitle: "Descubre qué candidato se alinea con tus ideas",
+      icon: Target,
       sparkleOverlay: false,
-      color: "text-emerald",
-      colorBg: "bg-emerald/10",
-      gradient: "from-emerald via-emerald/50 to-transparent",
-      label: "FACT-CHECK",
-      preview: <MiniFactCheck content={content} />,
-      cta: "Verificar afirmación",
-      href: `${cp}/verificador`,
+      color: "text-violet-400",
+      colorBg: "bg-violet-500/10",
+      gradient: "from-violet-500 via-violet-500/50 to-transparent",
+      label: "QUIZ IA",
+      preview: <MiniQuiz content={content} />,
+      cta: "Hacer el quiz",
+      href: `${cp}/quiz`,
     },
     {
       id: "news",
