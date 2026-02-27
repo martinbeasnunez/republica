@@ -235,6 +235,13 @@ export default function MetodologiaClient() {
                   description: m.newsDescription,
                   sources: m.newsSources,
                 },
+                {
+                  title: "CONDOR Brain — IA Editorial Autónoma",
+                  page: null,
+                  description:
+                    "CONDOR Brain es un sistema de inteligencia artificial que opera de forma autónoma sin intervención humana. Se ejecuta diariamente y realiza 5 trabajos: (1) Integridad de Datos — verifica que las biografías, edades y partidos de los candidatos estén actualizados cruzándolos con noticias recientes; si detecta un dato desactualizado con confianza ≥85%, lo corrige automáticamente y registra el cambio. (2) Verificador de Encuestas — analiza los datos de encuestas para detectar anomalías estadísticas: saltos bruscos (>5 puntos), valores atípicos, duplicados y encuestadoras no reconocidas. (3) Curador de Noticias — puntúa cada artículo por su impacto electoral (1-10), marca las noticias más relevantes como \"breaking\" y desactiva contenido de baja calidad. (4) Briefing Editorial — genera un resumen diario con las historias clave, movimientos en encuestas y verificaciones recientes, visible en la página principal. (5) Monitor de Salud — vigila que todos los sistemas funcionen correctamente y genera alertas si algo falla. Cada acción que toma el Brain queda registrada en un audit trail completo con valores antes/después, nivel de confianza y timestamp, garantizando transparencia total.",
+                  sources: ["OpenAI (gpt-4o-mini)", "Supabase", ...m.pollSources],
+                },
               ].map((section, i) => (
                 <div
                   key={section.title}
