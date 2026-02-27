@@ -47,8 +47,8 @@ const MAX_CANDIDATES_PER_RUN = 5;
 /** Confidence threshold for auto-updating data */
 const AUTO_UPDATE_THRESHOLD = 0.85;
 
-/** Fields that can be auto-updated */
-const UPDATABLE_FIELDS = new Set(["bio", "age", "party", "profession", "is_active"]);
+/** Fields that can be auto-updated (NEVER include is_active — only admin can deactivate candidates) */
+const UPDATABLE_FIELDS = new Set(["bio", "age", "party", "profession"]);
 
 // =============================================================================
 // MAIN JOB
@@ -227,8 +227,7 @@ async function checkCandidateIntegrity(
 - Bio: ${candidate.bio}
 - Edad: ${candidate.age}
 - Partido: ${candidate.party}
-- Profesion: ${candidate.profession}
-- Activo: ${candidate.is_active}`;
+- Profesion: ${candidate.profession}`;
 
   const newsData = articles
     .slice(0, 15)
@@ -295,8 +294,6 @@ async function autoUpdateCandidate(
       return false;
     }
     updateData.age = newAge;
-  } else if (field === "is_active") {
-    updateData.is_active = issue.suggested_value.toLowerCase() === "true";
   } else {
     // String fields: bio, party, profession
     if (!issue.suggested_value || issue.suggested_value.length < 3) return false;
