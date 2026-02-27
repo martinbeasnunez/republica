@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Brain,
@@ -14,6 +15,12 @@ import {
   Clock,
   Database,
   Eye,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash2,
+  Flag,
+  BarChart3,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,20 +46,193 @@ function timeAgo(dateStr: string | null): string {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  return `${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return d.toLocaleDateString("es-PE", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ── Human-readable descriptions for actions ──
+
+function humanizeAction(action: {
+  job: string;
+  action_type: string;
+  description: string;
+  entity_id: string | null;
+  before_value: Record<string, unknown> | null;
+  after_value: Record<string, unknown> | null;
+  confidence: number | null;
+}): { emoji: string; title: string; detail: string } {
+  const { job, action_type, description, before_value, after_value } = action;
+
+  // Extract candidate name from description if available
+  const nameMatch = description.match(
+    /(?:Auto-updated |updated |\[FLAG\] )([^.:]+)/
+  );
+  const candidateName = nameMatch ? nameMatch[1].trim() : "";
+
+  // ── Data Integrity ──
+  if (job === "data-integrity") {
+    // Poll spike
+    if (description.includes("[POLL SPIKE]")) {
+      const spikeMatch = description.match(
+        /\[POLL SPIKE\] (.+?): Cambio de (.+?)pp .+?: (.+?)% → (.+?)% \((.+?)\)/
+      );
+      if (spikeMatch) {
+        return {
+          emoji: "📊",
+          title: `Subida inusual de ${spikeMatch[1]}`,
+          detail: `Pasó de ${spikeMatch[3]}% a ${spikeMatch[4]}% según ${spikeMatch[5]} (+${spikeMatch[2]} puntos)`,
+        };
+      }
+      return { emoji: "📊", title: "Movimiento inusual en encuestas", detail: description };
+    }
+
+    // Auto-update
+    if (action_type === "update") {
+      const field = Object.keys(before_value || {})[0] || "";
+      const beforeVal = String(Object.values(before_value || {})[0] || "");
+      const afterVal = String(Object.values(after_value || {})[0] || "");
+
+      if (field === "is_active") {
+        return {
+          emoji: "⚠️",
+          title: `Desactivó a ${candidateName}`,
+          detail: `Cambió estado a inactivo (esto fue un error, ya corregido)`,
+        };
+      }
+      if (field === "bio") {
+        // Check if it's an orthography fix
+        if (description.toLowerCase().includes("tilde") || description.toLowerCase().includes("ortog")) {
+          return {
+            emoji: "✏️",
+            title: `Corrigió ortografía de ${candidateName}`,
+            detail: `Arregló tildes y acentos en la biografía`,
+          };
+        }
+        return {
+          emoji: "📝",
+          title: `Actualizó biografía de ${candidateName}`,
+          detail: afterVal.length > 100 ? afterVal.slice(0, 100) + "..." : afterVal,
+        };
+      }
+      if (field === "age") {
+        return {
+          emoji: "🎂",
+          title: `Corrigió edad de ${candidateName}`,
+          detail: `${beforeVal} → ${afterVal} años`,
+        };
+      }
+      if (field === "party") {
+        return {
+          emoji: "🏛️",
+          title: `Cambió partido de ${candidateName}`,
+          detail: `${beforeVal} → ${afterVal}`,
+        };
+      }
+      return {
+        emoji: "📝",
+        title: `Actualizó ${field} de ${candidateName}`,
+        detail: `${beforeVal.slice(0, 60)} → ${afterVal.slice(0, 60)}`,
+      };
+    }
+
+    // Flag
+    if (action_type === "flag") {
+      if (description.includes("is_active")) {
+        return {
+          emoji: "🚩",
+          title: `Sugirió revisar estado de ${candidateName}`,
+          detail: "Requiere revisión manual (no se aplicó cambio automático)",
+        };
+      }
+      return {
+        emoji: "🚩",
+        title: `Requiere revisión: ${candidateName}`,
+        detail: description.replace(/\[FLAG\]\s*/, "").replace(/[^:]+:\s*/, ""),
+      };
+    }
+  }
+
+  // ── News Curator ──
+  if (job === "news-curator") {
+    if (action_type === "set_breaking") {
+      return {
+        emoji: "🔴",
+        title: "Marcó noticia como Breaking",
+        detail: description.replace(/^Set breaking.*?:\s*/, "").slice(0, 120),
+      };
+    }
+    if (action_type === "deactivate") {
+      const scoreMatch = description.match(/\((\d+)\/10\)/);
+      return {
+        emoji: "🗑️",
+        title: "Eliminó noticia irrelevante",
+        detail: `Puntuación ${scoreMatch ? scoreMatch[1] : "baja"}/10 — ${description.replace(/^Deactivated.*?:\s*/, "").slice(0, 100)}`,
+      };
+    }
+  }
+
+  // ── Briefing Generator ──
+  if (job === "briefing-generator") {
+    return {
+      emoji: "📰",
+      title: "Generó resumen del día",
+      detail: `Briefing editorial generado exitosamente`,
+    };
+  }
+
+  // ── Health Monitor ──
+  if (job === "health-monitor") {
+    if (description.includes("[HEALTH")) {
+      const msg = description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, "");
+      const isCritical = description.includes("CRITICAL");
+      return {
+        emoji: isCritical ? "🔴" : "⚠️",
+        title: isCritical ? "Alerta crítica del sistema" : "Advertencia del sistema",
+        detail: msg,
+      };
+    }
+  }
+
+  // ── Poll Verifier ──
+  if (job === "poll-verifier") {
+    return {
+      emoji: "📊",
+      title: "Verificó encuestas",
+      detail: description,
+    };
+  }
+
+  // Fallback
+  return {
+    emoji: "🔧",
+    title: action_type === "update" ? "Actualización automática" : action_type === "flag" ? "Marcado para revisión" : description.slice(0, 50),
+    detail: description.slice(0, 150),
+  };
 }
 
 const jobLabels: Record<string, string> = {
-  "data-integrity": "Integridad de Datos",
-  "poll-verifier": "Verificador de Encuestas",
-  "news-curator": "Curador de Noticias",
-  "briefing-generator": "Generador de Briefing",
-  "health-monitor": "Monitor de Salud",
+  "data-integrity": "Datos",
+  "poll-verifier": "Encuestas",
+  "news-curator": "Noticias",
+  "briefing-generator": "Briefing",
+  "health-monitor": "Salud",
+};
+
+const jobColors: Record<string, string> = {
+  "data-integrity": "text-violet-400 bg-violet-400/10 border-violet-400/20",
+  "poll-verifier": "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  "news-curator": "text-amber bg-amber/10 border-amber/20",
+  "briefing-generator": "text-emerald bg-emerald/10 border-emerald/20",
+  "health-monitor": "text-rose bg-rose/10 border-rose/20",
 };
 
 const jobIcons: Record<string, typeof Brain> = {
   "data-integrity": Database,
-  "poll-verifier": Shield,
+  "poll-verifier": BarChart3,
   "news-curator": Newspaper,
   "briefing-generator": FileText,
   "health-monitor": Activity,
@@ -63,27 +243,27 @@ const actionTypeConfig: Record<
   { label: string; className: string; icon: typeof Brain }
 > = {
   update: {
-    label: "UPDATE",
+    label: "Cambio aplicado",
     className: "text-emerald bg-emerald/10 border-emerald/20",
-    icon: CheckCircle2,
+    icon: Pencil,
   },
   flag: {
-    label: "FLAG",
+    label: "Para revisar",
     className: "text-amber bg-amber/10 border-amber/20",
-    icon: AlertTriangle,
+    icon: Flag,
   },
   set_breaking: {
-    label: "BREAKING",
+    label: "Breaking",
     className: "text-rose bg-rose/10 border-rose/20",
     icon: Zap,
   },
   deactivate: {
-    label: "DEACTIVATE",
+    label: "Eliminado",
     className: "text-red-400 bg-red-400/10 border-red-400/20",
-    icon: XCircle,
+    icon: Trash2,
   },
   create: {
-    label: "CREATE",
+    label: "Creado",
     className: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
     icon: FileText,
   },
@@ -103,6 +283,13 @@ const verdictColors: Record<string, string> = {
 
 export function BrainClient({ data }: { data: BrainData }) {
   const latestBriefing = data.briefings[0];
+  const [showAllActions, setShowAllActions] = useState(false);
+
+  // Group actions by run for timeline view
+  const actionsByRun = data.recentRuns.map((run) => ({
+    ...run,
+    actions: data.actions.filter((a) => a.run_id === run.runId),
+  }));
 
   return (
     <div className="space-y-6">
@@ -115,20 +302,19 @@ export function BrainClient({ data }: { data: BrainData }) {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Brain className="h-6 w-6 text-violet-400" />
           <span>{data.countryEmoji}</span>
-          CONDOR Brain — {data.countryName}
+          CONDOR Brain
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Sistema autonomo de inteligencia editorial.{" "}
           {data.stats.lastRunTime
-            ? `Ultimo run: ${timeAgo(data.stats.lastRunTime)}`
-            : "Sin runs registrados"}
+            ? `Última actividad: ${timeAgo(data.stats.lastRunTime)}`
+            : "Sin actividad registrada"}
         </p>
       </motion.div>
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
-          title="Runs (7d)"
+          title="Ejecuciones"
           value={data.stats.totalRuns}
           subtitle={`${data.stats.actionsToday} acciones hoy`}
           icon={Activity}
@@ -136,7 +322,7 @@ export function BrainClient({ data }: { data: BrainData }) {
           delay={0.05}
         />
         <KPICard
-          title="Auto-Updates"
+          title="Correcciones"
           value={data.stats.totalUpdates}
           subtitle="datos corregidos"
           icon={CheckCircle2}
@@ -144,9 +330,9 @@ export function BrainClient({ data }: { data: BrainData }) {
           delay={0.1}
         />
         <KPICard
-          title="Flags"
+          title="Alertas"
           value={data.stats.totalFlags}
-          subtitle="para revision"
+          subtitle="para revisar"
           icon={AlertTriangle}
           color="amber"
           delay={0.15}
@@ -154,7 +340,7 @@ export function BrainClient({ data }: { data: BrainData }) {
         <KPICard
           title="Breaking"
           value={data.stats.totalBreaking}
-          subtitle="noticias marcadas"
+          subtitle="noticias urgentes"
           icon={Zap}
           color="rose"
           delay={0.2}
@@ -162,7 +348,7 @@ export function BrainClient({ data }: { data: BrainData }) {
         <KPICard
           title="Briefings"
           value={data.stats.totalBriefings}
-          subtitle="editoriales generados"
+          subtitle="resúmenes generados"
           icon={FileText}
           color="sky"
           delay={0.25}
@@ -187,12 +373,10 @@ export function BrainClient({ data }: { data: BrainData }) {
                     "text-[10px] font-mono ml-auto",
                     data.healthChecks.every((c) => c.ok)
                       ? "text-emerald border-emerald/30"
-                      : data.healthChecks.some((c) => !c.ok)
-                        ? "text-rose border-rose/30"
-                        : "text-amber border-amber/30"
+                      : "text-rose border-rose/30"
                   )}
                 >
-                  {data.healthChecks.every((c) => c.ok) ? "HEALTHY" : "DEGRADED"}
+                  {data.healthChecks.every((c) => c.ok) ? "TODO OK" : "REVISAR"}
                 </Badge>
               )}
             </CardTitle>
@@ -234,9 +418,6 @@ export function BrainClient({ data }: { data: BrainData }) {
             {/* Health Alerts */}
             {data.healthAlerts.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border space-y-1.5">
-                <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
-                  Alertas
-                </p>
                 {data.healthAlerts.map((alert, i) => (
                   <div
                     key={i}
@@ -257,7 +438,7 @@ export function BrainClient({ data }: { data: BrainData }) {
         </Card>
       </motion.div>
 
-      {/* ── Row: Latest Briefing + Jobs Breakdown ── */}
+      {/* ── Row: Latest Briefing + Activity Summary ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Latest Briefing (2/3) */}
         <motion.div
@@ -270,7 +451,7 @@ export function BrainClient({ data }: { data: BrainData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5" />
-                Briefing del Dia
+                Resumen del Día
                 {latestBriefing && (
                   <Badge
                     variant="outline"
@@ -292,7 +473,7 @@ export function BrainClient({ data }: { data: BrainData }) {
                   {latestBriefing.top_stories.length > 0 && (
                     <div>
                       <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
-                        Top Stories
+                        Noticias Principales
                       </p>
                       <div className="space-y-2">
                         {latestBriefing.top_stories.map((s, i) => (
@@ -322,7 +503,7 @@ export function BrainClient({ data }: { data: BrainData }) {
                                         : "text-muted-foreground"
                                   )}
                                 >
-                                  {s.impact_score}/10
+                                  Impacto {s.impact_score}/10
                                 </Badge>
                               </div>
                             </div>
@@ -403,14 +584,14 @@ export function BrainClient({ data }: { data: BrainData }) {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Sin briefings generados aun.
+                  Sin resúmenes generados aún.
                 </p>
               )}
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Jobs Breakdown (1/3) */}
+        {/* Activity Summary (1/3) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -420,7 +601,7 @@ export function BrainClient({ data }: { data: BrainData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Activity className="h-3.5 w-3.5" />
-                Jobs (7 dias)
+                Actividad por Área
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -437,7 +618,7 @@ export function BrainClient({ data }: { data: BrainData }) {
                           </span>
                         </div>
                         <span className="text-xs font-mono tabular-nums text-muted-foreground">
-                          {count}
+                          {count} {count === 1 ? "acción" : "acciones"}
                         </span>
                       </div>
                       <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -452,13 +633,13 @@ export function BrainClient({ data }: { data: BrainData }) {
                   );
                 })
               ) : (
-                <p className="text-xs text-muted-foreground">Sin datos</p>
+                <p className="text-xs text-muted-foreground">Sin actividad</p>
               )}
 
               {/* Recent runs */}
               <div className="pt-2 border-t border-border">
                 <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
-                  Runs Recientes
+                  Últimas Ejecuciones
                 </p>
                 <div className="space-y-1.5">
                   {data.recentRuns.slice(0, 5).map((run) => (
@@ -473,13 +654,13 @@ export function BrainClient({ data }: { data: BrainData }) {
                         </span>
                       </div>
                       <span className="font-mono tabular-nums text-foreground">
-                        {run.actionsCount} acciones
+                        {run.actionsCount} {run.actionsCount === 1 ? "acción" : "acciones"}
                       </span>
                     </div>
                   ))}
                   {data.recentRuns.length === 0 && (
                     <p className="text-[11px] text-muted-foreground">
-                      Sin runs
+                      Sin ejecuciones
                     </p>
                   )}
                 </div>
@@ -489,7 +670,7 @@ export function BrainClient({ data }: { data: BrainData }) {
         </motion.div>
       </div>
 
-      {/* ── Audit Trail ── */}
+      {/* ── Timeline — Qué hizo Brain ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -498,110 +679,116 @@ export function BrainClient({ data }: { data: BrainData }) {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5" />
-              Audit Trail
+              <Eye className="h-3.5 w-3.5" />
+              ¿Qué hizo Brain?
               <Badge
                 variant="outline"
                 className="text-[10px] font-mono ml-auto"
               >
-                {data.totalActions} total
+                {data.totalActions} acciones totales
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {data.actions.length > 0 ? (
-              <div className="space-y-1.5">
-                {data.actions.slice(0, 30).map((action) => {
-                  const config =
-                    actionTypeConfig[action.action_type] || actionTypeConfig.create;
-                  const Icon = config.icon;
-                  const JobIcon = jobIcons[action.job] || Brain;
-
-                  return (
-                    <div
-                      key={action.id}
-                      className="flex items-start gap-2 rounded-lg border border-border px-3 py-2 hover:bg-muted/30 transition-colors"
-                    >
-                      {/* Action type icon */}
-                      <Icon
-                        className={cn(
-                          "h-3.5 w-3.5 mt-0.5 shrink-0",
-                          config.className.split(" ")[0]
-                        )}
-                      />
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[9px] font-mono px-1 py-0",
-                              config.className
-                            )}
-                          >
-                            {config.label}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <JobIcon className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-[10px] text-muted-foreground">
-                              {jobLabels[action.job] || action.job}
-                            </span>
-                          </div>
-                          {action.entity_id && (
-                            <span className="text-[10px] font-mono text-muted-foreground">
-                              {action.entity_id}
-                            </span>
-                          )}
-                          {action.confidence != null && (
-                            <span
-                              className={cn(
-                                "text-[10px] font-mono tabular-nums",
-                                action.confidence >= 0.85
-                                  ? "text-emerald"
-                                  : action.confidence >= 0.5
-                                    ? "text-amber"
-                                    : "text-muted-foreground"
-                              )}
-                            >
-                              {Math.round(action.confidence * 100)}%
-                            </span>
-                          )}
+            {actionsByRun.length > 0 ? (
+              <div className="space-y-4">
+                {actionsByRun
+                  .slice(0, showAllActions ? undefined : 3)
+                  .map((run) => (
+                    <div key={run.runId} className="space-y-2">
+                      {/* Run header */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/10">
+                          <Brain className="h-3 w-3 text-violet-400" />
                         </div>
-                        <p className="text-xs text-foreground mt-0.5 truncate">
-                          {action.description}
-                        </p>
-
-                        {/* Before/After diff */}
-                        {action.before_value && action.after_value && (
-                          <div className="flex items-center gap-2 mt-1 text-[10px] font-mono">
-                            <span className="text-rose line-through truncate max-w-[200px]">
-                              {Object.values(action.before_value)[0] as string}
-                            </span>
-                            <span className="text-muted-foreground">→</span>
-                            <span className="text-emerald truncate max-w-[200px]">
-                              {Object.values(action.after_value)[0] as string}
-                            </span>
-                          </div>
-                        )}
+                        <span className="text-xs font-medium text-foreground">
+                          {formatDate(run.createdAt)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          — {run.actionsCount}{" "}
+                          {run.actionsCount === 1 ? "acción" : "acciones"}
+                        </span>
                       </div>
 
-                      {/* Timestamp */}
-                      <span className="text-[10px] text-muted-foreground font-mono tabular-nums shrink-0">
-                        {formatDate(action.created_at)}
-                      </span>
+                      {/* Actions list */}
+                      <div className="ml-3 border-l-2 border-border pl-4 space-y-1.5">
+                        {run.actions.map((action) => {
+                          const h = humanizeAction(action);
+                          const config =
+                            actionTypeConfig[action.action_type] ||
+                            actionTypeConfig.create;
+
+                          return (
+                            <div
+                              key={action.id}
+                              className="flex items-start gap-2 rounded-lg px-3 py-2 hover:bg-muted/30 transition-colors"
+                            >
+                              <span className="text-sm mt-0.5 shrink-0">
+                                {h.emoji}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-medium text-foreground">
+                                    {h.title}
+                                  </span>
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-[9px] font-mono px-1.5 py-0",
+                                      jobColors[action.job] || ""
+                                    )}
+                                  >
+                                    {jobLabels[action.job] || action.job}
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-[9px] font-mono px-1.5 py-0",
+                                      config.className
+                                    )}
+                                  >
+                                    {config.label}
+                                  </Badge>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  {h.detail}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  );
-                })}
+                  ))}
+
+                {/* Show more button */}
+                {actionsByRun.length > 3 && (
+                  <button
+                    onClick={() => setShowAllActions(!showAllActions)}
+                    className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors mx-auto"
+                  >
+                    {showAllActions ? (
+                      <>
+                        <ChevronUp className="h-3.5 w-3.5" />
+                        Ver menos
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3.5 w-3.5" />
+                        Ver {actionsByRun.length - 3} ejecuciones más
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="text-center py-8">
-                <Eye className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <Brain className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  Sin acciones registradas.
+                  Brain aún no ha hecho nada.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  El Brain se ejecuta diariamente a las 5:00 AM (hora Peru/Colombia).
+                  Se ejecuta automáticamente cada día a las 5:00 AM.
                 </p>
               </div>
             )}
@@ -620,7 +807,7 @@ export function BrainClient({ data }: { data: BrainData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5" />
-                Briefings Anteriores
+                Resúmenes Anteriores
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -637,9 +824,6 @@ export function BrainClient({ data }: { data: BrainData }) {
                       >
                         {b.briefing_date}
                       </Badge>
-                      <span className="text-[10px] font-mono text-muted-foreground">
-                        {b.id}
-                      </span>
                     </div>
                     <p className="text-xs text-foreground leading-relaxed">
                       {b.editorial_summary.substring(0, 300)}
