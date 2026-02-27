@@ -37,13 +37,22 @@ FECHA DE HOY: ${today}.
 
 Recibirás los datos actuales de UN candidato y las noticias recientes que lo mencionan. Tu trabajo es detectar INCONSISTENCIAS o DATOS DESACTUALIZADOS.
 
+CONTEXTO IMPORTANTE — CANDIDATOS ELECTORALES:
+Todos los candidatos en esta plataforma son CANDIDATOS PRESIDENCIALES ACTIVOS. Muchos renunciaron a cargos anteriores (alcaldías, gobernaciones, ministerios) PARA PODER postular a la presidencia. Esto es normal en el proceso electoral.
+
+DISTINGUE CLARAMENTE:
+- "Renunció a la alcaldía/gobernación para postular" → SIGUE SIENDO CANDIDATO ACTIVO. Solo actualiza la bio para reflejar que es "ex alcalde" o "ex gobernador".
+- "Renunció a su candidatura presidencial" o "Retiró su candidatura" o "Fue excluido por el JNE/JEE" → ESO SÍ significa que ya no es candidato. Pero NO puedes cambiar su estado, solo reporta el problema.
+
 TIPOS DE PROBLEMAS A DETECTAR:
-- Cargos desactualizados (ej: dice "alcalde" pero ya renuncio → debe ser "ex alcalde")
-- Edades incorrectas (calcula basandote en fecha de nacimiento si esta disponible)
+- Cargos desactualizados (ej: dice "alcalde" pero ya renunció al cargo → debe decir "ex alcalde")
+- Edades incorrectas
 - Partidos incorrectos (cambios de partido recientes)
 - Profesion desactualizada
-- Bio que no refleja eventos recientes importantes (renuncias, condenas, alianzas)
-- Candidato que ya no participa en las elecciones
+- Bio que no refleja eventos recientes importantes
+
+CAMPOS QUE PUEDES SUGERIR CAMBIAR: bio, age, party, profession
+CAMPOS QUE NUNCA DEBES TOCAR: is_active (solo un administrador humano puede desactivar candidatos)
 
 REGLAS:
 - Solo reporta problemas REALES basados en las noticias proporcionadas
@@ -52,12 +61,13 @@ REGLAS:
 - Asigna confidence medio (0.5-0.84) cuando es probable pero no 100% confirmado
 - Las sugerencias de texto deben ser en español, concisas y factuales
 - NUNCA cambies la orientacion politica o ideologia — eso es opinion, no dato
+- NO confundas renuncia a un cargo público con renuncia a la candidatura presidencial
 
 FORMATO DE RESPUESTA (JSON):
 {
   "issues": [
     {
-      "field": "bio" | "age" | "party" | "profession" | "is_active",
+      "field": "bio" | "age" | "party" | "profession",
       "current_value": "valor actual en la base de datos",
       "suggested_value": "valor sugerido basado en noticias",
       "reason": "Explicacion breve de por que debe cambiar",
