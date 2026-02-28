@@ -87,16 +87,14 @@ const CHANGELOG: ChangelogDay[] = [
     version: "0.12.0",
     entries: [
       { tag: "feature", text: "Radiografía migrada a datos reales: perfiles verificables compilados automáticamente por la IA desde fuentes públicas" },
-      { tag: "ai", text: "Nuevo Job 5 — Profile Researcher: investiga candidatos cruzando noticias, compila biografía, trayectoria, controversias y situación legal" },
-      { tag: "data", text: "Eliminadas 978 líneas de datos simulados — cero datos inventados en producción" },
+      { tag: "ai", text: "Nuevo Job — Profile Researcher: investiga candidatos cruzando noticias, compila biografía, trayectoria, controversias y situación legal" },
       { tag: "ui", text: "Radiografía rediseñada: 4 secciones verificables (Trayectoria, Controversias, Situación Legal, Historial Partidario)" },
       { tag: "data", text: "Primeros perfiles verificados: López Aliaga, Fujimori, Acuña (PE) + Cepeda, De la Espriella, Claudia López (CO)" },
-      { tag: "ui", text: "Badges de estado: PERFIL VERIFICADO (verde), PERFIL BÁSICO (amarillo), EN INVESTIGACIÓN (gris) según confianza del perfil" },
-      { tag: "infra", text: "Tabla candidate_profiles en Supabase con educación, carrera, controversias, fuentes y nivel de confianza" },
+      { tag: "ui", text: "Badges de estado: PERFIL VERIFICADO, PERFIL BÁSICO y EN INVESTIGACIÓN según confianza del perfil" },
+      { tag: "infra", text: "Base de datos de perfiles con educación, carrera, controversias, fuentes y nivel de confianza" },
       { tag: "infra", text: "Brain ampliado de 5 a 6 jobs — Profile Researcher se ejecuta automáticamente en el cron diario" },
-      { tag: "infra", text: "Dominio condorlatam.com migrado correctamente al proyecto Vercel activo" },
-      { tag: "feature", text: "Google Search Console configurado y verificado para indexación SEO" },
-      { tag: "fix", text: "Cron jobs reordenados: Scraper (12PM) → Brain (1PM) para que la IA siempre tenga noticias frescas" },
+      { tag: "feature", text: "SEO optimizado y verificado para indexación en buscadores" },
+      { tag: "fix", text: "Cron jobs reordenados: scraping primero, análisis de IA después, para siempre tener noticias frescas" },
     ],
   },
   {
@@ -164,7 +162,7 @@ const CHANGELOG: ChangelogDay[] = [
     date: "19 feb 2026",
     version: "0.7.0",
     entries: [
-      { tag: "feature", text: "Verificador conectado a noticias reales vía Supabase" },
+      { tag: "feature", text: "Verificador conectado a noticias reales en tiempo real" },
       { tag: "ai", text: "La IA verifica noticias automáticamente con Claude" },
       { tag: "data", text: "Verificaciones con variedad: verdadero, falso, engañoso, parcial" },
       { tag: "feature", text: "Historial de cambios en el sidebar" },
@@ -174,7 +172,7 @@ const CHANGELOG: ChangelogDay[] = [
     date: "18 feb 2026",
     version: "0.6.0",
     entries: [
-      { tag: "data", text: "Toda la plataforma ahora usa datos reales de Supabase" },
+      { tag: "data", text: "Toda la plataforma ahora usa datos reales de la base de datos" },
       { tag: "feature", text: "Mapa electoral: próximamente con datos regionales" },
       { tag: "ui", text: "Radiografía con aviso de datos preliminares" },
     ],
@@ -312,7 +310,7 @@ export default function ActualizacionesClient() {
       {/* Footer */}
       <div className="border-t border-border pt-4 text-center">
         <p className="text-xs text-muted-foreground/50 font-mono">
-          &gt; hecho con Next.js + Supabase + Claude &middot; open data for {country.name.toLowerCase()}
+          &gt; inteligencia electoral con IA &middot; datos abiertos para {country.name.toLowerCase()}
         </p>
       </div>
     </div>
