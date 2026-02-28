@@ -5,16 +5,16 @@
       "schedule": "0 12 * * *"
     },
     {
-      "path": "/api/cron/auto-verify",
-      "schedule": "0 14 * * *"
+      "path": "/api/cron/update-polls",
+      "schedule": "20 12 * * 1,4"
     },
     {
-      "path": "/api/cron/update-polls",
-      "schedule": "0 13 * * 1,4"
+      "path": "/api/cron/auto-verify",
+      "schedule": "40 12 * * *"
     },
     {
       "path": "/api/cron/condor-brain",
-      "schedule": "0 10 * * *"
+      "schedule": "0 13 * * *"
     }
   ]
 }
