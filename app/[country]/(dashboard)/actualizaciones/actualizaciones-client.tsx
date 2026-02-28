@@ -83,6 +83,23 @@ const tagConfig: Record<
 
 const CHANGELOG: ChangelogDay[] = [
   {
+    date: "28 feb 2026",
+    version: "0.12.0",
+    entries: [
+      { tag: "feature", text: "Radiografía migrada a datos reales: perfiles verificables compilados automáticamente por la IA desde fuentes públicas" },
+      { tag: "ai", text: "Nuevo Job 5 — Profile Researcher: investiga candidatos cruzando noticias, compila biografía, trayectoria, controversias y situación legal" },
+      { tag: "data", text: "Eliminadas 978 líneas de datos simulados — cero datos inventados en producción" },
+      { tag: "ui", text: "Radiografía rediseñada: 4 secciones verificables (Trayectoria, Controversias, Situación Legal, Historial Partidario)" },
+      { tag: "data", text: "Primeros perfiles verificados: López Aliaga, Fujimori, Acuña (PE) + Cepeda, De la Espriella, Claudia López (CO)" },
+      { tag: "ui", text: "Badges de estado: PERFIL VERIFICADO (verde), PERFIL BÁSICO (amarillo), EN INVESTIGACIÓN (gris) según confianza del perfil" },
+      { tag: "infra", text: "Tabla candidate_profiles en Supabase con educación, carrera, controversias, fuentes y nivel de confianza" },
+      { tag: "infra", text: "Brain ampliado de 5 a 6 jobs — Profile Researcher se ejecuta automáticamente en el cron diario" },
+      { tag: "infra", text: "Dominio condorlatam.com migrado correctamente al proyecto Vercel activo" },
+      { tag: "feature", text: "Google Search Console configurado y verificado para indexación SEO" },
+      { tag: "fix", text: "Cron jobs reordenados: Scraper (12PM) → Brain (1PM) para que la IA siempre tenga noticias frescas" },
+    ],
+  },
+  {
     date: "27 feb 2026",
     version: "0.11.0",
     entries: [
