@@ -5,77 +5,53 @@ import {
   Scan,
   Shield,
   AlertTriangle,
-  Eye,
-  User,
   ChevronRight,
-  Activity,
   Fingerprint,
+  BookOpen,
+  Briefcase,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type Candidate } from "@/lib/data/candidates";
-import { type CandidateRadiografia, getRadiografia } from "@/lib/data/radiografia";
+import { type CandidateProfile } from "@/lib/data/profiles";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useCountry } from "@/lib/config/country-context";
 
-interface CandidateWithRadiografia {
-  id: string;
-  name: string;
-  party: string;
-  partyColor: string;
-  radiografia: CandidateRadiografia;
-}
-
 interface RadiografiaIndexClientProps {
   candidates: Candidate[];
-  radiografias?: CandidateRadiografia[];
+  profiles: CandidateProfile[];
 }
 
-export default function RadiografiaIndexClient({ candidates, radiografias = [] }: RadiografiaIndexClientProps) {
+export default function RadiografiaIndexClient({
+  candidates,
+  profiles,
+}: RadiografiaIndexClientProps) {
   const country = useCountry();
-  const authority = country.code === "co" ? "Registraduría y CNE" : "JNE";
 
-  // Build unified list: prefer DB candidates, fall back to radiografia metadata
-  const candidatesWithData: CandidateWithRadiografia[] = [];
+  // Build map of profiles by candidateId
+  const profileMap = new Map(profiles.map((p) => [p.candidateId, p]));
 
-  if (candidates.length > 0) {
-    // DB candidates available — match with radiografia
-    for (const c of candidates) {
-      const rad = getRadiografia(c.id);
-      if (rad) {
-        candidatesWithData.push({
-          id: c.id,
-          name: c.name,
-          party: c.party,
-          partyColor: c.partyColor,
-          radiografia: rad,
-        });
-      }
-    }
-  } else {
-    // No DB candidates — use radiografia metadata as fallback
-    for (const rad of radiografias) {
-      if (rad.candidateName) {
-        candidatesWithData.push({
-          id: rad.candidateId,
-          name: rad.candidateName,
-          party: rad.candidateParty ?? "",
-          partyColor: rad.candidatePartyColor ?? "#6366f1",
-          radiografia: rad,
-        });
-      }
-    }
-  }
+  // Merge candidates with their profiles (candidates are already filtered to active by the DB query)
+  const candidatesWithProfile = candidates
+    .map((c) => ({
+      candidate: c,
+      profile: profileMap.get(c.id) ?? null,
+    }));
 
-  candidatesWithData.sort((a, b) => b.radiografia.riskScore - a.radiografia.riskScore);
+  const withProfile = candidatesWithProfile.filter((c) => c.profile !== null);
+  const withoutProfile = candidatesWithProfile.filter(
+    (c) => c.profile === null
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="classification-header text-center">
-          // CONDOR INTELLIGENCE SYSTEM — MÓDULO RADIOGRAFÍA — ACCESO AUTORIZADO //
+          // CONDOR — PERFILES VERIFICABLES — FUENTES PUBLICAS //
         </div>
       </motion.div>
 
@@ -86,31 +62,31 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
         <div className="flex items-center gap-2">
           <Scan className="h-5 w-5 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">
-            Radiografía de Candidatos
+            Radiografia de Candidatos
           </h1>
           <Badge variant="secondary" className="text-[10px] gap-1 font-mono">
             <Fingerprint className="h-3 w-3" />
-            X-RAY
+            PERFILES
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Análisis profundo de patrimonio, historial legal, redes de contactos y financiamiento de campaña
-
+          Trayectoria, controversias documentadas y situacion legal de cada
+          candidato. Toda la informacion proviene de fuentes publicas
+          verificables.
         </p>
       </motion.div>
 
-      {/* Disclaimer — honest about simulated data */}
-      <div className="flex items-start gap-3 rounded-xl border border-amber/20 bg-amber/5 p-4">
-        <AlertTriangle className="h-5 w-5 text-amber flex-shrink-0 mt-0.5" />
+      {/* Info notice */}
+      <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-medium text-foreground">
-            Datos de demostración
+            Informacion verificable
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            La información mostrada es <span className="font-semibold text-amber">simulada con fines ilustrativos</span>.
-            Los montos de patrimonio, procesos legales y puntajes de riesgo no son reales.
-            Cuando CONDOR acceda a las declaraciones juradas del {authority} y registros oficiales,
-            esta sección se actualizará con datos verificados.
+            Los perfiles se compilan automaticamente a partir de noticias y
+            fuentes publicas. Cada dato incluye sus fuentes para que puedas
+            verificarlo. Los perfiles se actualizan semanalmente.
           </p>
         </div>
       </div>
@@ -119,131 +95,151 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <p className="font-mono text-2xl font-bold tabular-nums text-foreground">
-            {candidatesWithData.length}
+            {candidatesWithProfile.length}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-1">Candidatos Analizados</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4 text-center">
-          <p className="font-mono text-2xl font-bold tabular-nums text-rose">
-            {candidatesWithData.filter((c) => (c.radiografia?.riskScore || 0) >= 60).length}
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Candidatos
           </p>
-          <p className="text-[11px] text-muted-foreground mt-1">Alto Riesgo</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4 text-center">
           <p className="font-mono text-2xl font-bold tabular-nums text-emerald">
-            {candidatesWithData.filter((c) => (c.radiografia?.riskScore || 0) < 35).length}
+            {withProfile.length}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-1">Bajo Riesgo</p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Perfiles Investigados
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 text-center">
+          <p className="font-mono text-2xl font-bold tabular-nums text-amber">
+            {withoutProfile.length}
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            En Investigacion
+          </p>
         </div>
       </div>
 
       {/* Candidates grid */}
       <div className="space-y-3">
-        {candidatesWithData.map((entry, index) => {
-          const { radiografia } = entry;
+        {candidatesWithProfile.map((entry, index) => {
+          const { candidate, profile } = entry;
+          const hasProfile = profile !== null;
+          const controversyCount = profile?.controversies?.length ?? 0;
+          const careerCount = profile?.career?.length ?? 0;
 
-          const riskColor =
-            radiografia.riskScore >= 60
-              ? "text-rose"
-              : radiografia.riskScore >= 35
-                ? "text-amber"
-                : "text-emerald";
+          const confidenceLabel =
+            !profile
+              ? "EN INVESTIGACION"
+              : profile.confidence >= 0.7
+                ? "PERFIL VERIFICADO"
+                : "PERFIL BASICO";
 
-          const riskBg =
-            radiografia.riskScore >= 60
-              ? "bg-rose/10"
-              : radiografia.riskScore >= 35
-                ? "bg-amber/10"
-                : "bg-emerald/10";
+          const confidenceColor =
+            !profile
+              ? "text-amber"
+              : profile.confidence >= 0.7
+                ? "text-emerald"
+                : "text-sky";
 
-          const riskLabel =
-            radiografia.riskScore >= 60
-              ? "ALTO"
-              : radiografia.riskScore >= 35
-                ? "MEDIO"
-                : "BAJO";
-
-          const activeProcs = radiografia.legalHistory.filter(
-            (l) => l.status === "activo" || l.status === "investigación"
-          ).length;
+          const confidenceBorder =
+            !profile
+              ? "border-amber/20"
+              : profile.confidence >= 0.7
+                ? "border-emerald/20"
+                : "border-sky/20";
 
           return (
             <motion.div
-              key={entry.id}
+              key={candidate.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link href={`/${country.code}/radiografia/${entry.id}`}>
-                <Card className="bg-card border-border hover:border-primary/30 transition-all cursor-pointer group overflow-hidden">
+              <Link href={`/${country.code}/radiografia/${candidate.id}`}>
+                <Card
+                  className={cn(
+                    "bg-card border-border hover:border-primary/30 transition-all cursor-pointer group overflow-hidden",
+                    !hasProfile && "opacity-70"
+                  )}
+                >
                   <div
                     className="h-1 w-full"
-                    style={{ backgroundColor: entry.partyColor }}
+                    style={{ backgroundColor: candidate.partyColor }}
                   />
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
-                      {/* Risk score circle */}
-                      <div className={cn(
-                        "relative flex h-16 w-16 items-center justify-center rounded-full border-2 flex-shrink-0",
-                        riskBg,
-                        radiografia.riskScore >= 60
-                          ? "border-rose/40"
-                          : radiografia.riskScore >= 35
-                            ? "border-amber/40"
-                            : "border-emerald/40"
-                      )}>
-                        <div className="text-center">
-                          <p className={cn("font-mono text-xl font-bold tabular-nums", riskColor)}>
-                            {radiografia.riskScore}
-                          </p>
-                        </div>
-                        <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 72 72">
-                          <circle cx="36" cy="36" r="30" fill="none" stroke="currentColor" className="text-muted/20" strokeWidth="2" />
-                          <circle cx="36" cy="36" r="30" fill="none" stroke="currentColor" className={riskColor} strokeWidth="2" strokeDasharray={`${(radiografia.riskScore / 100) * 188} 188`} strokeLinecap="round" />
-                        </svg>
+                      {/* Profile photo or placeholder */}
+                      <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-muted/30 flex-shrink-0 overflow-hidden">
+                        {candidate.photo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={candidate.photo}
+                            alt={candidate.name}
+                            className="h-full w-full object-cover rounded-full"
+                          />
+                        ) : (
+                          <Scan className="h-6 w-6 text-muted-foreground" />
+                        )}
                       </div>
 
                       {/* Candidate info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <h3 className="text-sm font-bold text-foreground truncate">
-                            {entry.name}
+                            {candidate.name}
                           </h3>
                           <Badge
                             variant="outline"
-                            className={cn("text-[9px] font-mono flex-shrink-0", riskColor,
-                              radiografia.riskScore >= 60
-                                ? "border-rose/20"
-                                : radiografia.riskScore >= 35
-                                  ? "border-amber/20"
-                                  : "border-emerald/20"
+                            className={cn(
+                              "text-[9px] font-mono flex-shrink-0",
+                              confidenceColor,
+                              confidenceBorder
                             )}
                           >
-                            {riskLabel}
+                            {hasProfile ? (
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Clock className="h-3 w-3 mr-1" />
+                            )}
+                            {confidenceLabel}
                           </Badge>
                         </div>
-                        <p className="text-[11px] text-muted-foreground">{entry.party}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {candidate.party}
+                        </p>
 
                         {/* Quick indicators */}
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground font-mono">
-                          <span className="flex items-center gap-1">
-                            <Activity className="h-3 w-3" />
-                            {radiografia.legalHistory.length} proc.
-                          </span>
-                          {activeProcs > 0 && (
-                            <span className="flex items-center gap-1 text-rose">
-                              <AlertTriangle className="h-3 w-3" />
-                              {activeProcs} activos
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <Shield className="h-3 w-3" />
-                            {radiografia.network.length} vínculos
-                          </span>
-                          {radiografia.conflictsOfInterest.length > 0 && (
+                          {hasProfile ? (
+                            <>
+                              <span className="flex items-center gap-1">
+                                <Briefcase className="h-3 w-3" />
+                                {profile.yearsInPolitics} anos en politica
+                              </span>
+                              {careerCount > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <BookOpen className="h-3 w-3" />
+                                  {careerCount} cargos
+                                </span>
+                              )}
+                              {controversyCount > 0 && (
+                                <span className="flex items-center gap-1 text-amber">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  {controversyCount} controversias
+                                </span>
+                              )}
+                              {profile.previousCandidacies > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Fingerprint className="h-3 w-3" />
+                                  {profile.previousCandidacies} candidaturas
+                                  previas
+                                </span>
+                              )}
+                            </>
+                          ) : (
                             <span className="flex items-center gap-1 text-amber">
-                              <AlertTriangle className="h-3 w-3" />
-                              {radiografia.conflictsOfInterest.length} conflictos
+                              <Clock className="h-3 w-3" />
+                              Perfil en proceso de investigacion
                             </span>
                           )}
                         </div>
@@ -262,7 +258,7 @@ export default function RadiografiaIndexClient({ candidates, radiografias = [] }
 
       {/* Bottom */}
       <div className="classification-header text-center">
-        // FIN DEL ÍNDICE — {candidatesWithData.length} PERFILES DISPONIBLES //
+        // FIN DEL INDICE — {candidatesWithProfile.length} CANDIDATOS //
       </div>
     </div>
   );

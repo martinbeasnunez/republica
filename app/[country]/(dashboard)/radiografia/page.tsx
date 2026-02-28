@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { getRadiografiasForCountry } from "@/lib/data/radiografia";
+import { fetchProfilesForCountry } from "@/lib/data/profiles";
 import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import RadiografiaIndexClient from "./radiografia-index-client";
 
@@ -13,14 +13,14 @@ export async function generateMetadata({
   const seo = getCountrySeo(country, "/radiografia");
 
   return {
-    title: `Radiografía de Candidatos — Análisis Profundo ${seo.name} ${seo.year}`,
-    description: `Radiografía completa de los candidatos presidenciales ${seo.name} ${seo.year}. Patrimonio, procesos legales y financiamiento.`,
+    title: `Radiografia de Candidatos — Perfil Verificable ${seo.name} ${seo.year}`,
+    description: `Perfiles verificables de los candidatos presidenciales ${seo.name} ${seo.year}. Trayectoria, controversias y situacion legal con fuentes publicas.`,
     keywords: getCountryKeywords(country, "radiografia"),
     alternates: seo.alternates,
     openGraph: {
       ...seo.openGraph,
-      title: `Radiografía de Candidatos — ${seo.name} ${seo.year}`,
-      description: `Análisis profundo de los candidatos: patrimonio, procesos legales y financiamiento de campaña.`,
+      title: `Radiografia de Candidatos — ${seo.name} ${seo.year}`,
+      description: `Perfiles verificables: trayectoria politica, controversias documentadas y situacion legal de cada candidato.`,
       type: "website",
     },
   };
@@ -34,8 +34,10 @@ export default async function RadiografiaIndexPage({
   params: Promise<{ country: string }>;
 }) {
   const { country } = await params;
-  const candidates = await fetchCandidates(country);
-  const radiografias = getRadiografiasForCountry(country);
+  const [candidates, profiles] = await Promise.all([
+    fetchCandidates(country),
+    fetchProfilesForCountry(country),
+  ]);
 
-  return <RadiografiaIndexClient candidates={candidates} radiografias={radiografias} />;
+  return <RadiografiaIndexClient candidates={candidates} profiles={profiles} />;
 }

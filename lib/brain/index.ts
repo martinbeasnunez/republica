@@ -5,6 +5,7 @@ import { runNewsCurator, type NewsCuratorResult } from "./jobs/news-curator";
 import { runBriefingGenerator, type BriefingGeneratorResult } from "./jobs/briefing-generator";
 import { runPollVerifier, type PollVerifierResult } from "./jobs/poll-verifier";
 import { runHealthMonitor, type HealthMonitorResult } from "./jobs/health-monitor";
+import { runProfileResearcher, type ProfileResearcherResult } from "./jobs/profile-researcher";
 
 // =============================================================================
 // TYPES
@@ -17,6 +18,7 @@ export interface BrainRunResult {
   pollVerifier: PollVerifierResult;
   curation: NewsCuratorResult;
   briefing: BriefingGeneratorResult;
+  profileResearcher: ProfileResearcherResult;
   health: HealthMonitorResult;
   duration_ms: number;
 }
@@ -34,12 +36,13 @@ export interface BrainResult {
 /**
  * Run the CONDOR Brain for a single country.
  *
- * Executes 5 jobs in sequence:
+ * Executes 6 jobs in sequence:
  * 1. Data Integrity — verify candidate data against news
  * 2. Poll Verifier — cross-verify poll data, detect anomalies
  * 3. News Curator — score and prioritize articles
  * 4. Briefing Generator — create daily editorial summary
- * 5. Health Monitor — check system health, generate alerts
+ * 5. Profile Researcher — compile verifiable candidate profiles
+ * 6. Health Monitor — check system health, generate alerts
  *
  * Each job logs its actions to brain_actions for full audit trail.
  */
@@ -53,7 +56,7 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
   console.log(`${"=".repeat(60)}\n`);
 
   // ─── Job 1: Data Integrity ────────────────────────────────
-  console.log(`[CONDOR Brain] Job 1/5: Data Integrity`);
+  console.log(`[CONDOR Brain] Job 1/6: Data Integrity`);
   let integrity: DataIntegrityResult;
   try {
     integrity = await runDataIntegrity(supabase, countryCode, runId);
@@ -63,7 +66,7 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
   }
 
   // ─── Job 2: Poll Verifier ─────────────────────────────────
-  console.log(`[CONDOR Brain] Job 2/5: Poll Verifier`);
+  console.log(`[CONDOR Brain] Job 2/6: Poll Verifier`);
   let pollVerifier: PollVerifierResult;
   try {
     pollVerifier = await runPollVerifier(supabase, countryCode, runId);
@@ -73,7 +76,7 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
   }
 
   // ─── Job 3: News Curation ─────────────────────────────────
-  console.log(`[CONDOR Brain] Job 3/5: News Curation`);
+  console.log(`[CONDOR Brain] Job 3/6: News Curation`);
   let curation: NewsCuratorResult;
   try {
     curation = await runNewsCurator(supabase, countryCode, runId);
@@ -83,7 +86,7 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
   }
 
   // ─── Job 4: Briefing Generator ────────────────────────────
-  console.log(`[CONDOR Brain] Job 4/5: Briefing Generator`);
+  console.log(`[CONDOR Brain] Job 4/6: Briefing Generator`);
   let briefing: BriefingGeneratorResult;
   try {
     briefing = await runBriefingGenerator(
@@ -97,8 +100,18 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
     briefing = { briefing_id: null, editorial_summary: "", skipped: false, errors: 1 };
   }
 
-  // ─── Job 5: Health Monitor ────────────────────────────────
-  console.log(`[CONDOR Brain] Job 5/5: Health Monitor`);
+  // ─── Job 5: Profile Researcher ────────────────────────────
+  console.log(`[CONDOR Brain] Job 5/6: Profile Researcher`);
+  let profileResearcher: ProfileResearcherResult;
+  try {
+    profileResearcher = await runProfileResearcher(supabase, countryCode, runId);
+  } catch (err) {
+    console.error(`[CONDOR Brain] Profile Researcher failed:`, err);
+    profileResearcher = { researched: 0, created: 0, updated: 0, skipped: 0, errors: 1 };
+  }
+
+  // ─── Job 6: Health Monitor ────────────────────────────────
+  console.log(`[CONDOR Brain] Job 6/6: Health Monitor`);
   let health: HealthMonitorResult;
   try {
     health = await runHealthMonitor(supabase, countryCode, runId);
@@ -125,6 +138,7 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
   console.log(`  Poll Verifier:   ${pollVerifier.analyzed} analyzed, ${pollVerifier.anomalies} anomalies, ${pollVerifier.flagged} flagged`);
   console.log(`  News Curation:   ${curation.reviewed} reviewed, ${curation.set_breaking} breaking, ${curation.deactivated} deactivated`);
   console.log(`  Briefing:        ${briefing.skipped ? "skipped (already exists)" : briefing.briefing_id ? "created" : "failed"}`);
+  console.log(`  Profiles:        ${profileResearcher.researched} researched, ${profileResearcher.created} created, ${profileResearcher.updated} updated`);
   console.log(`  Health:          ${health.status} (${health.alerts.length} alerts)`);
   console.log(`${"=".repeat(60)}\n`);
 
@@ -135,6 +149,7 @@ export async function runBrain(countryCode: CountryCode): Promise<BrainRunResult
     pollVerifier,
     curation,
     briefing,
+    profileResearcher,
     health,
     duration_ms,
   };
@@ -162,6 +177,7 @@ export async function runBrainAll(
         pollVerifier: { analyzed: 0, anomalies: 0, flagged: 0, removed: 0, errors: 1 },
         curation: { reviewed: 0, set_breaking: 0, deactivated: 0, top_stories: [], errors: 1 },
         briefing: { briefing_id: null, editorial_summary: "", skipped: false, errors: 1 },
+        profileResearcher: { researched: 0, created: 0, updated: 0, skipped: 0, errors: 1 },
         health: {
           status: "critical",
           alerts: [],
