@@ -142,7 +142,7 @@ REGLAS para poll_data (ESTRICTAS — seguir al pie de la letra):
 - Si no puedes identificar la encuestadora, poll_data = []
 - Si la noticia es opinion, analisis, columna, desmentido, o editorial, poll_data = []
 - Si el titulo contiene negacion ("NO lidera", "falso que", "desmiente"), poll_data = []
-- Rango: ningun candidato supera el 25%. Si el valor es mayor a 30%, poll_data = []
+- Rango valido: 0.5% a 50%. Si el valor es mayor a 50%, poll_data = []
 - Solo incluir candidatos de la lista CONOCIDA
 - CONTEXTO ELECTORAL: Organismos electorales son ${electoralBodies}`;
 }
@@ -225,6 +225,11 @@ export async function classifyArticle(
     const isoDate = formatISODate(raw.pubDate);
 
     // Extract poll data if present — STRICT: only from recognized pollsters
+    // Build a map for normalizing AI-returned pollster names back to canonical form
+    const canonicalPollsters = new Map(
+      (config?.pollsters ?? []).map((p) => [p.toLowerCase().trim(), p])
+    );
+
     let pollData: PollDataExtracted[] = [];
     if (category === "encuestas" && Array.isArray(result.poll_data)) {
       pollData = result.poll_data
@@ -234,14 +239,15 @@ export async function classifyArticle(
             validSlugs.includes(p.candidate_id) &&
             typeof p.value === "number" &&
             p.value > 0 &&
-            p.value <= 30 && // Hard cap
+            p.value <= 50 && // Hard cap — Colombia candidates poll >30%
             p.pollster &&
             validPollsters.has(p.pollster.toLowerCase().trim())
         )
         .map((p: { candidate_id: string; value: number; pollster?: string }) => ({
           candidate_id: slugToId[p.candidate_id] || p.candidate_id,
           value: Math.round(p.value * 10) / 10, // 1 decimal
-          pollster: p.pollster!,
+          // Normalize to canonical pollster name (e.g. "invamer" → "Invamer")
+          pollster: canonicalPollsters.get(p.pollster!.toLowerCase().trim()) || p.pollster!,
           date: isoDate,
           country_code: countryCode,
         }));

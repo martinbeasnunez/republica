@@ -245,60 +245,11 @@ REGLAS ESTRICTAS:
       }
     }
 
-    // ─── 5. For stale candidates, generate trend estimate ───
+    // ─── 5. Log stale candidates (no fake estimates) ─────────
     if (staleCandidates.length > 0) {
       console.log(
-        `[update-polls][${countryCode}] ${staleCandidates.length} candidates have stale poll data`
+        `[update-polls][${countryCode}] ${staleCandidates.length} candidates have stale poll data (>7 days) — waiting for real data`
       );
-
-      for (const candidate of staleCandidates) {
-        try {
-          if (candidate.recentValues.length < 2) continue;
-
-          const [latest, prev] = candidate.recentValues;
-          const trend = latest - prev;
-          let estimated = latest + trend * 0.5;
-          estimated = Math.max(0.5, Math.min(60, estimated));
-          estimated = Math.round(estimated * 10) / 10;
-
-          const pollsterIndex = new Date().getDay() % validPollsters.length;
-          const pollster = validPollsters[pollsterIndex];
-
-          const { data: existing } = await supabase
-            .from("poll_data_points")
-            .select("id")
-            .eq("candidate_id", candidate.id)
-            .eq("date", todayStr)
-            .limit(1);
-
-          if (existing && existing.length > 0) continue;
-
-          const { error: insertErr } = await supabase
-            .from("poll_data_points")
-            .insert({
-              candidate_id: candidate.id,
-              value: estimated,
-              pollster: `${pollster} (estimado)`,
-              date: todayStr,
-              country_code: countryCode,
-            });
-
-          if (!insertErr) {
-            stats.polls_inserted++;
-            await recalculatePollStats(supabase, candidate.id);
-            stats.candidates_updated++;
-            console.log(
-              `[update-polls][${countryCode}] Estimated ${candidate.name}: ${estimated}% (${pollster})`
-            );
-          }
-        } catch (err) {
-          console.error(
-            `[update-polls][${countryCode}] Error estimating ${candidate.name}:`,
-            err
-          );
-          stats.errors++;
-        }
-      }
     }
 
     stats.duration_ms = Date.now() - startTime;

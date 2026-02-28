@@ -142,7 +142,9 @@ const PERU_CONFIG: CountryConfig = {
   phonePrefix: "+51",
   phoneRegex: /^\+?51?\d{9}$/,
 
-  pollsters: ["Ipsos", "Datum", "IEP", "CPI", "Vox Populi", "GfK"],
+  // Encuestadoras verificadas publicando encuestas presidenciales PE 2026
+  // Fuente: JNE Registro Electoral de Encuestadoras + publicaciones activas
+  pollsters: ["Ipsos", "Datum", "IEP", "CPI"],
 
   mediaSources: [
     { name: "El Comercio", domain: "elcomercio.pe", rss: "https://elcomercio.pe/arcio/rss/", type: "newspaper" },
@@ -238,16 +240,19 @@ const COLOMBIA_CONFIG: CountryConfig = {
   phonePrefix: "+57",
   phoneRegex: /^\+?57?\d{10}$/,
 
-  pollsters: ["Invamer", "Datexco", "Cifras y Conceptos", "Guarumo", "CNC", "YanHaas"],
+  // Encuestadoras verificadas publicando encuestas presidenciales CO 2026
+  // Fuente: CNE Registro de Firmas Encuestadoras + publicaciones activas
+  pollsters: ["Invamer", "CNC", "Guarumo", "Datexco", "AtlasIntel"],
 
   mediaSources: [
     { name: "El Tiempo", domain: "eltiempo.com", rss: "https://www.eltiempo.com/rss/politica.xml", type: "newspaper" },
-    { name: "El Espectador", domain: "elespectador.com", rss: "https://www.elespectador.com/rss/politica.xml", type: "newspaper" },
-    { name: "Semana", domain: "semana.com", type: "digital" },
+    { name: "El Espectador", domain: "elespectador.com", type: "newspaper" },
+    { name: "Semana", domain: "semana.com", rss: "https://www.semana.com/arc/outboundfeeds/rss/category/politica/?outputType=xml", type: "digital" },
+    { name: "Infobae", domain: "infobae.com", rss: "https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/?outputType=xml", type: "digital" },
     { name: "Caracol Radio", domain: "caracol.com.co", type: "tv" },
     { name: "RCN Radio", domain: "rcnradio.com", type: "tv" },
     { name: "Blu Radio", domain: "bluradio.com", type: "digital" },
-    { name: "La Silla Vacía", domain: "lasillavacia.com", type: "factcheck" },
+    { name: "La Silla Vacía", domain: "lasillavacia.com", rss: "https://www.lasillavacia.com/feed", type: "factcheck" },
     { name: "Colombiacheck", domain: "colombiacheck.com", type: "factcheck" },
     { name: "Razón Pública", domain: "razonpublica.com", type: "digital" },
   ],

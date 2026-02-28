@@ -92,9 +92,23 @@ const COLOMBIA_FEEDS: RSSFeedConfig[] = [
     type: "direct",
   },
   {
-    id: "co-elespectador-politica",
-    name: "El Espectador",
-    feedUrl: "https://www.elespectador.com/rss/politica.xml",
+    id: "co-semana-politica",
+    name: "Semana",
+    feedUrl:
+      "https://www.semana.com/arc/outboundfeeds/rss/category/politica/?outputType=xml",
+    type: "direct",
+  },
+  {
+    id: "co-lasillavacia",
+    name: "La Silla Vacía",
+    feedUrl: "https://www.lasillavacia.com/feed",
+    type: "direct",
+  },
+  {
+    id: "co-infobae-colombia",
+    name: "Infobae",
+    feedUrl:
+      "https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/?outputType=xml",
     type: "direct",
   },
   // ── Google News (meta-agregadores) ──

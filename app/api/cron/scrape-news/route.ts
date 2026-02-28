@@ -12,7 +12,7 @@ import { COUNTRY_CODES, type CountryCode } from "@/lib/config/countries";
 /** Max new articles to classify per run per country (controls OpenAI costs) */
 const MAX_NEW_ARTICLES = 20;
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   // ─── Auth ────────────────────────────────────────────────
@@ -99,24 +99,31 @@ async function scrapeCountry(countryCode: CountryCode) {
       return stats;
     }
 
-    // ─── 3. Classify new articles with OpenAI ───────────────
+    // ─── 3. Classify new articles with OpenAI (parallel, batches of 5) ──
     const toClassify = diversifyBySource(newArticles, MAX_NEW_ARTICLES, countryCode);
     const classified = [];
     const allPollData: PollDataExtracted[] = [];
 
-    for (const raw of toClassify) {
-      const result = await classifyArticle(raw, countryCode);
-      if (result) {
-        if (result._poll_data && result._poll_data.length > 0) {
-          allPollData.push(...result._poll_data);
-          stats.polls_extracted += result._poll_data.length;
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < toClassify.length; i += BATCH_SIZE) {
+      const batch = toClassify.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map((raw) => classifyArticle(raw, countryCode))
+      );
+      for (const settled of results) {
+        if (settled.status === "fulfilled" && settled.value) {
+          const result = settled.value;
+          if (result._poll_data && result._poll_data.length > 0) {
+            allPollData.push(...result._poll_data);
+            stats.polls_extracted += result._poll_data.length;
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { _poll_data, ...articleData } = result;
+          classified.push(articleData);
+          stats.classified++;
+        } else {
+          stats.not_electoral++;
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _poll_data, ...articleData } = result;
-        classified.push(articleData);
-        stats.classified++;
-      } else {
-        stats.not_electoral++;
       }
     }
 
@@ -243,6 +250,7 @@ const KNOWN_SOURCES_CO = new Set([
   "colombiacheck", "razón pública", "razon publica",
   "w radio", "noticias uno", "el colombiano", "la fm",
   "publimetro colombia", "las2orillas", "cambio",
+  "infobae", "infobae colombia",
 ]);
 
 const KNOWN_SOURCES_INTL = new Set([
