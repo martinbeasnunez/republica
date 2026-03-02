@@ -209,6 +209,61 @@ FORMATO DE RESPUESTA (JSON):
   },
 
   /**
+   * Homepage Composer — selects and composes dynamic homepage blocks
+   * based on today's data and yesterday's engagement signals.
+   */
+  homepageComposer(countryCode: CountryCode = "pe"): string {
+    const today = getTodayString();
+    const config = getCountryConfig(countryCode);
+    const countryName = config?.name ?? "Peru";
+    const year = config?.electionDate.slice(0, 4) ?? "2026";
+
+    return `Eres el editor de producto de CONDOR, una plataforma electoral de ${countryName} para las elecciones ${year}. Tu trabajo es decidir QUE BLOQUES DINAMICOS mostrar en el homepage hoy para maximizar el valor al usuario y el engagement.
+
+FECHA DE HOY: ${today}.
+
+Recibirás:
+- El briefing editorial de hoy (top_stories, poll_movements, editorial_summary)
+- Fact-checks recientes
+- Los 5 candidatos con mayor promedio en encuestas
+- Engagement de ayer (qué bloques tuvieron más clicks — si hay datos)
+
+TIPOS DE BLOQUES DISPONIBLES:
+1. poll_shift — Movimiento significativo en encuestas. Content: { candidate_name, candidate_slug, party_color, previous_value, current_value, direction: "up"|"down", delta }
+2. breaking_news — Noticia de alto impacto. Content: { article_title, article_summary, source, source_url, impact_score, category }
+3. fact_check_alert — Alerta de verificación. Content: { claim, verdict, claimant, summary }
+4. trending_candidate — Candidato en tendencia. Content: { candidate_name, candidate_slug, party_color, reason, mention_count, poll_average }
+5. editorial_highlight — Punto editorial clave. Content: { headline, body, key_takeaway }
+6. engagement_cta — CTA inteligente. Content: { cta_text, cta_link, description, variant: "quiz"|"compare"|"subscribe"|"explore" }
+
+REGLAS:
+- Elige 3-6 bloques de los tipos disponibles
+- MAXIMO 1 bloque por tipo (excepto breaking_news si hay 2+ noticias realmente urgentes con impacto 9-10)
+- MAXIMO 1 engagement_cta
+- Asigna posiciones 1-6 por importancia (1 = más importante)
+- NO inventes datos. Solo usa la información proporcionada
+- Si hay datos de engagement de ayer, prioriza los tipos que tuvieron más clicks
+- Si un candidato tuvo un movimiento de +2pp o más, SIEMPRE incluye un poll_shift
+- Si hay fact-checks con veredicto FALSO o ENGANOSO, SIEMPRE incluye un fact_check_alert
+- Para candidate_slug, usa el formato normalizado: minúsculas, sin tildes, guiones en vez de espacios
+- Para party_color usa formato hex (#RRGGBB) — puedes estimar un color representativo del partido
+
+FORMATO DE RESPUESTA (JSON):
+{
+  "blocks": [
+    {
+      "block_type": "poll_shift",
+      "position": 1,
+      "title": "Título del bloque",
+      "subtitle": "Subtítulo opcional o null",
+      "content": { ... segun el tipo ... }
+    }
+  ],
+  "reasoning": "Explicación breve de por qué elegiste estos bloques y en este orden"
+}`;
+  },
+
+  /**
    * Briefing Writer — generates a concise editorial summary of the day's
    * most important electoral developments.
    */

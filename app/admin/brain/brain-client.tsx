@@ -21,6 +21,8 @@ import {
   Trash2,
   Flag,
   BarChart3,
+  Sparkles,
+  LayoutGrid,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -197,6 +199,36 @@ function humanizeAction(action: {
     }
   }
 
+  // ── Homepage Composer ──
+  if (job === "homepage-composer") {
+    if (action_type === "compose") {
+      const blocksCount = after_value?.blocks_count
+        ? String(after_value.blocks_count)
+        : "";
+      return {
+        emoji: "🧩",
+        title: `Compuso homepage: ${blocksCount} bloques`,
+        detail: after_value?.reasoning
+          ? String(after_value.reasoning).slice(0, 200)
+          : description,
+      };
+    }
+    if (action_type === "create") {
+      return {
+        emoji: "🧩",
+        title: `Bloque: ${description.replace(/^Bloque \w+:\s*/, "").slice(0, 60)}`,
+        detail: description,
+      };
+    }
+    if (action_type === "deactivate") {
+      return {
+        emoji: "♻️",
+        title: "Reemplazó bloques anteriores",
+        detail: description,
+      };
+    }
+  }
+
   // ── Poll Verifier ──
   if (job === "poll-verifier") {
     return {
@@ -220,6 +252,7 @@ const jobLabels: Record<string, string> = {
   "news-curator": "Noticias",
   "briefing-generator": "Briefing",
   "health-monitor": "Salud",
+  "homepage-composer": "Homepage",
 };
 
 const jobColors: Record<string, string> = {
@@ -228,6 +261,7 @@ const jobColors: Record<string, string> = {
   "news-curator": "text-amber bg-amber/10 border-amber/20",
   "briefing-generator": "text-emerald bg-emerald/10 border-emerald/20",
   "health-monitor": "text-rose bg-rose/10 border-rose/20",
+  "homepage-composer": "text-pink-400 bg-pink-400/10 border-pink-400/20",
 };
 
 const jobIcons: Record<string, typeof Brain> = {
@@ -236,6 +270,7 @@ const jobIcons: Record<string, typeof Brain> = {
   "news-curator": Newspaper,
   "briefing-generator": FileText,
   "health-monitor": Activity,
+  "homepage-composer": LayoutGrid,
 };
 
 const actionTypeConfig: Record<
@@ -266,6 +301,11 @@ const actionTypeConfig: Record<
     label: "Creado",
     className: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
     icon: FileText,
+  },
+  compose: {
+    label: "Compuesto",
+    className: "text-pink-400 bg-pink-400/10 border-pink-400/20",
+    icon: LayoutGrid,
   },
 };
 
@@ -670,6 +710,11 @@ export function BrainClient({ data }: { data: BrainData }) {
         </motion.div>
       </div>
 
+      {/* ── Homepage Blocks ── */}
+      {data.homepageBlocks.length > 0 && (
+        <HomepageBlocksSection blocks={data.homepageBlocks} actions={data.actions} />
+      )}
+
       {/* ── Timeline — Qué hizo Brain ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -837,5 +882,168 @@ export function BrainClient({ data }: { data: BrainData }) {
         </motion.div>
       )}
     </div>
+  );
+}
+
+// =============================================================================
+// HOMEPAGE BLOCKS SECTION
+// =============================================================================
+
+const blockTypeEmoji: Record<string, string> = {
+  poll_shift: "📊",
+  breaking_news: "🔴",
+  fact_check_alert: "🛡️",
+  trending_candidate: "👤",
+  editorial_highlight: "✨",
+  engagement_cta: "⚡",
+};
+
+const blockTypeLabel: Record<string, string> = {
+  poll_shift: "Encuesta",
+  breaking_news: "Breaking",
+  fact_check_alert: "Fact-check",
+  trending_candidate: "Tendencia",
+  editorial_highlight: "Editorial",
+  engagement_cta: "CTA",
+};
+
+function HomepageBlocksSection({
+  blocks,
+  actions,
+}: {
+  blocks: BrainData["homepageBlocks"];
+  actions: BrainData["actions"];
+}) {
+  const [showHistory, setShowHistory] = useState(false);
+
+  const activeBlocks = blocks.filter((b) => b.is_active);
+  const inactiveBlocks = blocks.filter((b) => !b.is_active);
+
+  // Find the latest compose action's reasoning
+  const composeAction = actions.find(
+    (a) => a.job === "homepage-composer" && a.action_type === "compose"
+  );
+  const reasoning = composeAction?.after_value?.reasoning
+    ? String(composeAction.after_value.reasoning)
+    : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.38 }}
+    >
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Bloques del Homepage
+            <Badge
+              variant="outline"
+              className="text-[10px] font-mono ml-auto"
+            >
+              {activeBlocks.length} activos
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* AI Reasoning */}
+          {reasoning && (
+            <div className="rounded-lg border border-pink-400/20 bg-pink-400/5 p-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="h-3 w-3 text-pink-400" />
+                <span className="text-[9px] font-mono uppercase tracking-wider text-pink-400">
+                  Reasoning del AI
+                </span>
+              </div>
+              <p className="text-xs text-foreground leading-relaxed">
+                {reasoning}
+              </p>
+            </div>
+          )}
+
+          {/* Active Blocks */}
+          {activeBlocks.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                Bloques activos
+              </p>
+              {activeBlocks
+                .sort((a, b) => a.position - b.position)
+                .map((block) => (
+                  <div
+                    key={block.id}
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+                  >
+                    <span className="text-sm shrink-0">
+                      {blockTypeEmoji[block.block_type] || "🧩"}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] font-mono px-1.5 py-0 shrink-0 text-pink-400 border-pink-400/30"
+                    >
+                      {blockTypeLabel[block.block_type] || block.block_type}
+                    </Badge>
+                    <span className="text-xs text-foreground truncate flex-1">
+                      {block.title}
+                    </span>
+                    <span className="text-[11px] font-mono tabular-nums text-muted-foreground shrink-0">
+                      {block.click_count}{" "}
+                      {block.click_count === 1 ? "click" : "clicks"}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Sin bloques activos en el homepage.
+            </p>
+          )}
+
+          {/* History Toggle */}
+          {inactiveBlocks.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+              >
+                {showHistory ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
+                {showHistory
+                  ? "Ocultar historial"
+                  : `Ver ${inactiveBlocks.length} bloques anteriores`}
+              </button>
+
+              {showHistory && (
+                <div className="mt-2 space-y-1.5">
+                  {inactiveBlocks.map((block) => (
+                    <div
+                      key={block.id}
+                      className="flex items-center gap-2 rounded-lg px-3 py-1.5 opacity-50"
+                    >
+                      <span className="text-sm shrink-0">
+                        {blockTypeEmoji[block.block_type] || "🧩"}
+                      </span>
+                      <span className="text-[11px] text-foreground truncate flex-1">
+                        {block.title}
+                      </span>
+                      <span className="text-[10px] font-mono tabular-nums text-muted-foreground shrink-0">
+                        {block.click_count} clicks
+                      </span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {formatDate(block.created_at)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

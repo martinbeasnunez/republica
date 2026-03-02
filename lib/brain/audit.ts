@@ -5,9 +5,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // TYPES
 // =============================================================================
 
-export type ActionType = "update" | "create" | "deactivate" | "flag" | "set_breaking";
-export type EntityType = "candidate" | "article" | "fact_check" | "poll" | "briefing";
-export type JobName = "data-integrity" | "news-curator" | "briefing-generator" | "profile-researcher";
+export type ActionType = "update" | "create" | "deactivate" | "flag" | "set_breaking" | "compose";
+export type EntityType = "candidate" | "article" | "fact_check" | "poll" | "briefing" | "homepage_block";
+export type JobName = "data-integrity" | "news-curator" | "briefing-generator" | "profile-researcher" | "homepage-composer";
 
 export interface BrainAction {
   run_id: string;

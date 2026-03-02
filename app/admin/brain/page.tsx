@@ -103,6 +103,21 @@ export interface BrainData {
     system: string;
     message: string;
   }>;
+  // Homepage blocks
+  homepageBlocks: Array<{
+    id: string;
+    block_type: string;
+    position: number;
+    title: string;
+    subtitle: string | null;
+    content: Record<string, unknown>;
+    click_count: number;
+    impression_count: number;
+    is_active: boolean;
+    created_at: string;
+    expires_at: string;
+    run_id: string;
+  }>;
 }
 
 // =============================================================================
@@ -183,6 +198,14 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
     };
   });
 
+  // ── Homepage blocks (last 20, active + inactive for history)
+  const { data: homepageBlocksRaw } = await supabase
+    .from("homepage_blocks")
+    .select("id, block_type, position, title, subtitle, content, click_count, impression_count, is_active, created_at, expires_at, run_id")
+    .eq("country_code", country)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
   return {
     countryName: config.name,
     countryEmoji: config.emoji,
@@ -207,15 +230,15 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
     actionsByType,
     recentRuns,
     healthChecks: await getHealthChecks(supabase, country),
-    // Deduplicate health alerts by message (each run logs the same ones)
+    // Deduplicate health alerts by system (keep only the latest per system)
     healthAlerts: (() => {
-      const seen = new Set<string>();
+      const seenSystems = new Set<string>();
       return actions
         .filter((a) => a.description.startsWith("[HEALTH"))
         .filter((a) => {
-          const msg = a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, "");
-          if (seen.has(msg)) return false;
-          seen.add(msg);
+          const system = a.entity_id || "unknown";
+          if (seenSystems.has(system)) return false;
+          seenSystems.add(system);
           return true;
         })
         .slice(0, 10)
@@ -225,6 +248,7 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
           message: a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, ""),
         }));
     })(),
+    homepageBlocks: (homepageBlocksRaw || []) as BrainData["homepageBlocks"],
   };
 }
 
@@ -351,6 +375,7 @@ export default async function AdminBrainPage({
       recentRuns: [],
       healthChecks: [],
       healthAlerts: [],
+      homepageBlocks: [],
     };
   }
 

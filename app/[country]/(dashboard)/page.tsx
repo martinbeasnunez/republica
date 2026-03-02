@@ -5,6 +5,7 @@ import { fetchFactChecks } from "@/lib/data/fact-checks";
 import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import { getSupabase } from "@/lib/supabase";
 import HomeClient from "./home-client";
+import type { HomepageBlock } from "@/lib/types/homepage-blocks";
 
 export async function generateMetadata({
   params,
@@ -40,6 +41,12 @@ export interface PublicBriefing {
     source: string;
     impact_score: number;
   }>;
+  poll_movements?: Array<{
+    candidate: string;
+    previous: number;
+    current: number;
+    direction: "up" | "down" | "stable";
+  }>;
 }
 
 async function fetchLatestBriefing(country: string): Promise<PublicBriefing | null> {
@@ -47,7 +54,7 @@ async function fetchLatestBriefing(country: string): Promise<PublicBriefing | nu
     const supabase = getSupabase();
     const { data } = await supabase
       .from("brain_briefings")
-      .select("editorial_summary, briefing_date, top_stories")
+      .select("editorial_summary, briefing_date, top_stories, poll_movements")
       .eq("country_code", country)
       .order("briefing_date", { ascending: false })
       .limit(1);
@@ -59,6 +66,24 @@ async function fetchLatestBriefing(country: string): Promise<PublicBriefing | nu
   }
 }
 
+async function fetchHomepageBlocks(country: string): Promise<HomepageBlock[]> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("homepage_blocks")
+      .select("id, country_code, block_type, position, title, subtitle, content, click_count, is_active, created_at, expires_at")
+      .eq("country_code", country)
+      .eq("is_active", true)
+      .gt("expires_at", new Date().toISOString())
+      .order("position", { ascending: true })
+      .limit(6);
+
+    return (data as HomepageBlock[]) || [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage({
   params,
 }: {
@@ -66,12 +91,13 @@ export default async function HomePage({
 }) {
   const { country } = await params;
 
-  const [candidates, topCandidates, articles, factChecks, briefing] = await Promise.all([
+  const [candidates, topCandidates, articles, factChecks, briefing, homepageBlocks] = await Promise.all([
     fetchCandidates(country),
     fetchTopCandidates(5, country),
     fetchArticles(country),
     fetchFactChecks(10, country),
     fetchLatestBriefing(country),
+    fetchHomepageBlocks(country),
   ]);
 
   return (
@@ -81,6 +107,7 @@ export default async function HomePage({
       articles={articles}
       factChecks={factChecks}
       briefing={briefing}
+      homepageBlocks={homepageBlocks}
     />
   );
 }
