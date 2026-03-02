@@ -4,32 +4,30 @@ import { COUNTRIES, type CountryCode } from "@/lib/config/countries";
 
 export const dynamic = "force-dynamic";
 
-/* ── bot filter ── */
-const BOT_PATTERNS = [
-  "headlesschrome",
-  "bot",
-  "crawler",
-  "spider",
-  "lighthouse",
-  "pagespeed",
-  "prerender",
-  "phantom",
-  "puppeteer",
-  "selenium",
-];
+/* ── Types ── */
+type PageViewRow = {
+  page: string;
+  referrer: string | null;
+  user_agent: string | null;
+  session_id: string | null;
+  created_at: string;
+};
 
-function isBot(ua: string | null | undefined): boolean {
-  if (!ua) return false;
-  const lower = ua.toLowerCase();
-  return BOT_PATTERNS.some((p) => lower.includes(p));
-}
+type NormalizedView = {
+  path: string;
+  referrer: string | null;
+  device: string;
+  session_id: string | null;
+  created_at: string;
+};
 
-/* ── Fetch all page_views with pagination (Supabase default limit is 1000) ── */
-type PageView = { page: string; referrer: string | null; user_agent: string | null; session_id: string; created_at: string };
-
-async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since: string, countryPrefix: string): Promise<PageView[]> {
+/* ── Fetch page_views with pagination (ALL site traffic, no country filter) ── */
+async function fetchPageViews(
+  supabase: ReturnType<typeof getSupabase>,
+  since: string,
+): Promise<PageViewRow[]> {
   const PAGE_SIZE = 1000;
-  const allRows: PageView[] = [];
+  const allRows: PageViewRow[] = [];
   let offset = 0;
   let hasMore = true;
 
@@ -38,11 +36,10 @@ async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since
       .from("page_views")
       .select("page, referrer, user_agent, session_id, created_at")
       .gte("created_at", since)
-      .like("page", `${countryPrefix}%`)
       .order("created_at", { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
 
-    const rows = (data || []) as PageView[];
+    const rows = (data || []) as PageViewRow[];
     allRows.push(...rows);
     hasMore = rows.length === PAGE_SIZE;
     offset += PAGE_SIZE;
@@ -51,58 +48,91 @@ async function fetchAllPageViews(supabase: ReturnType<typeof getSupabase>, since
   return allRows;
 }
 
+/* ── Helpers ── */
+function parseDevice(ua: string | null): string {
+  if (!ua) return "desktop";
+  if (/mobile|android|iphone|ipod/i.test(ua)) return "mobile";
+  if (/tablet|ipad/i.test(ua)) return "tablet";
+  return "desktop";
+}
+
+function isBot(ua: string | null): boolean {
+  if (!ua) return false;
+  return /bot|crawler|spider|googlebot|bingbot|yandex|baidu|duckduck|facebookexternalhit|Twitterbot|LinkedInBot|Slurp|Sogou|ia_archiver|HeadlessChrome|PhantomJS|Lighthouse/i.test(
+    ua,
+  );
+}
+
+function parseReferrerDomain(referrer: string | null): string | null {
+  if (!referrer) return null;
+  try {
+    const url = new URL(referrer);
+    if (
+      url.hostname.includes("condorlatam.com") ||
+      url.hostname.includes("condorperu") ||
+      url.hostname.includes("localhost") ||
+      url.hostname.includes("127.0.0.1") ||
+      url.hostname.includes("vercel.app")
+    ) {
+      return null; // Self-referral
+    }
+    return url.hostname.replace("www.", "");
+  } catch {
+    return referrer.slice(0, 200);
+  }
+}
+
+/** Strip country prefix from path for display: /pe/noticias → /noticias */
+function normalizePath(path: string): string {
+  return path.replace(/^\/(pe|co)/, "") || "/";
+}
+
+/** Check if a page view belongs to a specific country */
+function pathBelongsToCountry(path: string, country: CountryCode): boolean {
+  if (path.startsWith(`/${country}/`) || path === `/${country}`) return true;
+  // Legacy paths without country prefix → attribute to PE (original country)
+  if (country === "pe" && !path.startsWith("/pe") && !path.startsWith("/co")) return true;
+  return false;
+}
+
 async function getAdminData(country: CountryCode) {
   const supabase = getSupabase();
   const countryConfig = COUNTRIES[country];
-  const countryPrefix = `/${country}`;
 
   /* ── Use country timezone (both PE and CO are UTC-5) ── */
   const TZ_OFFSET = -5 * 60 * 60 * 1000; // UTC-5
   const now = new Date();
   const localNow = new Date(now.getTime() + TZ_OFFSET);
-  const todayStart = new Date(
-    Date.UTC(localNow.getUTCFullYear(), localNow.getUTCMonth(), localNow.getUTCDate()) - TZ_OFFSET
+  const sevenDaysAgo = new Date(
+    now.getTime() - 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgo = new Date(
+    now.getTime() - 30 * 24 * 60 * 60 * 1000,
+  ).toISOString();
 
   const [
     subscribersResult,
-    allPageViews,
-    events7dResult,
+    rawPageViews,
     newsCountResult,
     factChecksResult,
     latestNewsResult,
     latestFactCheckResult,
     candidatesResult,
   ] = await Promise.all([
-    // Active subscribers count — filtered by country
     supabase
       .from("whatsapp_subscribers")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true)
       .eq("country_code", country),
 
-    // All views (30 days) — filtered by page URL prefix
-    fetchAllPageViews(supabase, thirtyDaysAgo, countryPrefix),
+    fetchPageViews(supabase, thirtyDaysAgo),
 
-    // Events 7 days — filtered by page URL prefix
-    supabase
-      .from("analytics_events")
-      .select("id, event, page, target, metadata, created_at")
-      .gte("created_at", sevenDaysAgo)
-      .like("page", `${countryPrefix}%`)
-      .order("created_at", { ascending: false })
-      .limit(500),
-
-    // Total active news articles — filtered by country
     supabase
       .from("news_articles")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true)
       .eq("country_code", country),
 
-    // Fact checks count + breakdown — filtered by country
     supabase
       .from("fact_checks")
       .select("verdict, created_at")
@@ -110,7 +140,6 @@ async function getAdminData(country: CountryCode) {
       .order("created_at", { ascending: false })
       .limit(500),
 
-    // Most recent news article — filtered by country
     supabase
       .from("news_articles")
       .select("created_at")
@@ -118,7 +147,6 @@ async function getAdminData(country: CountryCode) {
       .order("created_at", { ascending: false })
       .limit(1),
 
-    // Most recent fact check — filtered by country
     supabase
       .from("fact_checks")
       .select("created_at")
@@ -126,7 +154,6 @@ async function getAdminData(country: CountryCode) {
       .order("created_at", { ascending: false })
       .limit(1),
 
-    // Candidates with poll data — filtered by country
     supabase
       .from("candidates")
       .select("id, short_name, slug, poll_average, poll_trend, party")
@@ -135,16 +162,38 @@ async function getAdminData(country: CountryCode) {
       .limit(15),
   ]);
 
-  /* ── Filter bots ── */
-  const allViews = allPageViews.filter((v) => !isBot(v.user_agent));
-  const views7d = allViews.filter((v) => v.created_at >= sevenDaysAgo);
-  const viewsToday = allViews.filter((v) => v.created_at >= todayStart);
-  const events = events7dResult.data || [];
+  /* ── Normalize page_views: filter bots, admin, and by country ── */
+  const allViews: NormalizedView[] = rawPageViews
+    .filter(
+      (pv) =>
+        !pv.page.startsWith("/admin") &&
+        !isBot(pv.user_agent) &&
+        pathBelongsToCountry(pv.page, country),
+    )
+    .map((pv) => ({
+      path: pv.page,
+      referrer: parseReferrerDomain(pv.referrer),
+      device: parseDevice(pv.user_agent),
+      session_id: pv.session_id,
+      created_at: pv.created_at,
+    }));
 
-  /* ── Daily views chart (30d) — grouped by local date ── */
+  const views7d = allViews.filter((v) => v.created_at >= sevenDaysAgo);
+  const todayStart = new Date(
+    Date.UTC(
+      localNow.getUTCFullYear(),
+      localNow.getUTCMonth(),
+      localNow.getUTCDate(),
+    ) - TZ_OFFSET,
+  ).toISOString();
+  const viewsToday = allViews.filter((v) => v.created_at >= todayStart);
+
+  /* ── Daily views chart (30d) — all site traffic ── */
   const viewsByDay: Record<string, number> = {};
   for (const row of allViews) {
-    const localDate = new Date(new Date(row.created_at).getTime() + TZ_OFFSET);
+    const localDate = new Date(
+      new Date(row.created_at).getTime() + TZ_OFFSET,
+    );
     const day = localDate.toISOString().split("T")[0];
     viewsByDay[day] = (viewsByDay[day] || 0) + 1;
   }
@@ -155,10 +204,10 @@ async function getAdminData(country: CountryCode) {
     dailyViews.push({ date: key, views: viewsByDay[key] || 0 });
   }
 
-  /* ── Top pages (7d) — strip country prefix for readability ── */
+  /* ── Top pages (7d) — normalize paths, combine prefixed + non-prefixed ── */
   const pageCounts: Record<string, number> = {};
   for (const v of views7d) {
-    const displayPage = v.page.replace(countryPrefix, "") || "/";
+    const displayPage = normalizePath(v.path);
     pageCounts[displayPage] = (pageCounts[displayPage] || 0) + 1;
   }
   const topPages = Object.entries(pageCounts)
@@ -166,13 +215,24 @@ async function getAdminData(country: CountryCode) {
     .slice(0, 12)
     .map(([page, count]) => ({ page, count }));
 
-  /* ── Candidate page traffic (7d) ── */
+  /* ── Candidate page traffic (7d) — needs country prefix ── */
   const candidatePageViews: Record<string, number> = {};
   for (const v of views7d) {
-    const match = v.page.match(new RegExp(`^/${country}/candidatos/([^/]+)$`));
+    // Match country-prefixed candidate pages
+    const match = v.path.match(
+      new RegExp(`^/${country}/candidatos/([^/]+)$`),
+    );
     if (match) {
-      const slug = match[1];
-      candidatePageViews[slug] = (candidatePageViews[slug] || 0) + 1;
+      candidatePageViews[match[1]] =
+        (candidatePageViews[match[1]] || 0) + 1;
+    }
+    // Also match legacy non-prefixed candidate pages (these belong to PE)
+    if (country === "pe") {
+      const legacyMatch = v.path.match(/^\/candidatos\/([^/]+)$/);
+      if (legacyMatch) {
+        candidatePageViews[legacyMatch[1]] =
+          (candidatePageViews[legacyMatch[1]] || 0) + 1;
+      }
     }
   }
   const candidateTraffic = Object.entries(candidatePageViews)
@@ -180,101 +240,163 @@ async function getAdminData(country: CountryCode) {
     .slice(0, 10)
     .map(([slug, views]) => ({ slug, views }));
 
-  /* ── Referrers (7d) ── */
-  const referrerCounts: Record<string, number> = {};
-  for (const v of views7d) {
-    if (v.referrer) {
-      try {
-        const host = new URL(v.referrer).hostname || v.referrer;
-        referrerCounts[host] = (referrerCounts[host] || 0) + 1;
-      } catch {
-        referrerCounts[v.referrer] = (referrerCounts[v.referrer] || 0) + 1;
-      }
-    }
-  }
-  const referrers = Object.entries(referrerCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([referrer, count]) => ({ referrer, count }));
-
   /* ── Device breakdown (7d) ── */
   let mobileCount = 0;
   let desktopCount = 0;
+  let tabletCount = 0;
   for (const v of views7d) {
-    if (v.user_agent) {
-      const ua = v.user_agent.toLowerCase();
-      if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
-        mobileCount++;
-      } else {
-        desktopCount++;
+    if (v.device === "mobile") mobileCount++;
+    else if (v.device === "tablet") tabletCount++;
+    else desktopCount++;
+  }
+
+  /* ── Acquisition helper — computes all acquisition metrics for a set of views ── */
+  const SEARCH_ENGINES = [
+    "google",
+    "bing",
+    "yahoo",
+    "duckduckgo",
+    "ecosia",
+    "baidu",
+    "yandex",
+  ];
+  const SOCIAL_NETS = [
+    "facebook",
+    "fb.com",
+    "instagram",
+    "twitter",
+    "t.co",
+    "x.com",
+    "linkedin",
+    "tiktok",
+    "reddit",
+    "whatsapp",
+    "wa.me",
+    "telegram",
+    "t.me",
+    "youtube",
+  ];
+
+  function computeAcquisition(views: NormalizedView[]) {
+    // Traffic channels
+    const chCounts: Record<string, number> = {
+      Directo: 0,
+      "Búsqueda": 0,
+      Social: 0,
+      Referral: 0,
+    };
+    for (const v of views) {
+      if (!v.referrer) chCounts["Directo"]++;
+      else if (SEARCH_ENGINES.some((se) => v.referrer!.includes(se)))
+        chCounts["Búsqueda"]++;
+      else if (SOCIAL_NETS.some((sn) => v.referrer!.includes(sn)))
+        chCounts["Social"]++;
+      else chCounts["Referral"]++;
+    }
+    const total = views.length || 1;
+    const trafficChannels = Object.entries(chCounts)
+      .filter(([, c]) => c > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([channel, count]) => ({
+        channel,
+        count,
+        pct: Math.round((count / total) * 100),
+      }));
+
+    // Countries — not available from page_views (geo tracking is collecting data)
+    const topCountries: { country: string; count: number }[] = [];
+
+    // Cities — not available from page_views
+    const topCities: { city: string; count: number }[] = [];
+
+    // Referrers
+    const refCounts: Record<string, number> = {};
+    for (const v of views) {
+      const ref = v.referrer || "Directo";
+      refCounts[ref] = (refCounts[ref] || 0) + 1;
+    }
+    const referrers = Object.entries(refCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([referrer, count]) => ({ referrer, count }));
+
+    // UTM campaigns — not available from page_views
+    const utmCampaigns: { campaign: string; source: string; count: number }[] =
+      [];
+
+    // Entry pages (first page per session)
+    const sessionFirst: Record<string, string> = {};
+    for (const v of views) {
+      if (v.session_id && !sessionFirst[v.session_id]) {
+        sessionFirst[v.session_id] = normalizePath(v.path);
       }
     }
+    const epCounts: Record<string, number> = {};
+    for (const page of Object.values(sessionFirst))
+      epCounts[page] = (epCounts[page] || 0) + 1;
+    const entryPages = Object.entries(epCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([page, count]) => ({ page, count }));
+
+    return {
+      trafficChannels,
+      topCountries,
+      topCities,
+      referrers,
+      utmCampaigns,
+      entryPages,
+      totalViews: views.length,
+    };
   }
 
-  /* ── Parse visitor_id from session_id (format: "v:VISITOR|s:SESSION" or legacy plain UUID) ── */
-  function extractVisitorId(sid: string | null): string {
-    if (!sid) return "";
-    const match = sid.match(/^v:([^|]+)\|/);
-    return match ? match[1] : sid; // Legacy sessions fallback to session_id as visitor proxy
-  }
-  function extractSessionId(sid: string | null): string {
-    if (!sid) return "";
-    const match = sid.match(/\|s:(.+)$/);
-    return match ? match[1] : sid;
-  }
+  /* ── Compute acquisition for 3 periods ── */
+  const fifteenDaysAgo = new Date(
+    now.getTime() - 15 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const views15d = allViews.filter((v) => v.created_at >= fifteenDaysAgo);
 
-  /* ── Unique visitors & sessions (7d) ── */
-  const uniqueVisitors7d = new Set(views7d.map((v) => extractVisitorId(v.session_id)).filter(Boolean)).size;
-  const uniqueSessions = new Set(views7d.map((v) => extractSessionId(v.session_id)).filter(Boolean)).size;
-  const uniqueVisitorsToday = new Set(viewsToday.map((v) => extractVisitorId(v.session_id)).filter(Boolean)).size;
+  const acquisition = {
+    "7d": computeAcquisition(views7d),
+    "15d": computeAcquisition(views15d),
+    "30d": computeAcquisition(allViews),
+  };
+
+  /* ── Unique sessions (7d) ── */
+  const uniqueSessions = new Set(
+    views7d.map((v) => v.session_id).filter(Boolean),
+  ).size;
+  const uniqueSessionsToday = new Set(
+    viewsToday.map((v) => v.session_id).filter(Boolean),
+  ).size;
 
   /* ── Engagement metrics (7d) ── */
   const sessionPages: Record<string, string[]> = {};
   for (const v of views7d) {
-    const sid = extractSessionId(v.session_id);
-    if (sid) {
-      if (!sessionPages[sid]) sessionPages[sid] = [];
-      sessionPages[sid].push(v.page);
+    if (v.session_id) {
+      if (!sessionPages[v.session_id]) sessionPages[v.session_id] = [];
+      sessionPages[v.session_id].push(v.path);
     }
   }
-  const sessionLengths = Object.values(sessionPages).map((pages) => pages.length);
-  const avgPagesPerSession = sessionLengths.length > 0
-    ? Math.round((sessionLengths.reduce((a, b) => a + b, 0) / sessionLengths.length) * 10) / 10
-    : 0;
-  const bounceRate = sessionLengths.length > 0
-    ? Math.round((sessionLengths.filter((l) => l === 1).length / sessionLengths.length) * 100)
-    : 0;
-
-  /* ── Entry pages (7d) — first page per session ── */
-  const sessionFirstPage: Record<string, string> = {};
-  for (const v of views7d) {
-    const sid = extractSessionId(v.session_id);
-    if (sid && !sessionFirstPage[sid]) {
-      sessionFirstPage[sid] = v.page.replace(countryPrefix, "") || "/";
-    }
-  }
-  const entryPageCounts: Record<string, number> = {};
-  for (const page of Object.values(sessionFirstPage)) {
-    entryPageCounts[page] = (entryPageCounts[page] || 0) + 1;
-  }
-  const entryPages = Object.entries(entryPageCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([page, count]) => ({ page, count }));
-
-  /* ── Top events (7d) ── */
-  const eventCounts: Record<string, number> = {};
-  for (const e of events) {
-    const key = `${e.event}:${e.target}`;
-    eventCounts[key] = (eventCounts[key] || 0) + 1;
-  }
-  const topEvents = Object.entries(eventCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15)
-    .map(([key, count]) => {
-      const [event, target] = key.split(":");
-      return { event, target, count };
-    });
+  const sessionLengths = Object.values(sessionPages).map(
+    (pages) => pages.length,
+  );
+  const avgPagesPerSession =
+    sessionLengths.length > 0
+      ? Math.round(
+          (sessionLengths.reduce((a, b) => a + b, 0) /
+            sessionLengths.length) *
+            10,
+        ) / 10
+      : 0;
+  const bounceRate =
+    sessionLengths.length > 0
+      ? Math.round(
+          (sessionLengths.filter((l) => l === 1).length /
+            sessionLengths.length) *
+            100,
+        )
+      : 0;
 
   /* ── Content health ── */
   const factChecks = factChecksResult.data || [];
@@ -282,8 +404,12 @@ async function getAdminData(country: CountryCode) {
     verdadero: factChecks.filter((f) => f.verdict === "VERDADERO").length,
     falso: factChecks.filter((f) => f.verdict === "FALSO").length,
     enganoso: factChecks.filter((f) => f.verdict === "ENGANOSO").length,
-    parcial: factChecks.filter((f) => f.verdict === "PARCIALMENTE_VERDADERO").length,
-    noVerificable: factChecks.filter((f) => f.verdict === "NO_VERIFICABLE").length,
+    parcial: factChecks.filter(
+      (f) => f.verdict === "PARCIALMENTE_VERDADERO",
+    ).length,
+    noVerificable: factChecks.filter(
+      (f) => f.verdict === "NO_VERIFICABLE",
+    ).length,
   };
 
   const lastScrape = latestNewsResult.data?.[0]?.created_at || null;
@@ -306,18 +432,15 @@ async function getAdminData(country: CountryCode) {
     countryEmoji: countryConfig.emoji,
     subscribers: subscribersResult.count || 0,
     viewsToday: viewsToday.length,
-    visitorsToday: uniqueVisitorsToday,
+    sessionsToday: uniqueSessionsToday,
     views7d: views7d.length,
-    uniqueVisitors7d,
     uniqueSessions,
     mobileCount,
     desktopCount,
-    events7d: events.length,
+    tabletCount,
     dailyViews,
     topPages,
-    referrers,
-    topEvents,
-    recentEvents: events.slice(0, 20),
+    acquisition,
     totalNews: newsCountResult.count || 0,
     totalFactChecks: factChecks.length,
     verdictBreakdown,
@@ -327,7 +450,6 @@ async function getAdminData(country: CountryCode) {
     candidateTraffic,
     avgPagesPerSession,
     bounceRate,
-    entryPages,
   };
 }
 
@@ -349,28 +471,58 @@ export default async function AdminOverviewPage({
       countryEmoji: COUNTRIES[country].emoji,
       subscribers: 0,
       viewsToday: 0,
-      visitorsToday: 0,
+      sessionsToday: 0,
       views7d: 0,
-      uniqueVisitors7d: 0,
       uniqueSessions: 0,
       mobileCount: 0,
       desktopCount: 0,
-      events7d: 0,
+      tabletCount: 0,
       dailyViews: [],
       topPages: [],
-      referrers: [],
-      topEvents: [],
-      recentEvents: [],
+      acquisition: {
+        "7d": {
+          trafficChannels: [],
+          topCountries: [],
+          topCities: [],
+          referrers: [],
+          utmCampaigns: [],
+          entryPages: [],
+          totalViews: 0,
+        },
+        "15d": {
+          trafficChannels: [],
+          topCountries: [],
+          topCities: [],
+          referrers: [],
+          utmCampaigns: [],
+          entryPages: [],
+          totalViews: 0,
+        },
+        "30d": {
+          trafficChannels: [],
+          topCountries: [],
+          topCities: [],
+          referrers: [],
+          utmCampaigns: [],
+          entryPages: [],
+          totalViews: 0,
+        },
+      },
       totalNews: 0,
       totalFactChecks: 0,
-      verdictBreakdown: { verdadero: 0, falso: 0, enganoso: 0, parcial: 0, noVerificable: 0 },
+      verdictBreakdown: {
+        verdadero: 0,
+        falso: 0,
+        enganoso: 0,
+        parcial: 0,
+        noVerificable: 0,
+      },
       lastScrape: null,
       lastVerify: null,
       candidates: [],
       candidateTraffic: [],
       avgPagesPerSession: 0,
       bounceRate: 0,
-      entryPages: [],
     };
   }
 

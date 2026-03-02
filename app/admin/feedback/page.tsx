@@ -84,7 +84,7 @@ export default async function FeedbackAdminPage({
     <FeedbackAdminClient
       feedback={feedback}
       stats={stats}
-      country={countryConfig}
+      country={{ name: countryConfig.name, emoji: countryConfig.emoji, code: countryCode }}
     />
   );
 }

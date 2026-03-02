@@ -83,6 +83,17 @@ const tagConfig: Record<
 
 const CHANGELOG: ChangelogDay[] = [
   {
+    date: "1 mar 2026",
+    version: "0.13.0",
+    entries: [
+      { tag: "feature", text: "Admin Quiz: panel de analítica con total de completados, tendencia diaria, candidato más compatible y distribución de respuestas" },
+      { tag: "fix", text: "Monitor de salud del Brain: corregido bug que mostraba 'hace nunca' cuando no había artículos recientes en Colombia" },
+      { tag: "fix", text: "Alertas de salud en admin: deduplicación mejorada por sistema en vez de por mensaje exacto" },
+      { tag: "infra", text: "SEO: corregido BASE_URL en sitemap, robots.txt y metadata — URLs ahora apuntan correctamente a www.condorlatam.com" },
+      { tag: "infra", text: "Indexación solicitada en Google Search Console para las 8 URLs prioritarias de Perú" },
+    ],
+  },
+  {
     date: "28 feb 2026",
     version: "0.12.0",
     entries: [

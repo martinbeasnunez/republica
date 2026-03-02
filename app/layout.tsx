@@ -8,6 +8,8 @@ import {
   WebSiteJsonLd,
   ElectionJsonLd,
 } from "@/components/seo/json-ld";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
+import { Suspense } from "react";
 import "./globals.css";
 
 const inter = Inter({
@@ -124,6 +126,9 @@ export default function RootLayout({
           <QueryProvider>
             <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
           </QueryProvider>
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
         </ThemeProvider>
       </body>
     </html>

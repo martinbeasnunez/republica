@@ -4,7 +4,7 @@
 
 import { getCountryConfig, type CountryCode } from "@/lib/config/countries";
 
-const BASE_URL = "https://condorlatam.com";
+const BASE_URL = "https://www.condorlatam.com";
 
 /**
  * Generates country-aware SEO primitives for any page:

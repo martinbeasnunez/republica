@@ -82,16 +82,24 @@ export async function runHealthMonitor(
       const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
       const staleThreshold = new Date(now - SCRAPE_STALE_HOURS * 60 * 60 * 1000).toISOString();
 
-      const { data: recentArticles, count: articleCount } = await supabase
+      // Find the most recent article EVER (not just 24h) to calculate actual age
+      const { data: latestArticle } = await supabase
         .from("news_articles")
-        .select("created_at", { count: "exact" })
+        .select("created_at")
         .eq("country_code", countryCode)
-        .gte("created_at", oneDayAgo)
         .order("created_at", { ascending: false })
         .limit(1);
 
-      const lastArticle = recentArticles?.[0]?.created_at || null;
+      const lastArticle = latestArticle?.[0]?.created_at || null;
       result.checks.scraper.lastRun = lastArticle;
+
+      // Count articles in last 24h separately
+      const { count: articleCount } = await supabase
+        .from("news_articles")
+        .select("id", { count: "exact", head: true })
+        .eq("country_code", countryCode)
+        .gte("created_at", oneDayAgo);
+
       result.checks.scraper.articleCount24h = articleCount || 0;
 
       if (!lastArticle || lastArticle < staleThreshold) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -59,6 +59,11 @@ function CountrySwitcher() {
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Mark this device as admin so analytics tracker skips it
+  useEffect(() => {
+    localStorage.setItem("condor_admin", "1");
+  }, []);
 
   // Preserve country param in nav links
   const country = searchParams.get("country") || "pe";

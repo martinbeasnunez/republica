@@ -3,34 +3,29 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, MessageCircle, Send, Loader2 } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { useCountry } from "@/lib/config/country-context";
 
-interface ToastNotification {
+// ─── Types ───
+
+interface TickerItem {
   id: string;
   message: string;
-  type: "update" | "alert" | "analysis" | "verification" | "cta";
+  type: "update" | "alert" | "analysis" | "verification";
   time: string;
 }
-
-const typeStyles: Record<string, string> = {
-  update: "border-emerald/30",
-  alert: "border-amber/30",
-  analysis: "border-sky/30",
-  verification: "border-primary/30",
-  cta: "border-emerald/40",
-};
 
 const typeDotColors: Record<string, string> = {
   update: "bg-emerald",
   alert: "bg-amber",
   analysis: "bg-sky",
   verification: "bg-primary",
-  cta: "bg-emerald",
 };
 
-function categoryToType(category: string, factCheck?: string): ToastNotification["type"] {
+// ─── Helpers ───
+
+function categoryToType(category: string, factCheck?: string): TickerItem["type"] {
   if (factCheck === "false" || factCheck === "questionable") return "verification";
   switch (category) {
     case "encuestas": return "alert";
@@ -44,6 +39,7 @@ function categoryToType(category: string, factCheck?: string): ToastNotification
 
 function timeAgo(dateStr: string): string {
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
@@ -51,159 +47,69 @@ function timeAgo(dateStr: string): string {
   const diffD = Math.floor(diffH / 24);
 
   if (diffMin < 1) return "ahora";
-  if (diffMin < 60) return `hace ${diffMin}m`;
-  if (diffH < 24) return `hace ${diffH}h`;
+  if (diffMin < 60) return `${diffMin}m`;
+  if (diffH < 24) return `${diffH}h`;
   if (diffD === 1) return "ayer";
-  if (diffD < 7) return `hace ${diffD}d`;
-  return `hace ${Math.floor(diffD / 7)}sem`;
+  if (diffD < 7) return `${diffD}d`;
+  return `${Math.floor(diffD / 7)}sem`;
 }
 
-const CTA_AFTER_N_NEWS = 2; // Show CTA after 2 news toasts
-const STORAGE_KEY = "condor_wa_subscribed";
-const CTA_DISMISSED_KEY = "condor_wa_toast_cta_dismissed";
+// ─── Adaptive learning: track user dismiss behavior ───
 
-// ─── Inline WhatsApp CTA Toast ───
-function WhatsAppCTAToast({ onDismiss }: { onDismiss: () => void }) {
-  const country = useCountry();
-  const [phone, setPhone] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const COLLAPSE_KEY = "condor_ticker_collapses";
+const COLLAPSE_THRESHOLD = 3; // After 3 collapses in 7 days → start collapsed
+const COLLAPSE_WINDOW = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-  const handleSubmit = async () => {
-    if (!phone.trim() || isSubmitting) return;
-    setError(null);
-    setIsSubmitting(true);
-
-    try {
-      const fullPhone = phone.startsWith("+") ? phone : `${country.phonePrefix}${phone.replace(/^0+/, "")}`;
-      const res = await fetch("/api/whatsapp/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullPhone, interests: ["encuestas", "noticias", "alertas", "verificacion"] }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error");
-      localStorage.setItem(STORAGE_KEY, "true");
-      setDone(true);
-      setTimeout(onDismiss, 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
-    } finally {
-      setIsSubmitting(false);
+function getCollapseData(): { count: number; ts: number } {
+  try {
+    const raw = localStorage.getItem(COLLAPSE_KEY);
+    if (!raw) return { count: 0, ts: Date.now() };
+    const data = JSON.parse(raw);
+    // Reset if window expired
+    if (data.ts && Date.now() - data.ts > COLLAPSE_WINDOW) {
+      localStorage.removeItem(COLLAPSE_KEY);
+      return { count: 0, ts: Date.now() };
     }
-  };
-
-  if (done) {
-    return (
-      <div className="text-center py-2">
-        <p className="text-sm font-semibold text-emerald mb-0.5">Listo!</p>
-        <p className="text-[11px] text-muted-foreground">
-          Te enviaremos alertas electorales por WhatsApp
-        </p>
-      </div>
-    );
+    return { count: data.count || 0, ts: data.ts || Date.now() };
+  } catch {
+    return { count: 0, ts: Date.now() };
   }
-
-  return (
-    <div className="space-y-2.5">
-      {/* Headline — sell the benefit */}
-      <div>
-        <p className="text-[13px] font-semibold text-foreground leading-tight">
-          Estas noticias directo a tu WhatsApp
-        </p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
-          Encuestas, fake news y alertas antes que nadie
-        </p>
-      </div>
-
-      {/* Phone input + send */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-mono">
-            {country.phonePrefix}
-          </span>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => {
-              setError(null);
-              setPhone(e.target.value.replace(/[^\d\s]/g, ""));
-            }}
-            placeholder="Tu número"
-            className="w-full rounded-lg border border-emerald/30 bg-background/80 pl-10 pr-2 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-emerald font-mono tabular-nums"
-            maxLength={12}
-            disabled={isSubmitting}
-            autoFocus
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          />
-        </div>
-        <button
-          onClick={handleSubmit}
-          disabled={!phone.trim() || isSubmitting}
-          className="flex items-center gap-1.5 rounded-lg bg-emerald px-3.5 text-sm font-semibold text-white transition-all hover:bg-emerald/90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              <Send className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline text-xs">Activar</span>
-            </>
-          )}
-        </button>
-      </div>
-      {error && <p className="text-[10px] text-rose">{error}</p>}
-
-      {/* Trust signals */}
-      <div className="flex items-center justify-center gap-3 text-[9px] text-muted-foreground/60">
-        <span>100% gratis</span>
-        <span className="h-0.5 w-0.5 rounded-full bg-muted-foreground/30" />
-        <span>0 spam</span>
-        <span className="h-0.5 w-0.5 rounded-full bg-muted-foreground/30" />
-        <span>Cancela con un mensaje</span>
-      </div>
-    </div>
-  );
 }
 
-// ─── Main Toast Component ───
+function recordCollapse(): void {
+  try {
+    const { count } = getCollapseData();
+    localStorage.setItem(
+      COLLAPSE_KEY,
+      JSON.stringify({ count: count + 1, ts: Date.now() })
+    );
+  } catch {
+    /* silently fail */
+  }
+}
+
+function shouldStartCollapsed(): boolean {
+  return getCollapseData().count >= COLLAPSE_THRESHOLD;
+}
+
+// ─── Main Component ───
+
 export function AINotificationToast() {
   const router = useRouter();
   const country = useCountry();
-  const [notifications, setNotifications] = useState<ToastNotification[]>([]);
-  const [current, setCurrent] = useState<ToastNotification | null>(null);
-  const [index, setIndex] = useState(0);
-  const [dismissed, setDismissed] = useState(false);
-  const [showCTA, setShowCTA] = useState(false);
-  const [ctaDismissedForever, setCtaDismissedForever] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const newsShownCount = useRef(0);
+  const [items, setItems] = useState<TickerItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [collapsed, setCollapsed] = useState(true); // Default collapsed until we check
+  const [ready, setReady] = useState(false);
   const loaded = useRef(false);
 
-  // Detect mobile vs desktop for toast animation direction
+  // ── Read learned preference from localStorage ──
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    setCollapsed(shouldStartCollapsed());
+    setReady(true);
   }, []);
 
-  // Check if already subscribed or CTA was dismissed
-  useEffect(() => {
-    if (localStorage.getItem(STORAGE_KEY) === "true") {
-      setCtaDismissedForever(true);
-    }
-    const ctaDismissed = localStorage.getItem(CTA_DISMISSED_KEY);
-    if (ctaDismissed) {
-      const elapsed = Date.now() - parseInt(ctaDismissed);
-      if (elapsed < 3 * 24 * 60 * 60 * 1000) { // 3 day cooldown
-        setCtaDismissedForever(true);
-      }
-    }
-  }, []);
-
-  // Fetch real news
+  // ── Fetch news from Supabase ──
   useEffect(() => {
     if (loaded.current) return;
     loaded.current = true;
@@ -223,155 +129,128 @@ export function AINotificationToast() {
 
         if (error || !data || data.length === 0) return;
 
-        const mapped: ToastNotification[] = data.map((row) => ({
-          id: row.id,
-          message: row.title,
-          type: categoryToType(row.category, row.fact_check),
-          time: timeAgo(row.published_at),
-        }));
-
-        setNotifications(mapped);
+        setItems(
+          data.map((row) => ({
+            id: row.id,
+            message: row.title,
+            type: categoryToType(row.category, row.fact_check),
+            time: timeAgo(row.published_at),
+          }))
+        );
       } catch {
-        // Silently fail
+        /* silently fail */
       }
     }
 
     loadNews();
+  }, [country.code]);
+
+  // ── Auto-cycle headlines every 8 seconds (only when expanded) ──
+  useEffect(() => {
+    if (items.length === 0 || collapsed) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % items.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [items.length, collapsed]);
+
+  const handleCollapse = useCallback(() => {
+    setCollapsed(true);
+    recordCollapse();
   }, []);
 
-  const showNext = useCallback(() => {
-    if (notifications.length === 0) return;
-
-    // After N news toasts, show CTA (if not already subscribed/dismissed)
-    if (
-      newsShownCount.current >= CTA_AFTER_N_NEWS &&
-      !ctaDismissedForever &&
-      !showCTA
-    ) {
-      setShowCTA(true);
-      setCurrent({
-        id: "cta",
-        message: "",
-        type: "cta",
-        time: "",
-      });
-      setDismissed(false);
-      return;
-    }
-
-    const notif = notifications[index % notifications.length];
-    setCurrent(notif);
-    setDismissed(false);
-    setIndex((prev) => prev + 1);
-    newsShownCount.current += 1;
-  }, [notifications, index, ctaDismissedForever, showCTA]);
-
-  // Initial delay
-  useEffect(() => {
-    if (notifications.length === 0) return;
-    const timer = setTimeout(() => showNext(), 6000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notifications]);
-
-  // Auto-dismiss news toasts after 6s (CTA stays longer — 15s)
-  useEffect(() => {
-    if (!current || dismissed) return;
-    const duration = current.type === "cta" ? 25000 : 6000;
-    const timer = setTimeout(() => setDismissed(true), duration);
-    return () => clearTimeout(timer);
-  }, [current, dismissed]);
-
-  // Show next after dismiss
-  useEffect(() => {
-    if (!dismissed) return;
-    const timer = setTimeout(() => showNext(), 15000);
-    return () => clearTimeout(timer);
-  }, [dismissed, showNext]);
-
-  const handleDismissCTA = useCallback(() => {
-    setDismissed(true);
-    setShowCTA(false);
-    setCtaDismissedForever(true);
-    localStorage.setItem(CTA_DISMISSED_KEY, String(Date.now()));
+  const handleExpand = useCallback(() => {
+    setCollapsed(false);
   }, []);
 
-  if (notifications.length === 0) return null;
+  const handleNavigate = useCallback(() => {
+    router.push(`/${country.code}/noticias`);
+  }, [router, country.code]);
 
+  // Don't render until ready and we have data
+  if (!ready || items.length === 0) return null;
+
+  const current = items[currentIndex];
+
+  // ─── Collapsed: tiny pill at bottom-right ───
+  if (collapsed) {
+    return (
+      <motion.button
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+        onClick={handleExpand}
+        className="fixed bottom-2 right-4 sm:right-6 lg:right-auto lg:left-[256px] z-40 flex items-center gap-1.5 rounded-full border border-border/40 bg-card/80 backdrop-blur-sm px-2.5 py-1.5 shadow-md hover:shadow-lg hover:bg-card transition-all cursor-pointer group"
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald animate-pulse" />
+        <span className="text-[10px] font-mono font-medium text-muted-foreground group-hover:text-foreground transition-colors tabular-nums">
+          {items.length}
+        </span>
+        <ChevronUp className="h-2.5 w-2.5 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+      </motion.button>
+    );
+  }
+
+  // ─── Expanded: full-width bottom bar ───
   return (
-    <div className="fixed bottom-20 right-4 left-4 sm:bottom-auto sm:top-4 sm:left-auto z-50 sm:max-w-sm pointer-events-none">
-      <AnimatePresence mode="wait">
-        {current && !dismissed && (
-          <motion.div
-            key={current.id + "-" + index}
-            initial={{ opacity: 0, y: isMobile ? 30 : -30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: isMobile ? 20 : -20, scale: 0.95 }}
-            transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className={`pointer-events-auto rounded-xl border bg-card/95 backdrop-blur-md ${typeStyles[current.type]} ${current.type === "cta" ? "p-4 sm:p-5" : "p-3 sm:p-4"} shadow-2xl shadow-black/50`}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${typeDotColors[current.type]}`} />
-                <div className="flex items-center gap-1.5">
-                  {current.type === "cta" ? (
-                    <MessageCircle className="h-3 w-3 text-emerald" />
-                  ) : (
-                    <Sparkles className="h-3 w-3 text-primary" />
-                  )}
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-foreground/90">
-                    CONDOR AI
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  current.type === "cta" ? handleDismissCTA() : setDismissed(true);
-                }}
-                className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            {/* Content — news toasts are clickable, navigate to /noticias */}
-            {current.type === "cta" ? (
-              <WhatsAppCTAToast onDismiss={handleDismissCTA} />
-            ) : (
-              <div
-                className="cursor-pointer group"
-                onClick={() => {
-                  setDismissed(true);
-                  router.push("/noticias");
-                }}
-              >
-                <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">
-                  {current.message}
-                </p>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[9px] text-primary/70 group-hover:text-primary transition-colors">
-                    Ver noticias →
-                  </span>
-                  <span className="text-[9px] font-mono text-muted-foreground/60">
-                    {current.time}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Progress bar */}
-            <motion.div
-              className={`h-0.5 rounded-full mt-2 ${typeDotColors[current.type]}`}
-              initial={{ width: "100%" }}
-              animate={{ width: "0%" }}
-              transition={{ duration: current.type === "cta" ? 25 : 6, ease: "linear" }}
-              style={{ opacity: 0.4 }}
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-40"
+    >
+      <div className="border-t border-border/30 bg-card/90 backdrop-blur-sm px-4 sm:px-6">
+        <div className="flex items-center gap-2 py-2">
+          {/* Left: CONDOR label */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${typeDotColors[current.type]} animate-pulse`}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <Sparkles className="h-3 w-3 text-primary/50" />
+            <span className="hidden sm:inline text-[9px] font-mono font-bold tracking-wider text-muted-foreground/70">
+              CONDOR
+            </span>
+          </div>
+
+          {/* Separator */}
+          <div className="h-3 w-px bg-border/40 shrink-0" />
+
+          {/* Center: cycling headline — click navigates to /noticias */}
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={handleNavigate}
+          >
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={current.id + "-" + currentIndex}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.3 }}
+                className="text-[11px] text-foreground/60 truncate hover:text-primary transition-colors leading-tight"
+              >
+                {current.message}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          {/* Right: time + collapse */}
+          <span className="text-[9px] font-mono text-muted-foreground/40 shrink-0 tabular-nums">
+            {current.time}
+          </span>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCollapse();
+            }}
+            className="text-muted-foreground/30 hover:text-foreground transition-colors p-0.5 shrink-0 rounded-full"
+            aria-label="Minimizar noticias"
+          >
+            <ChevronDown className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 }

@@ -1,21 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useChartTheme } from "@/lib/echarts-theme";
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Users,
   Eye,
-  MousePointerClick,
+  Globe,
   TrendingUp,
   TrendingDown,
   Minus,
   Smartphone,
   Monitor,
+  Tablet,
   Link2,
+  ExternalLink,
+  MapPin,
+  Megaphone,
   Newspaper,
   ShieldCheck,
   Clock,
@@ -24,8 +28,6 @@ import {
   ArrowRight,
   AlertTriangle,
   CheckCircle,
-  Lightbulb,
-  Zap,
 } from "lucide-react";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
@@ -36,25 +38,15 @@ interface AdminData {
   countryEmoji: string;
   subscribers: number;
   viewsToday: number;
-  visitorsToday: number;
+  sessionsToday: number;
   views7d: number;
-  uniqueVisitors7d: number;
   uniqueSessions: number;
   mobileCount: number;
   desktopCount: number;
-  events7d: number;
+  tabletCount: number;
   dailyViews: { date: string; views: number }[];
   topPages: { page: string; count: number }[];
-  referrers: { referrer: string; count: number }[];
-  topEvents: { event: string; target: string; count: number }[];
-  recentEvents: {
-    id: string;
-    event: string;
-    page: string;
-    target: string;
-    metadata: Record<string, unknown> | null;
-    created_at: string;
-  }[];
+  acquisition: Record<string, AcquisitionPeriod>;
   totalNews: number;
   totalFactChecks: number;
   verdictBreakdown: {
@@ -76,7 +68,50 @@ interface AdminData {
   candidateTraffic: { slug: string; views: number }[];
   avgPagesPerSession: number;
   bounceRate: number;
+}
+
+type AcquisitionPeriod = {
+  trafficChannels: { channel: string; count: number; pct: number }[];
+  topCountries: { country: string; count: number }[];
+  topCities: { city: string; count: number }[];
+  referrers: { referrer: string; count: number }[];
+  utmCampaigns: { campaign: string; source: string; count: number }[];
   entryPages: { page: string; count: number }[];
+  totalViews: number;
+};
+
+/* ── Country code → flag emoji ── */
+const FLAG_MAP: Record<string, string> = {
+  PE: "\u{1F1F5}\u{1F1EA}",
+  CO: "\u{1F1E8}\u{1F1F4}",
+  US: "\u{1F1FA}\u{1F1F8}",
+  MX: "\u{1F1F2}\u{1F1FD}",
+  ES: "\u{1F1EA}\u{1F1F8}",
+  AR: "\u{1F1E6}\u{1F1F7}",
+  CL: "\u{1F1E8}\u{1F1F1}",
+  BR: "\u{1F1E7}\u{1F1F7}",
+  EC: "\u{1F1EA}\u{1F1E8}",
+  VE: "\u{1F1FB}\u{1F1EA}",
+  BO: "\u{1F1E7}\u{1F1F4}",
+  DE: "\u{1F1E9}\u{1F1EA}",
+  FR: "\u{1F1EB}\u{1F1F7}",
+  GB: "\u{1F1EC}\u{1F1E7}",
+};
+
+/* ── Referrer formatting ── */
+function formatReferrer(ref: string): string {
+  if (ref === "Directo") return "Directo";
+  if (ref.includes("google")) return "Google";
+  if (ref.includes("bing")) return "Bing";
+  if (ref.includes("t.co") || ref.includes("twitter") || ref.includes("x.com")) return "X / Twitter";
+  if (ref.includes("facebook") || ref.includes("fb.com")) return "Facebook";
+  if (ref.includes("linkedin") || ref.includes("lnkd.in")) return "LinkedIn";
+  if (ref.includes("instagram")) return "Instagram";
+  if (ref.includes("tiktok")) return "TikTok";
+  if (ref.includes("reddit")) return "Reddit";
+  if (ref.includes("whatsapp") || ref.includes("wa.me")) return "WhatsApp";
+  if (ref.includes("telegram") || ref.includes("t.me")) return "Telegram";
+  return ref;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -97,145 +132,16 @@ const TrendIcon = ({ trend }: { trend: string }) => {
   return <Minus className="h-3 w-3 text-muted-foreground" />;
 };
 
-/* ── Event translations for humans ── */
-const EVENT_LABELS: Record<string, string> = {
-  click: "Click",
-  page_view: "Vista",
-  scroll: "Scroll",
-  share: "Compartir",
-  quiz_start: "Quiz iniciado",
-  quiz_complete: "Quiz completado",
-  whatsapp_subscribe: "Suscripción WA",
-};
-
-const TARGET_LABELS: Record<string, string> = {
-  home_switch_dashboard: "Cambio a Dashboard",
-  home_full_dashboard: "Ver dashboard completo",
-  dashboard_mode_toggle: "Toggle modo dashboard",
-  resumen_candidate_card: "Card de candidato",
-  resumen_quiz_cta: "CTA del Quiz",
-  whatsapp_cta: "CTA WhatsApp",
-  whatsapp_fab: "Botón flotante WA",
-  candidate_profile: "Perfil candidato",
-  quiz_result_share: "Compartir resultado quiz",
-  news_article: "Noticia",
-  fact_check: "Verificación",
-  comparar_candidatos: "Comparar candidatos",
-  comparar_planes: "Comparar planes",
-  simulador: "Simulador",
-  ai_chat: "Chat IA",
-};
-
-function humanEvent(event: string): string {
-  return EVENT_LABELS[event] || event.replace(/_/g, " ");
-}
-
-function humanTarget(target: string): string {
-  return TARGET_LABELS[target] || target.replace(/_/g, " ");
-}
-
-function humanPage(page: string): string {
-  if (page === "/") return "Home";
-  if (page === "/candidatos") return "Candidatos";
-  if (page === "/encuestas") return "Encuestas";
-  if (page === "/quiz") return "Quiz";
-  if (page === "/noticias") return "Noticias";
-  if (page === "/verificador") return "Verificador";
-  if (page === "/planes") return "Planes";
-  if (page === "/mapa") return "Mapa";
-  if (page === "/simulador") return "Simulador";
-  if (page === "/radiografia") return "Radiografía";
-  if (page === "/pilares") return "Pilares";
-  if (page?.startsWith("/candidatos/")) {
-    const slug = page.replace("/candidatos/", "");
-    return slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-  }
-  return page;
-}
-
-/* ── Generate insights from data ── */
-function generateInsights(data: AdminData): string[] {
-  const insights: string[] = [];
-  const mobilePct = data.views7d > 0 ? Math.round((data.mobileCount / data.views7d) * 100) : 0;
-  const desktopPct = 100 - mobilePct;
-
-  // Mobile insight
-  if (mobilePct >= 80) {
-    insights.push(`${mobilePct}% de tu tráfico es mobile. Tu audiencia te visita desde el celular.`);
-  } else if (mobilePct >= 60) {
-    insights.push(`${mobilePct}% mobile vs ${desktopPct}% desktop. Mayoría en celular pero hay audiencia desktop.`);
-  } else {
-    insights.push(`Solo ${mobilePct}% mobile. Inusual — la mayoría de sitios electorales son 80%+ mobile.`);
-  }
-
-  // Top candidate insight
-  if (data.candidateTraffic.length > 0) {
-    const top = data.candidateTraffic[0];
-    const candidate = data.candidates.find(c => c.slug === top.slug);
-    if (candidate) {
-      insights.push(`${candidate.name} es el candidato más buscado con ${top.views} visitas esta semana.`);
-    }
-  }
-
-  // Engagement insight
-  if (data.avgPagesPerSession >= 3) {
-    insights.push(`Los usuarios ven ${data.avgPagesPerSession} páginas por sesión. Buen engagement.`);
-  } else if (data.avgPagesPerSession >= 2) {
-    insights.push(`${data.avgPagesPerSession} páginas/sesión. Aceptable, pero se puede mejorar.`);
-  } else {
-    insights.push(`Solo ${data.avgPagesPerSession} página/sesión. Los usuarios no exploran más allá de la primera página.`);
-  }
-
-  // Bounce rate insight
-  if (data.bounceRate > 70) {
-    insights.push(`Bounce rate del ${data.bounceRate}%. La mayoría se va sin interactuar.`);
-  } else if (data.bounceRate > 50) {
-    insights.push(`Bounce rate ${data.bounceRate}% — dentro de lo normal.`);
-  } else {
-    insights.push(`Bounce rate ${data.bounceRate}%. Excelente retención.`);
-  }
-
-  // Top referrer
-  if (data.referrers.length > 0) {
-    const topRef = data.referrers[0];
-    insights.push(`Tu principal fuente de tráfico es ${topRef.referrer} con ${topRef.count} visitas.`);
-  } else {
-    insights.push("Todo tu tráfico es directo o desde WhatsApp. No hay referrers externos.");
-  }
-
-  // Events insight
-  if (data.events7d > 0 && data.views7d > 0) {
-    const eventsPerVisit = (data.events7d / data.views7d).toFixed(1);
-    insights.push(`${eventsPerVisit} interacciones por visita. ${Number(eventsPerVisit) >= 1 ? "Los usuarios están activos." : "Pocas interacciones."}`);
-  }
-
-  // Growth insight
-  if (data.dailyViews.length >= 7) {
-    const lastWeek = data.dailyViews.slice(-7).reduce((sum, d) => sum + d.views, 0);
-    const prevWeek = data.dailyViews.slice(-14, -7).reduce((sum, d) => sum + d.views, 0);
-    if (prevWeek > 0) {
-      const growthPct = Math.round(((lastWeek - prevWeek) / prevWeek) * 100);
-      if (growthPct > 0) {
-        insights.push(`Tráfico creció ${growthPct}% vs semana anterior.`);
-      } else if (growthPct < -10) {
-        insights.push(`Tráfico bajó ${Math.abs(growthPct)}% vs semana anterior.`);
-      } else {
-        insights.push("Tráfico estable vs semana anterior.");
-      }
-    }
-  }
-
-  return insights.slice(0, 6);
-}
+const PERIODS = ["7d", "15d", "30d"] as const;
+type Period = (typeof PERIODS)[number];
 
 export function AdminOverviewClient({ data }: { data: AdminData }) {
   const ct = useChartTheme();
-  const mobilePct =
-    data.views7d > 0
-      ? Math.round((data.mobileCount / data.views7d) * 100)
-      : 0;
-  const desktopPct = 100 - mobilePct;
-  const insights = generateInsights(data);
+  const [acqPeriod, setAcqPeriod] = useState<Period>("7d");
+  const totalDevices = data.mobileCount + data.desktopCount + data.tabletCount;
+  const mobilePct = totalDevices > 0 ? Math.round((data.mobileCount / totalDevices) * 100) : 0;
+  const desktopPct = totalDevices > 0 ? Math.round((data.desktopCount / totalDevices) * 100) : 0;
+  const tabletPct = 100 - mobilePct - desktopPct;
 
   /* ── Charts ── */
   const viewsChartOption = {
@@ -363,40 +269,9 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           Dashboard — {data.countryName}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Resumen general — datos sin bots
+          Tráfico global del sitio — datos sin bots
         </p>
       </motion.div>
-
-      {/* ── INSIGHTS ── */}
-      {insights.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-        >
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Insights rápidos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {insights.map((insight, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-2 rounded-lg border border-primary/10 bg-background/50 px-3 py-2"
-                  >
-                    <Zap className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-foreground leading-relaxed">{insight}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -411,7 +286,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
         <KPICard
           title="Visitas hoy"
           value={data.viewsToday}
-          subtitle={`${data.visitorsToday} visitantes`}
+          subtitle={`${data.sessionsToday} sesiones`}
           icon={Eye}
           color="indigo"
           delay={0.05}
@@ -419,7 +294,7 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
         <KPICard
           title="Visitas 7d"
           value={data.views7d}
-          subtitle={`${data.uniqueVisitors7d} visitantes · ${data.uniqueSessions} sesiones`}
+          subtitle={`${data.uniqueSessions} sesiones`}
           icon={TrendingUp}
           color="sky"
           delay={0.1}
@@ -455,32 +330,44 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
               {/* Visual bar */}
               <div className="w-full h-3 rounded-full overflow-hidden bg-muted flex">
                 <div
-                  className="h-full bg-indigo rounded-l-full transition-all"
+                  className="h-full bg-indigo transition-all"
                   style={{ width: `${mobilePct}%` }}
                 />
+                {tabletPct > 0 && (
+                  <div
+                    className="h-full bg-amber transition-all"
+                    style={{ width: `${tabletPct}%` }}
+                  />
+                )}
                 <div
-                  className="h-full bg-emerald rounded-r-full transition-all"
+                  className="h-full bg-emerald transition-all"
                   style={{ width: `${desktopPct}%` }}
                 />
               </div>
               {/* Labels */}
               <div className="flex items-center justify-between mt-1.5">
-                <span className="text-[10px] text-muted-foreground">
-                  {data.mobileCount} mobile
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Smartphone className="h-2.5 w-2.5" /> {data.mobileCount}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {data.desktopCount} desktop
+                {data.tabletCount > 0 && (
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <Tablet className="h-2.5 w-2.5" /> {data.tabletCount}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <Monitor className="h-2.5 w-2.5" /> {data.desktopCount}
                 </span>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
+        {/* Top channel quick summary */}
         <KPICard
-          title="Eventos 7d"
-          value={data.events7d}
-          subtitle="Clicks e interacciones"
-          icon={MousePointerClick}
+          title="Top canal"
+          value={data.acquisition["7d"]?.trafficChannels[0]?.channel || "—"}
+          subtitle={data.acquisition["7d"]?.trafficChannels[0] ? `${data.acquisition["7d"].trafficChannels[0].pct}% del tráfico` : "sin datos"}
+          icon={ExternalLink}
           color="rose"
           delay={0.2}
         />
@@ -615,26 +502,12 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
                   <p className="text-[10px] text-muted-foreground">1 sola página</p>
                 </div>
               </div>
-              {/* Entry pages */}
-              {data.entryPages.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Páginas de entrada
-                  </p>
-                  <div className="space-y-1">
-                    {data.entryPages.slice(0, 5).map((ep) => (
-                      <div key={ep.page} className="flex items-center justify-between">
-                        <span className="text-[10px] text-foreground font-mono truncate max-w-[160px]">
-                          {ep.page}
-                        </span>
-                        <span className="text-[10px] font-mono text-muted-foreground ml-2">
-                          {ep.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Session quality indicator */}
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-[10px] font-mono uppercase text-muted-foreground">Sesiones únicas</p>
+                <p className="text-xl font-bold font-mono tabular-nums text-foreground">{data.uniqueSessions}</p>
+                <p className="text-[10px] text-muted-foreground">últimos 7 días</p>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -797,130 +670,237 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
         </motion.div>
       </div>
 
-      {/* Row: Referrers (device chart removed, info now in KPI bar) */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.43 }}
-      >
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Link2 className="h-3.5 w-3.5" />
-              Referrers (7d)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.referrers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Sin referrers (tráfico directo)
-              </p>
-            ) : (
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
-                {data.referrers.map((r) => (
-                  <div
-                    key={r.referrer}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-xs text-foreground truncate font-mono">
-                      {r.referrer}
-                    </span>
-                    <span className="text-xs font-mono text-muted-foreground ml-2">
-                      {r.count}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* ── EVENTOS RECIENTES (human-readable) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45 }}
-      >
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <MousePointerClick className="h-3.5 w-3.5" />
-              Actividad reciente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data.recentEvents.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No hay eventos registrados aún
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {data.recentEvents.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="flex items-center gap-3 rounded-lg border border-border/50 px-3 py-2 hover:bg-muted/30 transition-colors"
-                  >
-                    {/* Event icon */}
-                    <div className="flex-shrink-0">
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] px-2 py-0.5"
-                      >
-                        {humanEvent(ev.event)}
-                      </Badge>
-                    </div>
-                    {/* Description */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground truncate">
-                        <span className="font-medium">{humanTarget(ev.target)}</span>
-                        <span className="text-muted-foreground"> en </span>
-                        <span className="text-muted-foreground font-mono">{humanPage(ev.page)}</span>
-                      </p>
-                    </div>
-                    {/* Time */}
-                    <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">
-                      {new Date(ev.created_at).toLocaleString("es-PE", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Top events summary */}
-            {data.topEvents.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
-                  Acciones más populares (7d)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {data.topEvents.slice(0, 8).map((e) => (
-                    <div
-                      key={`${e.event}:${e.target}`}
-                      className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1"
-                    >
-                      <span className="text-[10px] text-foreground">
-                        {humanTarget(e.target)}
+      {/* ── ADQUISICIÓN — De dónde vienen los usuarios ── */}
+      {(() => {
+        const acq = data.acquisition[acqPeriod] || data.acquisition["7d"];
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.42 }}
+          >
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    De dónde vienen tus usuarios
+                    {acq.totalViews > 0 && (
+                      <span className="text-[10px] font-mono font-normal text-muted-foreground">
+                        ({acq.totalViews} visitas)
                       </span>
-                      <Badge
-                        variant="secondary"
-                        className="text-[9px] px-1 py-0"
+                    )}
+                  </CardTitle>
+                  {/* Period tabs */}
+                  <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
+                    {PERIODS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setAcqPeriod(p)}
+                        className={`rounded-md px-2.5 py-1 text-[10px] font-mono font-medium transition-all ${
+                          acqPeriod === p
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
                       >
-                        {e.count}x
-                      </Badge>
-                    </div>
-                  ))}
+                        {p}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid lg:grid-cols-3 gap-6">
+                  {/* Column 1: Traffic channels */}
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">
+                      Canales de tráfico
+                    </p>
+                    {acq.trafficChannels.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {acq.trafficChannels.map((ch) => {
+                          const colors: Record<string, string> = {
+                            Directo: "bg-slate-400",
+                            "Búsqueda": "bg-emerald",
+                            Social: "bg-indigo",
+                            Referral: "bg-amber",
+                            "Campañas": "bg-rose",
+                          };
+                          const icons: Record<string, string> = {
+                            Directo: "→",
+                            "Búsqueda": "🔍",
+                            Social: "💬",
+                            Referral: "🔗",
+                            "Campañas": "📢",
+                          };
+                          return (
+                            <div key={ch.channel}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-foreground flex items-center gap-1.5">
+                                  <span className="text-sm">{icons[ch.channel] || "•"}</span>
+                                  {ch.channel}
+                                </span>
+                                <span className="text-xs font-mono tabular-nums text-muted-foreground">
+                                  {ch.count} <span className="text-[9px]">({ch.pct}%)</span>
+                                </span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${colors[ch.channel] || "bg-primary/50"} transition-all`}
+                                  style={{ width: `${Math.max(ch.pct, 3)}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-4">Sin datos</p>
+                    )}
+
+                    {/* Referrer details below channels */}
+                    {acq.referrers.filter(r => r.referrer !== "Directo").length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-border">
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
+                          Fuentes específicas
+                        </p>
+                        <div className="space-y-1">
+                          {acq.referrers.map((r) => (
+                            <div key={r.referrer} className="flex items-center justify-between">
+                              <span className="text-[11px] text-foreground truncate">
+                                {formatReferrer(r.referrer)}
+                              </span>
+                              <span className="text-[11px] font-mono tabular-nums text-muted-foreground ml-2">
+                                {r.count}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Column 2: Countries + Cities */}
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3">
+                      Países
+                    </p>
+                    {acq.topCountries.length > 0 ? (
+                      <div className="space-y-2">
+                        {acq.topCountries.slice(0, 8).map((c, i) => {
+                          const maxCount = acq.topCountries[0].count;
+                          const pct = maxCount > 0 ? (c.count / maxCount) * 100 : 0;
+                          return (
+                            <div key={c.country}>
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className="text-xs text-foreground flex items-center gap-1.5">
+                                  <span className="text-sm">{FLAG_MAP[c.country] || "🌍"}</span>
+                                  {c.country}
+                                </span>
+                                <span className="text-xs font-mono tabular-nums text-muted-foreground">
+                                  {c.count}
+                                </span>
+                              </div>
+                              {i < 5 && (
+                                <div className="h-1 rounded-full bg-muted overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-sky/60 transition-all"
+                                    style={{ width: `${Math.max(pct, 3)}%` }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-border/50 px-3 py-4 text-center">
+                        <p className="text-xs text-muted-foreground">Recopilando datos</p>
+                        <p className="text-[9px] text-muted-foreground/60 mt-1">
+                          Geolocalización se activará con más tráfico
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Cities */}
+                    {acq.topCities.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-border">
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1">
+                          <MapPin className="h-2.5 w-2.5" /> Ciudades
+                        </p>
+                        <div className="space-y-1">
+                          {acq.topCities.slice(0, 6).map((c) => (
+                            <div key={c.city} className="flex items-center justify-between">
+                              <span className="text-[11px] text-foreground truncate">{c.city}</span>
+                              <span className="text-[11px] font-mono tabular-nums text-muted-foreground ml-2">
+                                {c.count}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Column 3: UTM Campaigns + Entry pages */}
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1">
+                      <Megaphone className="h-2.5 w-2.5" /> Campañas UTM
+                    </p>
+                    {acq.utmCampaigns.length > 0 ? (
+                      <div className="space-y-2">
+                        {acq.utmCampaigns.map((c) => (
+                          <div key={c.campaign} className="rounded-lg border border-border/50 px-3 py-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-foreground truncate">
+                                {c.campaign}
+                              </span>
+                              <span className="text-xs font-mono font-bold tabular-nums text-primary ml-2">
+                                {c.count}
+                              </span>
+                            </div>
+                            <span className="text-[9px] text-muted-foreground">
+                              via {c.source}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-border/50 px-3 py-6 text-center">
+                        <p className="text-xs text-muted-foreground">Sin campañas activas</p>
+                        <p className="text-[9px] text-muted-foreground/60 mt-1">
+                          Agrega ?utm_source=...&utm_campaign=... a tus links
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Entry pages */}
+                    {acq.entryPages.length > 0 && (
+                      <div className="mt-4 pt-3 border-t border-border">
+                        <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
+                          Páginas de entrada
+                        </p>
+                        <div className="space-y-1">
+                          {acq.entryPages.slice(0, 5).map((ep) => (
+                            <div key={ep.page} className="flex items-center justify-between">
+                              <span className="text-[11px] text-foreground font-mono truncate max-w-[160px]">
+                                {ep.page}
+                              </span>
+                              <span className="text-[11px] font-mono tabular-nums text-muted-foreground ml-2">
+                                {ep.count}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })()}
 
       {/* System status footer */}
       <motion.div

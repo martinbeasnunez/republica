@@ -26,7 +26,7 @@ export function middleware(req: NextRequest) {
   // ── Legacy domain redirect: condorperu.vercel.app → condorlatam.com ──
   if (host.includes("condorperu")) {
     return NextResponse.redirect(
-      new URL(pathname, "https://condorlatam.com"),
+      new URL(pathname, "https://www.condorlatam.com"),
       301
     );
   }
