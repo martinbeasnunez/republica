@@ -54,44 +54,6 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(diffD / 7)}sem`;
 }
 
-// ─── Adaptive learning: track user dismiss behavior ───
-
-const COLLAPSE_KEY = "condor_ticker_collapses";
-const COLLAPSE_THRESHOLD = 3; // After 3 collapses in 7 days → start collapsed
-const COLLAPSE_WINDOW = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-function getCollapseData(): { count: number; ts: number } {
-  try {
-    const raw = localStorage.getItem(COLLAPSE_KEY);
-    if (!raw) return { count: 0, ts: Date.now() };
-    const data = JSON.parse(raw);
-    // Reset if window expired
-    if (data.ts && Date.now() - data.ts > COLLAPSE_WINDOW) {
-      localStorage.removeItem(COLLAPSE_KEY);
-      return { count: 0, ts: Date.now() };
-    }
-    return { count: data.count || 0, ts: data.ts || Date.now() };
-  } catch {
-    return { count: 0, ts: Date.now() };
-  }
-}
-
-function recordCollapse(): void {
-  try {
-    const { count } = getCollapseData();
-    localStorage.setItem(
-      COLLAPSE_KEY,
-      JSON.stringify({ count: count + 1, ts: Date.now() })
-    );
-  } catch {
-    /* silently fail */
-  }
-}
-
-function shouldStartCollapsed(): boolean {
-  return getCollapseData().count >= COLLAPSE_THRESHOLD;
-}
-
 // ─── Main Component ───
 
 export function AINotificationToast() {
@@ -99,13 +61,11 @@ export function AINotificationToast() {
   const country = useCountry();
   const [items, setItems] = useState<TickerItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [collapsed, setCollapsed] = useState(true); // Default collapsed until we check
+  const [collapsed, setCollapsed] = useState(false); // Always start expanded
   const [ready, setReady] = useState(false);
   const loaded = useRef(false);
 
-  // ── Read learned preference from localStorage ──
   useEffect(() => {
-    setCollapsed(shouldStartCollapsed());
     setReady(true);
   }, []);
 
@@ -156,7 +116,6 @@ export function AINotificationToast() {
 
   const handleCollapse = useCallback(() => {
     setCollapsed(true);
-    recordCollapse();
   }, []);
 
   const handleExpand = useCallback(() => {
@@ -172,7 +131,7 @@ export function AINotificationToast() {
 
   const current = items[currentIndex];
 
-  // ─── Collapsed: tiny pill at bottom-right ───
+  // ─── Collapsed: tiny pill — tap to re-expand ───
   if (collapsed) {
     return (
       <motion.button
@@ -180,7 +139,7 @@ export function AINotificationToast() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
         onClick={handleExpand}
-        className="fixed bottom-2 right-4 sm:right-6 lg:right-auto lg:left-[256px] z-40 flex items-center gap-1.5 rounded-full border border-border/40 bg-card/80 backdrop-blur-sm px-2.5 py-1.5 shadow-md hover:shadow-lg hover:bg-card transition-all cursor-pointer group"
+        className="fixed bottom-[6.5rem] right-4 lg:bottom-auto lg:top-[4.5rem] lg:right-6 z-40 flex items-center gap-1.5 rounded-full border border-border/40 bg-card/80 backdrop-blur-sm px-2.5 py-1.5 shadow-md hover:shadow-lg hover:bg-card transition-all cursor-pointer group"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-emerald animate-pulse" />
         <span className="text-[10px] font-mono font-medium text-muted-foreground group-hover:text-foreground transition-colors tabular-nums">
@@ -191,13 +150,13 @@ export function AINotificationToast() {
     );
   }
 
-  // ─── Expanded: full-width bottom bar ───
+  // ─── Expanded: full-width ticker bar ───
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-40"
+      className="fixed bottom-[3.75rem] left-0 right-0 lg:bottom-0 lg:left-[240px] z-40"
     >
       <div className="border-t border-border/30 bg-card/90 backdrop-blur-sm px-4 sm:px-6">
         <div className="flex items-center gap-2 py-2">

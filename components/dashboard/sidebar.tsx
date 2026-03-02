@@ -40,7 +40,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-const navigation = [
+export const navigation = [
   // ─── Core ───
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Candidatos", href: "/candidatos", icon: Users },

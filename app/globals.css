@@ -76,12 +76,12 @@
   --secondary: #f1f5f9;
   --secondary-foreground: #334155;
   --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+  --muted-foreground: #475569;
   --accent: #f1f5f9;
   --accent-foreground: #0f172a;
   --destructive: #ef4444;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
+  --border: #cbd5e1;
+  --input: #cbd5e1;
   --ring: #8B1A1A;
   --chart-1: #8B1A1A;
   --chart-2: #A52525;
@@ -259,7 +259,7 @@
     font-size: 8px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #94a3b8;
+    color: #64748b;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     padding: 4px 8px;
@@ -603,6 +603,13 @@
   }
   .dark .ai-prose tr:hover td {
     background: rgba(139, 26, 26, 0.05);
+  }
+
+  /* Mobile Framer Motion compositing fix */
+  @media (max-width: 640px) {
+    [style*="will-change: transform"] {
+      will-change: auto !important;
+    }
   }
 
   /* Quiz results shareable card */

@@ -6,6 +6,7 @@ import { Sidebar, MobileNav } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { WhatsAppFAB } from "@/components/dashboard/whatsapp-fab";
 import { AINotificationToast } from "@/components/dashboard/ai-notification-toast";
+import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { CountryProvider } from "@/lib/config/country-context";
 import { isValidCountry, type CountryCode } from "@/lib/config/countries";
@@ -32,10 +33,11 @@ export default function DashboardLayout({
         <MobileNav open={mobileNavOpen} onOpenChange={setMobileNavOpen} />
         <div className="flex flex-1 flex-col lg:pl-[240px] overflow-x-hidden">
           <Header onMobileMenuClick={() => setMobileNavOpen(true)} />
-          <main className="flex-1 p-4 sm:p-6">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 pb-20 lg:pb-6">{children}</main>
         </div>
         <WhatsAppFAB />
         <AINotificationToast />
+        <MobileBottomNav onMoreClick={() => setMobileNavOpen(true)} />
       </div>
     </CountryProvider>
   );

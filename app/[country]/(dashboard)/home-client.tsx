@@ -78,12 +78,22 @@ export default function HomeClient({
   useEffect(() => {
     if (!mounted) return;
     localStorage.setItem(`condor-dashboard-mode-${country.code}`, mode);
-  }, [mode, mounted]);
+  }, [mode, mounted, country.code]);
 
   const handleToggle = (newMode: DashboardMode) => {
     setMode(newMode);
     trackEvent("click", "dashboard_mode_toggle", { mode: newMode });
   };
+
+  // Don't render until hydrated — prevents AnimatePresence flicker on mobile
+  if (!mounted) {
+    return (
+      <div className="space-y-6">
+        <div className="h-8" />
+        <div className="rounded-2xl border border-border bg-card h-64 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -117,15 +127,15 @@ export default function HomeClient({
         </div>
       </div>
 
-      {/* Content based on mode */}
-      <AnimatePresence mode="wait">
+      {/* Content based on mode — initial={false} prevents mobile blank-content bug */}
+      <AnimatePresence initial={false} mode="wait">
         {mode === "light" ? (
           <motion.div
             key="light"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="space-y-8"
           >
             {briefing ? (
@@ -137,6 +147,9 @@ export default function HomeClient({
             ) : (
               <HeroBriefingEmpty />
             )}
+
+            {/* Quiz CTA (compact — high conversion position) */}
+            <QuizCTACompact trackEvent={trackEvent} />
 
             {/* DYNAMIC BLOCKS (AI-curated) */}
             {homepageBlocks && homepageBlocks.length > 0 && (
@@ -150,16 +163,15 @@ export default function HomeClient({
               trackEvent={trackEvent}
             />
             <NoticiasBlock articles={articles.slice(0, 3)} />
-            <QuizCTABlock trackEvent={trackEvent} />
             <WhatsAppCTA context="default" />
           </motion.div>
         ) : (
           <motion.div
             key="full"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
           >
             <DashboardClient
               candidates={candidates}
@@ -269,20 +281,6 @@ function HeroBriefing({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.15 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-primary">
-                  Hoy en las elecciones
-                </span>
-                {isToday && (
-                  <span className="h-2 w-2 rounded-full bg-emerald pulse-dot" />
-                )}
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-bold leading-tight mb-2 line-clamp-2">
-                <span className="text-gradient">{headline}</span>
-              </h2>
-
               <p className="text-[11px] sm:text-xs text-muted-foreground mb-3">
                 IA que monitorea {country.pollsters.slice(0, 3).join(", ")} y{" "}
                 {country.mediaSources.slice(0, 3).map((s) => s.name).join(", ")}{" "}
@@ -607,7 +605,7 @@ function EncuestasBlock({ candidates }: { candidates: Candidate[] }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <h2 className="text-lg font-bold text-foreground mb-1">
+      <h2 className="text-lg font-extrabold text-foreground mb-1">
         ¿Quién va ganando?
       </h2>
       <p className="text-xs text-muted-foreground mb-4">
@@ -716,7 +714,7 @@ function ConocelosBlock({
   const country = useCountry();
   return (
     <section>
-      <h2 className="text-lg font-bold text-foreground mb-1">
+      <h2 className="text-lg font-extrabold text-foreground mb-1">
         Conócelos en 30 segundos
       </h2>
       <p className="text-xs text-muted-foreground mb-4">
@@ -810,10 +808,10 @@ function ConocelosBlock({
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLOQUE 3: ¿NO SABES POR QUIÉN VOTAR?
+   BLOQUE: QUIZ CTA — Compact horizontal card (high-conversion position)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function QuizCTABlock({
+function QuizCTACompact({
   trackEvent,
 }: {
   trackEvent: (
@@ -825,28 +823,28 @@ function QuizCTABlock({
   const country = useCountry();
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
+      transition={{ delay: 0.15 }}
     >
       <Link
         href={`/${country.code}/quiz`}
-        onClick={() => trackEvent("click", "resumen_quiz_cta")}
-        className="block"
+        onClick={() => trackEvent("click", "quiz_cta_compact")}
+        className="group flex items-center gap-3 sm:gap-4 rounded-xl border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent px-4 py-3.5 transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.99]"
       >
-        <div className="rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6 text-center transition-all hover:border-primary/40 hover:shadow-lg active:scale-[0.99]">
-          <div className="text-4xl mb-3">🗳️</div>
-          <h2 className="text-lg font-bold text-foreground mb-2">
+        <span className="text-2xl sm:text-3xl shrink-0">🗳️</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground">
             ¿No sabes por quién votar?
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Responde 10 preguntas y descubre con quién coincides
           </p>
-          <Button size="lg" className="w-full text-base font-semibold">
-            Hacer el quiz
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+          <p className="text-[11px] text-muted-foreground">
+            10 preguntas · 2 minutos
+          </p>
         </div>
+        <Button size="sm" className="shrink-0 font-semibold shadow-sm">
+          Quiz
+          <ArrowRight className="h-3.5 w-3.5 ml-1" />
+        </Button>
       </Link>
     </motion.section>
   );
@@ -882,7 +880,7 @@ function NoticiasBlock({ articles }: { articles: NewsArticle[] }) {
     <section>
       <div className="flex items-center gap-2 mb-4">
         <span className="h-2 w-2 rounded-full bg-rose-500 pulse-dot" />
-        <h2 className="text-lg font-bold text-foreground">¿Qué pasó hoy?</h2>
+        <h2 className="text-lg font-extrabold text-foreground">¿Qué pasó hoy?</h2>
       </div>
 
       <div className="space-y-3">
@@ -898,12 +896,32 @@ function NoticiasBlock({ articles }: { articles: NewsArticle[] }) {
                 href={article.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50"
+                className={cn(
+                  "group block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/50 border-l-[3px]",
+                  article.factCheck === "verified"
+                    ? "border-l-emerald-500"
+                    : article.factCheck === "questionable"
+                      ? "border-l-amber-500"
+                      : article.factCheck === "false"
+                        ? "border-l-rose-500"
+                        : "border-l-border"
+                )}
               >
                 <NewsItemContent article={article} />
               </a>
             ) : (
-              <div className="rounded-xl border border-border bg-card p-4">
+              <div
+                className={cn(
+                  "rounded-xl border border-border bg-card p-4 border-l-[3px]",
+                  article.factCheck === "verified"
+                    ? "border-l-emerald-500"
+                    : article.factCheck === "questionable"
+                      ? "border-l-amber-500"
+                      : article.factCheck === "false"
+                        ? "border-l-rose-500"
+                        : "border-l-border"
+                )}
+              >
                 <NewsItemContent article={article} />
               </div>
             )}
@@ -925,28 +943,36 @@ function NewsItemContent({ article }: { article: NewsArticle }) {
     ? factCheckConfig[article.factCheck]
     : null;
 
+  const sourceInitial = article.source?.charAt(0)?.toUpperCase() || "?";
+
   return (
-    <div className="flex items-start justify-between gap-3">
+    <div className="flex items-start gap-3">
+      {/* Source initial avatar */}
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground mt-0.5">
+        {sourceInitial}
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
           {article.title}
         </p>
-        <p className="text-[11px] text-muted-foreground mt-1">
-          {article.source} · {article.time}
-        </p>
-      </div>
-      {config && (
-        <Badge
-          variant="outline"
-          className={cn(
-            "flex-shrink-0 text-[10px] gap-1 border",
-            config.className
+        <div className="flex items-center gap-2 mt-1">
+          <p className="text-[11px] text-muted-foreground">
+            {article.source} · {article.time}
+          </p>
+          {config && (
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-[9px] gap-0.5 border h-4 px-1.5",
+                config.className
+              )}
+            >
+              <config.Icon className="h-2.5 w-2.5" />
+              {config.label}
+            </Badge>
           )}
-        >
-          <config.Icon className="h-3 w-3" />
-          {config.label}
-        </Badge>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
