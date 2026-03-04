@@ -73,17 +73,17 @@ export function AIHero({ candidateCount }: { candidateCount?: number }) {
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <ShieldCheck className="h-3 w-3 text-emerald" />
-              <span>{candidateCount ?? "—"} candidatos monitoreados</span>
+              <span>Candidatos bajo análisis</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Cpu className="h-3 w-3 text-primary" />
-              <span>{country.mediaSources.length} fuentes monitoreadas</span>
+              <span>{country.mediaSources.length} fuentes</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Activity className="h-3 w-3 text-sky" />
-              <span>Actualización diaria</span>
+              <span>Análisis diario · 8am</span>
             </div>
           </motion.div>
         </div>
