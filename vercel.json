@@ -13,8 +13,12 @@
       "schedule": "40 12 * * *"
     },
     {
-      "path": "/api/cron/condor-brain",
+      "path": "/api/cron/condor-brain?country=pe",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/condor-brain?country=co",
+      "schedule": "5 13 * * *"
     }
   ]
 }
