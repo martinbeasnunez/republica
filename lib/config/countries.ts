@@ -67,6 +67,9 @@ export interface CountryConfig {
   pollsters: string[];
   mediaSources: MediaSource[];
 
+  // AI knowledge — structured electoral process for the chat assistant
+  electoralProcessGuide: string;
+
   // Deployment
   domain: string;
 }
@@ -157,6 +160,17 @@ const PERU_CONFIG: CountryConfig = {
     { name: "Convoca", domain: "convoca.pe", type: "factcheck" },
     { name: "IDL Reporteros", domain: "idl-reporteros.pe", type: "factcheck" },
   ],
+
+  electoralProcessGuide: `PROCESO ELECTORAL PERÚ 2026:
+- ELECCIONES GENERALES: 13 de abril 2026 (primera vuelta presidencial + Congreso).
+- SEGUNDA VUELTA: Si ningún candidato supera el 50%, hay balotaje en junio 2026.
+- ELECCIONES INTERNAS: Los partidos realizaron elecciones internas para elegir a sus candidatos. Cada partido define si usa votación de militantes, delegados o un mecanismo mixto.
+- NO HAY SISTEMA DE CONSULTAS ABIERTAS como en Colombia. En Perú, los candidatos se definen dentro de cada partido por decisión interna.
+- INSCRIPCIÓN: Los candidatos se inscriben ante el JNE. El JNE revisa requisitos, tachas y exclusiones.
+- VOTO PREFERENCIAL: Para el Congreso se usa voto preferencial — el elector puede marcar hasta 2 candidatos dentro de la lista de su partido.
+- VOTO OBLIGATORIO: El voto es obligatorio para ciudadanos de 18 a 70 años.
+- FRANJA ELECTORAL: Espacio gratuito en TV y radio para candidatos, regulado por la ONPE.
+- FINANCIAMIENTO: Regulado por la ONPE. Hay límites de gasto y obligación de reportar aportes.`,
 
   domain: "condorlatam.com",
 };
@@ -256,6 +270,23 @@ const COLOMBIA_CONFIG: CountryConfig = {
     { name: "Colombiacheck", domain: "colombiacheck.com", type: "factcheck" },
     { name: "Razón Pública", domain: "razonpublica.com", type: "digital" },
   ],
+
+  electoralProcessGuide: `PROCESO ELECTORAL COLOMBIA 2026:
+- CONSULTAS (PRIMARIAS): Mecanismo por el cual coaliciones o partidos definen su candidato presidencial mediante voto popular abierto. Cualquier ciudadano puede votar en UNA consulta el día de las legislativas.
+- FECHA DE CONSULTAS: 8 de marzo 2026 (mismo día de elecciones legislativas al Congreso).
+- CONSULTAS CONFIRMADAS 2026:
+  • "Gran Consulta por Colombia" (centro-derecha): Es la MÁS GRANDE. Reúne a Partido Conservador, Cambio Radical, y otros. Candidatos: Vicky Dávila, David Barguil, Juan Daniel Oviedo, entre otros. Se estima que tendrá más del doble de votos que las demás consultas por la cantidad de partidos que agrupa.
+  • Consulta Pacto Histórico (izquierda/progresismo): Iván Cepeda, Alexander López, y otros candidatos de la coalición de gobierno.
+  • Consulta Fuerza de la Paz: Roy Barreras y aliados.
+  • Otros precandidatos van por firmas o aval directo de partido (sin consulta): Sergio Fajardo, Daniel Quintero, etc.
+- PRIMERA VUELTA: 31 de mayo 2026. Compiten los ganadores de cada consulta + candidatos por aval/firmas.
+- SEGUNDA VUELTA: 21 de junio 2026. Solo si ningún candidato supera 50% + 1 en primera vuelta.
+- ELECCIONES LEGISLATIVAS: 8 de marzo 2026. Se elige Senado (108) y Cámara de Representantes (188).
+- UMBRAL ELECTORAL: Un partido necesita mínimo 3% de votos al Senado para mantener personería jurídica.
+- VOTO NO OBLIGATORIO: En Colombia el voto es voluntario (a diferencia de Perú).
+- CNE: Vigila partidos y campañas. RNEC (Registraduría): Organiza las elecciones, emite cédulas, certifica resultados.
+- FINANCIAMIENTO: El Estado financia parcialmente las campañas (reposición de votos). Hay topes de gasto.
+- ENCUESTAS: Deben ser publicadas con ficha técnica completa. Prohibida su publicación 7 días antes de la elección (ley de "veda de encuestas").`,
 
   domain: "condorlatam.com",
 };

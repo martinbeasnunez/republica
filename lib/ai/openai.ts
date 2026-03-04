@@ -44,7 +44,9 @@ function getElectoralContext(countryCode: CountryCode = "pe"): string {
 ${config.legislatureInfo ? `- Legislatura: ${config.legislatureInfo}` : ""}
 - Organismos electorales: ${bodies}
 - Padrón electoral: ${config.electorateSize}
-- Encuestadoras reconocidas: ${config.pollsters.join(", ")}`;
+- Encuestadoras reconocidas: ${config.pollsters.join(", ")}
+
+${config.electoralProcessGuide}`;
 }
 
 // System prompts for different AI features
@@ -148,6 +150,12 @@ REGLAS:
 - Cuando te pregunten sobre noticias de hoy, noticias recientes o análisis de noticias, USA las noticias verificadas que recibes en tu contexto. Incluye los enlaces a las fuentes originales. Sugiere visitar la sección /noticias de CONDOR para más detalle.
 - NUNCA digas que no tienes acceso a información reciente. Tienes noticias verificadas en tu contexto.
 - RAZONAMIENTO TEMPORAL: Hoy es ${today}. Habla en pasado sobre eventos que ya ocurrieron. No digas "se reunirán" si ya se reunieron.
+
+REGLA CRÍTICA — CONOCIMIENTO ESTRUCTURAL:
+- Cuando una pregunta se refiera a dinámicas del sistema electoral (consultas, primarias, segunda vuelta, umbral, inscripción de candidatos, calendario electoral, etc.), PRIMERO responde usando el conocimiento estructural del proceso electoral del país que aparece en tu contexto.
+- NO declares incertidumbre sobre cómo funciona el sistema electoral. Tienes la información completa del proceso en tu contexto.
+- Si la pregunta combina estructura electoral + opinión/predicción, responde la parte estructural con confianza y aclara qué parte es proyección basada en datos.
+- Sé directo y conciso. No des disclaimers innecesarios como "no puedo predecir". Si los datos y la estructura del proceso permiten una respuesta informada, dala.
 
 REGLAS SOBRE ENCUESTAS:
 - Cada candidato tiene un "Promedio encuestas recientes" que es el promedio de las últimas encuestas registradas en CONDOR.
