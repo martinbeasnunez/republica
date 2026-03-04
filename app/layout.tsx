@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: "%s | CONDOR",
   },
   description:
-    "Plataforma de inteligencia electoral con IA para Perú y Colombia 2026. Encuestas en tiempo real, verificador de hechos, quiz electoral, simulador de escenarios, comparador de candidatos y análisis de planes de gobierno. Todo en un solo lugar.",
+    "Plataforma de inteligencia electoral con IA para Perú y Colombia 2026. Encuestas en tiempo real, verificador de hechos, quiz electoral, análisis de escenarios, comparador de candidatos y planes de gobierno. Todo en un solo lugar.",
   keywords: [
     "elecciones peru 2026",
     "elecciones colombia 2026",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     "fact check elecciones",
     "planes de gobierno peru 2026",
     "planes de gobierno colombia 2026",
-    "simulador electoral 2026",
+    "escenarios electorales 2026",
     "quien va ganando encuestas peru",
     "quien va ganando encuestas colombia",
     "primera vuelta peru 2026",
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CONDOR — Inteligencia Electoral con IA | Perú y Colombia 2026",
     description:
-      "Encuestas, verificador de hechos, quiz electoral, simulador, comparador de candidatos y más. La plataforma más completa para las elecciones 2026.",
+      "Encuestas, verificador de hechos, quiz electoral, comparador de candidatos y más. La plataforma más completa para las elecciones 2026.",
     type: "website",
     locale: "es_ES",
     siteName: "CONDOR",
@@ -85,7 +85,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CONDOR — Inteligencia Electoral con IA",
     description:
-      "Encuestas, fact-check, quiz electoral, simulador y más para elecciones Perú y Colombia 2026.",
+      "Encuestas, fact-check, quiz electoral y más para elecciones Perú y Colombia 2026.",
   },
   robots: {
     index: true,
