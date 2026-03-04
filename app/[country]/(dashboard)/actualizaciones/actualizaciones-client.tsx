@@ -83,6 +83,30 @@ const tagConfig: Record<
 
 const CHANGELOG: ChangelogDay[] = [
   {
+    date: "3 mar 2026",
+    version: "0.14.0",
+    entries: [
+      { tag: "ui", text: "Navegación mobile: nueva barra inferior con Inicio, Encuestas, Candidatos, Noticias y Más" },
+      { tag: "fix", text: "Contenido mobile ya no desaparece al cambiar entre Resumen y Dashboard (fix de AnimatePresence + hydration)" },
+      { tag: "ui", text: "Contraste mejorado en toda la plataforma: bordes más visibles, textos más legibles" },
+      { tag: "ui", text: "Quiz CTA compacto en posición 2 del home para mejor visibilidad" },
+      { tag: "ui", text: "Noticias del home mejoradas: avatares de fuente y bordes por tipo de verificación" },
+      { tag: "ui", text: "WhatsApp FAB reposicionado al lateral derecho en mobile, sin conflicto con bottom nav" },
+      { tag: "ui", text: "Ticker de noticias: arranca expandido, colapsable con toggle, pill push-notification en desktop" },
+      { tag: "ui", text: "Actualizaciones recientes: acceso directo a /actualizaciones sin desplegable" },
+      { tag: "ui", text: "Títulos de secciones con mayor peso visual (extrabold)" },
+    ],
+  },
+  {
+    date: "2 mar 2026",
+    entries: [
+      { tag: "ai", text: "Homepage Composer (Brain Job 7): bloques dinámicos curados por IA — trending, análisis editorial, fact-checks destacados" },
+      { tag: "ai", text: "Bloques dinámicos con diseño diferenciado por tipo: tendencia (rojo), análisis (gris editorial), verificación (verde/ámbar)" },
+      { tag: "infra", text: "Tabla homepage_blocks en Supabase con TTL de 12h y refresco automático por el Brain" },
+      { tag: "feature", text: "Admin Brain ampliado: visualización de bloques del homepage con preview en tiempo real" },
+    ],
+  },
+  {
     date: "1 mar 2026",
     version: "0.13.0",
     entries: [

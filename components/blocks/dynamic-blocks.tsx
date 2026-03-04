@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -52,8 +52,29 @@ export function DynamicBlocks({ blocks }: DynamicBlocksProps) {
   const router = useRouter();
   const country = useCountry();
   const { trackEvent } = useAnalytics();
+  const impressionsSent = useRef(false);
 
   const sortedBlocks = [...blocks].sort((a, b) => a.position - b.position);
+
+  // ── Track impressions once when blocks render ──
+  useEffect(() => {
+    if (impressionsSent.current || blocks.length === 0) return;
+    impressionsSent.current = true;
+
+    try {
+      const supabase = getSupabaseBrowser();
+      if (!supabase) return;
+
+      // Fire impression RPCs for all visible blocks
+      blocks.forEach((block) => {
+        Promise.resolve(
+          supabase.rpc("increment_block_impression", { block_id: block.id })
+        ).catch(() => {}); // silently fail if RPC doesn't exist yet
+      });
+    } catch {
+      // silently fail
+    }
+  }, [blocks]);
 
   const handleBlockClick = useCallback(
     (block: HomepageBlock) => {
@@ -69,7 +90,9 @@ export function DynamicBlocks({ blocks }: DynamicBlocksProps) {
       try {
         const supabase = getSupabaseBrowser();
         if (supabase) {
-          supabase.rpc("increment_block_click", { block_id: block.id });
+          Promise.resolve(
+            supabase.rpc("increment_block_click", { block_id: block.id })
+          ).catch(() => {});
         }
       } catch {
         // silently fail
