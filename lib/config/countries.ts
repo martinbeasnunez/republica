@@ -272,13 +272,15 @@ const COLOMBIA_CONFIG: CountryConfig = {
   ],
 
   electoralProcessGuide: `PROCESO ELECTORAL COLOMBIA 2026:
-- CONSULTAS (PRIMARIAS): Mecanismo por el cual coaliciones o partidos definen su candidato presidencial mediante voto popular abierto. Cualquier ciudadano puede votar en UNA consulta el día de las legislativas.
+- CONSULTAS (PRIMARIAS): Mecanismo por el cual coaliciones o partidos definen su candidato presidencial mediante voto popular abierto. Cualquier ciudadano puede votar en UNA consulta el día de las legislativas. Cada consulta es INDEPENDIENTE — los candidatos de una consulta NO compiten contra los de otra. Solo compiten entre sí dentro de su propia consulta.
 - FECHA DE CONSULTAS: 8 de marzo 2026 (mismo día de elecciones legislativas al Congreso).
 - CONSULTAS CONFIRMADAS 2026:
-  • "Gran Consulta por Colombia" (centro-derecha): Es la MÁS GRANDE. Reúne a Partido Conservador, Cambio Radical, y otros. Candidatos: Vicky Dávila, David Barguil, Juan Daniel Oviedo, entre otros. Se estima que tendrá más del doble de votos que las demás consultas por la cantidad de partidos que agrupa.
-  • Consulta Pacto Histórico (izquierda/progresismo): Iván Cepeda, Alexander López, y otros candidatos de la coalición de gobierno.
-  • Consulta Fuerza de la Paz: Roy Barreras y aliados.
-  • Otros precandidatos van por firmas o aval directo de partido (sin consulta): Sergio Fajardo, Daniel Quintero, etc.
+  • "GRAN CONSULTA POR COLOMBIA" (centro-derecha): Es la MÁS GRANDE por cantidad de partidos y votantes esperados. Reúne a Partido Conservador, Cambio Radical, y otros. Candidatos: Vicky Dávila, David Barguil, Juan Daniel Oviedo, Paloma Valencia, entre otros. Se estima que tendrá más del doble de votos que las demás consultas.
+  • "CONSULTA PACTO HISTÓRICO" (izquierda/progresismo): Coalición de gobierno. Candidatos: Iván Cepeda, Alexander López, y otros. Compiten SOLO entre ellos.
+  • "CONSULTA IMPARABLES" (Claudia López): Claudia López compite en su propia consulta con candidatos menores/poco conocidos. Por la diferencia de perfil, se proyecta como amplia favorita en esta consulta específica.
+  • "CONSULTA FUERZA DE LA PAZ": Roy Barreras y aliados. Consulta propia separada.
+  • SIN CONSULTA (aval directo o firmas): Sergio Fajardo (Dignidad y Compromiso), Daniel Quintero (AICO), Abelardo de la Espriella, y otros van directo a primera vuelta sin pasar por consulta.
+- REGLA CLAVE: Los ganadores de CADA consulta + los candidatos sin consulta se enfrentan en PRIMERA VUELTA. No se mezclan antes.
 - PRIMERA VUELTA: 31 de mayo 2026. Compiten los ganadores de cada consulta + candidatos por aval/firmas.
 - SEGUNDA VUELTA: 21 de junio 2026. Solo si ningún candidato supera 50% + 1 en primera vuelta.
 - ELECCIONES LEGISLATIVAS: 8 de marzo 2026. Se elige Senado (108) y Cámara de Representantes (188).
