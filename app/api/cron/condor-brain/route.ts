@@ -20,7 +20,7 @@ import { runBrainAll } from "@/lib/brain";
  * Auth: Bearer CRON_SECRET
  */
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function GET(request: NextRequest) {
   // ─── Auth ────────────────────────────────────────────────

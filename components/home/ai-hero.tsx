@@ -78,12 +78,12 @@ export function AIHero({ candidateCount }: { candidateCount?: number }) {
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Cpu className="h-3 w-3 text-primary" />
-              <span>{country.mediaSources.filter(s => s.rss).length} fuentes RSS activas</span>
+              <span>{country.mediaSources.length} fuentes monitoreadas</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground tabular-nums">
               <Activity className="h-3 w-3 text-sky" />
-              <span>Actualización cada 4h</span>
+              <span>Actualización diaria</span>
             </div>
           </motion.div>
         </div>
