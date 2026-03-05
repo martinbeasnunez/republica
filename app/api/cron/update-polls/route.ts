@@ -156,7 +156,7 @@ async function updatePollsForCountry(countryCode: CountryCode) {
             messages: [
               {
                 role: "system",
-                content: `Extrae datos de encuestas de esta noticia electoral de ${config?.name ?? "Perú"}.
+                content: `Extrae datos de encuestas de INTENCIÓN DE VOTO PRESIDENCIAL de esta noticia electoral de ${config?.name ?? "Perú"}.
 
 CANDIDATOS:
 ${candidateList}
@@ -171,12 +171,20 @@ Responde en JSON:
 }
 
 REGLAS ESTRICTAS:
-- Solo extraer si la noticia menciona una ENCUESTA de una encuestadora reconocida
-- El pollster DEBE ser de la lista de encuestadoras validas
-- value es el porcentaje exacto (ej: 12.5, 7.3)
-- Rango valido: 0.5 a 60.0
-- Si no hay datos de encuesta claros, polls = []
-- Un medio NO es una encuestadora`,
+- Solo extraer si la noticia menciona una ENCUESTA FORMAL de una encuestadora reconocida con CIFRAS EXACTAS
+- El pollster DEBE ser EXACTAMENTE uno de la lista de encuestadoras validas (sin sufijos, sin "(estimado)")
+- value es el porcentaje exacto mencionado en la noticia (ej: 12.5, 7.3)
+- Rango valido: 0.5 a 45.0
+- Si no hay datos de encuesta claros con cifras numéricas explícitas, polls = []
+- Un medio de comunicación NO es una encuestadora
+- NUNCA inventes, estimes o interpoles valores. Solo extrae números TEXTUALMENTE mencionados en la noticia.
+- NUNCA agregues "(estimado)" al nombre de la encuestadora
+
+REGLA CRÍTICA PARA COLOMBIA:
+- DISTINGUIR entre "intención de voto PRESIDENCIAL" (primera vuelta general) y "intención de voto en CONSULTA" (primaria interna de una coalición).
+- Solo extraer intención de voto PRESIDENCIAL (primera vuelta).
+- Si la encuesta es sobre una CONSULTA (ej: "Gran Consulta por Colombia", "Consulta del Pacto Histórico"), NO extraer esos números — son de una primaria, no de la elección general.
+- Si la noticia mezcla ambas, solo extraer los números de intención presidencial general.`,
               },
               {
                 role: "user",
@@ -192,16 +200,22 @@ REGLAS ESTRICTAS:
           if (!Array.isArray(result.polls) || result.polls.length === 0) continue;
 
           for (const poll of result.polls) {
+            // ── Basic validation ──
             if (
               !poll.candidate_id ||
               !poll.value ||
               !poll.pollster ||
               poll.value < 0.5 ||
-              poll.value > 60
+              poll.value > 45
             ) continue;
 
+            // ── Reject "(estimado)" pollster names ──
+            if (/estimado/i.test(poll.pollster)) continue;
+
+            // ── Pollster must be in the valid list (exact match) ──
+            const cleanPollster = poll.pollster.trim();
             const isValid = validPollsters.some(
-              (p) => p.toLowerCase() === poll.pollster.toLowerCase().trim()
+              (p) => p.toLowerCase() === cleanPollster.toLowerCase()
             );
             if (!isValid) continue;
 
@@ -210,10 +224,30 @@ REGLAS ESTRICTAS:
             );
             if (!candidateExists) continue;
 
+            // ── Delta check: reject if value differs >15pp from last known ──
+            const { data: lastKnown } = await supabase
+              .from("poll_data_points")
+              .select("value")
+              .eq("candidate_id", poll.candidate_id)
+              .order("date", { ascending: false })
+              .limit(1);
+
+            if (lastKnown && lastKnown.length > 0) {
+              const delta = Math.abs(poll.value - lastKnown[0].value);
+              if (delta > 15) {
+                console.warn(
+                  `[update-polls][${countryCode}] REJECTED ${poll.candidate_id}: ${lastKnown[0].value}% → ${poll.value}% (delta ${delta.toFixed(1)}pp > 15pp max)`
+                );
+                continue;
+              }
+            }
+
+            // ── Duplicate check: one entry per candidate per pollster per day ──
             const { data: existing } = await supabase
               .from("poll_data_points")
               .select("id")
               .eq("candidate_id", poll.candidate_id)
+              .eq("pollster", cleanPollster)
               .eq("date", todayStr)
               .limit(1);
 
@@ -224,7 +258,7 @@ REGLAS ESTRICTAS:
               .insert({
                 candidate_id: poll.candidate_id,
                 value: Math.round(poll.value * 10) / 10,
-                pollster: poll.pollster,
+                pollster: cleanPollster,
                 date: todayStr,
                 country_code: countryCode,
               });
