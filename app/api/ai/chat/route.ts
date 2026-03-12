@@ -4,6 +4,9 @@ import { fetchCandidates } from "@/lib/data/candidates";
 import { fetchNewsContext } from "@/lib/data/news";
 import type { CountryCode } from "@/lib/config/countries";
 
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.OPENAI_API_KEY) {
