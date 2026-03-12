@@ -66,10 +66,11 @@ export async function fetchArticles(countryCode?: string): Promise<NewsArticle[]
   }
 }
 
-/** Build a text context block with all news for AI injection */
-export async function fetchNewsContext(countryCode?: string): Promise<string> {
+/** Build a text context block with recent news for AI injection (limited to avoid token overflow) */
+export async function fetchNewsContext(countryCode?: string, limit: number = 20): Promise<string> {
   const articles = await fetchArticles(countryCode);
   return articles
+    .slice(0, limit)
     .map(
       (a, i) =>
         `${i + 1}. "${a.title}" — ${a.source} (${a.time})${a.sourceUrl ? `\n   Link: ${a.sourceUrl}` : ""}\n   Resumen: ${a.summary}`

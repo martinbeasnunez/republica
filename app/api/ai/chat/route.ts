@@ -6,6 +6,13 @@ import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "API key de OpenAI no configurada. Contacta al administrador." }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages, countryCode = "pe", mode = "electoral" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -25,10 +32,16 @@ export async function POST(req: NextRequest) {
       systemContent = SYSTEM_PROMPTS.feedbackCollector(cc);
     } else {
       // Electoral assistant mode: load full context
-      const [candidates, newsContext] = await Promise.all([
-        fetchCandidates(cc),
-        fetchNewsContext(cc),
-      ]);
+      let candidates: Awaited<ReturnType<typeof fetchCandidates>> = [];
+      let newsContext = "";
+      try {
+        [candidates, newsContext] = await Promise.all([
+          fetchCandidates(cc),
+          fetchNewsContext(cc),
+        ]);
+      } catch (dataErr) {
+        console.error("Error fetching context data:", dataErr);
+      }
 
       const candidateContext = candidates
         .map((c) => {
@@ -43,6 +56,12 @@ export async function POST(req: NextRequest) {
         .join("\n");
 
       systemContent = `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`;
+    }
+
+    // Truncate context to stay within ~80k chars (~20k tokens) to leave room for conversation
+    const MAX_CONTEXT_CHARS = 80000;
+    if (systemContent.length > MAX_CONTEXT_CHARS) {
+      systemContent = systemContent.slice(0, MAX_CONTEXT_CHARS) + "\n\n[Contexto truncado por límite de tokens]";
     }
 
     const stream = await getOpenAI().chat.completions.create({
@@ -86,10 +105,30 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Chat API error:", error);
-    const message =
-      error instanceof Error ? error.message : "Error interno del servidor";
+
+    let message = "Error interno del servidor";
+    let status = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes("401") || error.message.includes("Incorrect API key")) {
+        message = "Error de autenticación con el servicio de IA. Contacta al administrador.";
+        status = 503;
+      } else if (error.message.includes("429") || error.message.includes("Rate limit")) {
+        message = "Demasiadas consultas. Intenta de nuevo en unos segundos.";
+        status = 429;
+      } else if (error.message.includes("context length") || error.message.includes("maximum")) {
+        message = "El contexto excede el límite del modelo. Intenta con una pregunta más corta.";
+        status = 400;
+      } else if (error.message.includes("timeout") || error.message.includes("ECONNREFUSED")) {
+        message = "No se pudo conectar con el servicio de IA. Intenta de nuevo.";
+        status = 503;
+      } else {
+        message = error.message;
+      }
+    }
+
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { "Content-Type": "application/json" },
     });
   }
