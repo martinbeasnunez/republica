@@ -28,6 +28,7 @@ import { type FactCheck } from "@/lib/data/fact-checks";
 import { type PublicBriefing } from "./page";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 import { DynamicBlocks } from "@/components/blocks/dynamic-blocks";
+import { AIPromptBar } from "@/components/home/ai-prompt-bar";
 import { useAnalytics } from "@/hooks/use-analytics";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -147,6 +148,9 @@ export default function HomeClient({
             ) : (
               <HeroBriefingEmpty />
             )}
+
+            {/* AI Prompt Bar — chat with CONDOR AI */}
+            <AIPromptBar />
 
             {/* Quiz CTA (compact — high conversion position) */}
             <QuizCTACompact trackEvent={trackEvent} />
