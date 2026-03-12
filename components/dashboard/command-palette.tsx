@@ -131,7 +131,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         }),
       });
 
-      if (!res.ok) throw new Error("Error de conexión");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || `Error ${res.status}`);
+      }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -168,13 +171,15 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         { role: "assistant", content: fullContent },
       ]);
       setStreamingContent("");
-    } catch {
+    } catch (err) {
+      const errorMsg = err instanceof Error && err.message
+        ? err.message
+        : "Lo siento, hubo un error al procesar tu consulta. Intenta de nuevo.";
       setChatMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content:
-            "Lo siento, hubo un error al procesar tu consulta. Intenta de nuevo.",
+          content: errorMsg,
         },
       ]);
     } finally {
