@@ -6,6 +6,13 @@ import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "API key de OpenAI no configurada. Contacta al administrador." }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages, countryCode = "pe" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -17,10 +24,17 @@ export async function POST(req: NextRequest) {
 
     const cc = countryCode as CountryCode;
 
-    const [candidates, newsContext] = await Promise.all([
-      fetchCandidates(cc),
-      fetchNewsContext(cc),
-    ]);
+    let candidates, newsContext;
+    try {
+      [candidates, newsContext] = await Promise.all([
+        fetchCandidates(cc),
+        fetchNewsContext(cc),
+      ]);
+    } catch (dataErr) {
+      console.error("Error fetching context data:", dataErr);
+      candidates = [];
+      newsContext = "";
+    }
 
     const candidateContext = candidates
       .map((c) => {
@@ -79,10 +93,28 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Chat API error:", error);
-    const message =
-      error instanceof Error ? error.message : "Error interno del servidor";
+
+    // Detect common OpenAI errors
+    let message = "Error interno del servidor";
+    let status = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes("401") || error.message.includes("Incorrect API key")) {
+        message = "Error de autenticación con el servicio de IA. Contacta al administrador.";
+        status = 503;
+      } else if (error.message.includes("429") || error.message.includes("Rate limit")) {
+        message = "Demasiadas consultas. Intenta de nuevo en unos segundos.";
+        status = 429;
+      } else if (error.message.includes("timeout") || error.message.includes("ECONNREFUSED")) {
+        message = "No se pudo conectar con el servicio de IA. Intenta de nuevo.";
+        status = 503;
+      } else {
+        message = error.message;
+      }
+    }
+
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { "Content-Type": "application/json" },
     });
   }

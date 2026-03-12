@@ -5,9 +5,11 @@ let _openai: OpenAI | null = null;
 
 export function getOpenAI() {
   if (!_openai) {
-    _openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || "",
-    });
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY no está configurada");
+    }
+    _openai = new OpenAI({ apiKey });
   }
   return _openai;
 }
