@@ -6,6 +6,14 @@ import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("Chat API error: OPENAI_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ error: "CONDOR AI no está configurado correctamente. Falta OPENAI_API_KEY." }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages, countryCode = "pe" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -17,14 +25,21 @@ export async function POST(req: NextRequest) {
 
     const cc = countryCode as CountryCode;
 
-    const [candidates, newsContext] = await Promise.all([
-      fetchCandidates(cc),
-      fetchNewsContext(cc),
-    ]);
+    let candidates;
+    let newsContext;
+    try {
+      [candidates, newsContext] = await Promise.all([
+        fetchCandidates(cc),
+        fetchNewsContext(cc),
+      ]);
+    } catch (dataError) {
+      console.error("Chat API - Error fetching context data:", dataError);
+      candidates = [];
+      newsContext = "";
+    }
 
     const candidateContext = candidates
       .map((c) => {
-        // Get the latest poll data point for context
         const latestPoll = c.pollHistory.length > 0
           ? c.pollHistory[c.pollHistory.length - 1]
           : null;
@@ -79,10 +94,27 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Chat API error:", error);
-    const message =
-      error instanceof Error ? error.message : "Error interno del servidor";
+
+    let message = "Error interno del servidor";
+    let status = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes("API key") || error.message.includes("auth")) {
+        message = "Error de autenticación con OpenAI. Verifica la API key.";
+        status = 503;
+      } else if (error.message.includes("SUPABASE")) {
+        message = "Error de conexión a la base de datos. Verifica las variables de entorno de Supabase.";
+        status = 503;
+      } else if (error.message.includes("rate limit") || error.message.includes("429")) {
+        message = "Demasiadas solicitudes. Intenta en unos segundos.";
+        status = 429;
+      } else {
+        message = error.message;
+      }
+    }
+
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { "Content-Type": "application/json" },
     });
   }

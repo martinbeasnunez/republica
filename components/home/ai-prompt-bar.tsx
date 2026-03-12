@@ -61,7 +61,10 @@ export function AIPromptBar() {
         }),
       });
 
-      if (!res.ok) throw new Error("Error de conexión");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || `Error ${res.status}`);
+      }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -98,8 +101,11 @@ export function AIPromptBar() {
         { role: "assistant", content: fullContent },
       ]);
       setStreamingContent("");
-    } catch {
-      setError("CONDOR AI no disponible en este momento. Intenta de nuevo.");
+    } catch (err) {
+      const errorMsg = err instanceof Error && err.message !== "Error de conexión"
+        ? err.message
+        : "CONDOR AI no disponible en este momento. Intenta de nuevo.";
+      setError(errorMsg);
       setMessages((prev) => prev.slice(0, -1)); // remove user message on error
     } finally {
       setIsStreaming(false);
