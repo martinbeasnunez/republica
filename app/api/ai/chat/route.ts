@@ -38,7 +38,6 @@ export async function POST(req: NextRequest) {
 
     const candidateContext = candidates
       .map((c) => {
-        // Get the latest poll data point for context
         const latestPoll = c.pollHistory.length > 0
           ? c.pollHistory[c.pollHistory.length - 1]
           : null;
@@ -49,12 +48,19 @@ export async function POST(req: NextRequest) {
       })
       .join("\n");
 
+    // Truncate context to stay within ~80k chars (~20k tokens) to leave room for conversation
+    const MAX_CONTEXT_CHARS = 80000;
+    let systemContent = `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`;
+    if (systemContent.length > MAX_CONTEXT_CHARS) {
+      systemContent = systemContent.slice(0, MAX_CONTEXT_CHARS) + "\n\n[Contexto truncado por límite de tokens]";
+    }
+
     const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`,
+          content: systemContent,
         },
         ...messages,
       ],
