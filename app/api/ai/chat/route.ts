@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
 
     const cc = countryCode as CountryCode;
 
-    let candidates, newsContext;
+    let candidates: Awaited<ReturnType<typeof fetchCandidates>> = [];
+    let newsContext = "";
     try {
       [candidates, newsContext] = await Promise.all([
         fetchCandidates(cc),
