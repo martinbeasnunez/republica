@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Send, Loader2, Bot, ArrowRight } from "lucide-react";
+import { Sparkles, Send, Loader2, Bot, ArrowRight, RefreshCw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { useCountry } from "@/lib/config/country-context";
@@ -26,6 +26,7 @@ export function AIPromptBar() {
   const [streamingContent, setStreamingContent] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [lastFailedQuery, setLastFailedQuery] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const responseRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +42,7 @@ export function AIPromptBar() {
     if (!text || isStreaming) return;
 
     setError(null);
+    setLastFailedQuery(null);
     const userMessage: ChatMessage = { role: "user", content: text };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
@@ -61,7 +63,12 @@ export function AIPromptBar() {
         }),
       });
 
-      if (!res.ok) throw new Error("Error de conexion");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.error || `Error del servidor (${res.status})`
+        );
+      }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -98,8 +105,13 @@ export function AIPromptBar() {
         { role: "assistant", content: fullContent },
       ]);
       setStreamingContent("");
-    } catch {
-      setError("CONDOR AI no disponible en este momento. Intenta de nuevo.");
+    } catch (err) {
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "CONDOR AI no disponible en este momento.";
+      setError(message);
+      setLastFailedQuery(text);
       setMessages((prev) => prev.slice(0, -1)); // remove user message on error
     } finally {
       setIsStreaming(false);
@@ -244,14 +256,24 @@ export function AIPromptBar() {
       {/* Error */}
       <AnimatePresence>
         {error && (
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-xs text-rose text-center"
+            className="flex flex-col items-center gap-2"
           >
-            {error}
-          </motion.p>
+            <p className="text-xs text-destructive text-center">{error}</p>
+            {lastFailedQuery && (
+              <button
+                onClick={() => handleSubmit(lastFailedQuery)}
+                disabled={isStreaming}
+                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                <RefreshCw className="h-3 w-3" />
+                Reintentar
+              </button>
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
 

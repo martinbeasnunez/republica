@@ -6,6 +6,13 @@ import type { CountryCode } from "@/lib/config/countries";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "API key de OpenAI no configurada. Contacta al administrador." }),
+        { status: 503, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages, countryCode = "pe" } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -17,14 +24,20 @@ export async function POST(req: NextRequest) {
 
     const cc = countryCode as CountryCode;
 
-    const [candidates, newsContext] = await Promise.all([
-      fetchCandidates(cc),
-      fetchNewsContext(cc),
-    ]);
+    let candidates, newsContext;
+    try {
+      [candidates, newsContext] = await Promise.all([
+        fetchCandidates(cc),
+        fetchNewsContext(cc),
+      ]);
+    } catch (dataErr) {
+      console.error("Error fetching context data:", dataErr);
+      candidates = [];
+      newsContext = "";
+    }
 
     const candidateContext = candidates
       .map((c) => {
-        // Get the latest poll data point for context
         const latestPoll = c.pollHistory.length > 0
           ? c.pollHistory[c.pollHistory.length - 1]
           : null;
@@ -35,12 +48,19 @@ export async function POST(req: NextRequest) {
       })
       .join("\n");
 
+    // Truncate context to stay within ~80k chars (~20k tokens) to leave room for conversation
+    const MAX_CONTEXT_CHARS = 80000;
+    let systemContent = `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`;
+    if (systemContent.length > MAX_CONTEXT_CHARS) {
+      systemContent = systemContent.slice(0, MAX_CONTEXT_CHARS) + "\n\n[Contexto truncado por límite de tokens]";
+    }
+
     const stream = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`,
+          content: systemContent,
         },
         ...messages,
       ],
@@ -79,10 +99,28 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Chat API error:", error);
-    const message =
-      error instanceof Error ? error.message : "Error interno del servidor";
+
+    // Detect common OpenAI errors
+    let message = "Error interno del servidor";
+    let status = 500;
+
+    if (error instanceof Error) {
+      if (error.message.includes("401") || error.message.includes("Incorrect API key")) {
+        message = "Error de autenticación con el servicio de IA. Contacta al administrador.";
+        status = 503;
+      } else if (error.message.includes("429") || error.message.includes("Rate limit")) {
+        message = "Demasiadas consultas. Intenta de nuevo en unos segundos.";
+        status = 429;
+      } else if (error.message.includes("timeout") || error.message.includes("ECONNREFUSED")) {
+        message = "No se pudo conectar con el servicio de IA. Intenta de nuevo.";
+        status = 503;
+      } else {
+        message = error.message;
+      }
+    }
+
     return new Response(JSON.stringify({ error: message }), {
-      status: 500,
+      status,
       headers: { "Content-Type": "application/json" },
     });
   }
