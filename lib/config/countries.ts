@@ -22,6 +22,19 @@ export interface MediaSource {
   type: "newspaper" | "tv" | "digital" | "agency" | "factcheck";
 }
 
+export interface ElectoralEvent {
+  id: string;
+  type: "debate" | "foro" | "entrevista";
+  title: string;
+  date: string;           // "2026-03-23"
+  startTime: string;      // "20:00" (local time)
+  endTime: string;        // "22:30"
+  organizer: string;      // "JNE", "SNI", etc.
+  topics?: string[];
+  broadcastUrl?: string;  // YouTube, etc.
+  broadcastChannels?: string[];
+}
+
 export interface CountryTheme {
   primary: string;          // Main accent color (hex)
   primaryForeground: string;
@@ -44,6 +57,8 @@ export interface CountryConfig {
   // Election
   electionDate: string; // ISO date
   electionDateSecondRound?: string;
+  /** Slugs of the two candidates that advanced to the runoff. Set once first-round results are official. */
+  runoffCandidateSlugs?: [string, string];
   electionType: string;
   electionSystem: string;
   electorateSize: string;
@@ -69,6 +84,9 @@ export interface CountryConfig {
 
   // AI knowledge — structured electoral process for the chat assistant
   electoralProcessGuide: string;
+
+  // Events (debates, foros, etc.)
+  events?: ElectoralEvent[];
 
   // Deployment
   domain: string;
@@ -125,6 +143,7 @@ const PERU_CONFIG: CountryConfig = {
 
   electionDate: "2026-04-12",
   electionDateSecondRound: "2026-06-07",
+  runoffCandidateSlugs: ["keiko-fujimori", "roberto-sanchez"],
   electionType: "Presidencial + Congreso",
   electionSystem: "Primera vuelta (si nadie supera 50%, hay segunda vuelta)",
   electorateSize: "~25.3 millones de electores habilitados",
@@ -162,7 +181,7 @@ const PERU_CONFIG: CountryConfig = {
   ],
 
   electoralProcessGuide: `PROCESO ELECTORAL PERÚ 2026:
-- ELECCIONES GENERALES: 13 de abril 2026 (primera vuelta presidencial + Congreso).
+- ELECCIONES GENERALES: 12 de abril 2026 (primera vuelta presidencial + Congreso).
 - SEGUNDA VUELTA: Si ningún candidato supera el 50%, hay balotaje en junio 2026.
 - ELECCIONES INTERNAS: Los partidos realizaron elecciones internas para elegir a sus candidatos. Cada partido define si usa votación de militantes, delegados o un mecanismo mixto.
 - NO HAY SISTEMA DE CONSULTAS ABIERTAS como en Colombia. En Perú, los candidatos se definen dentro de cada partido por decisión interna.
@@ -172,7 +191,16 @@ const PERU_CONFIG: CountryConfig = {
 - FRANJA ELECTORAL: Espacio gratuito en TV y radio para candidatos, regulado por la ONPE.
 - FINANCIAMIENTO: Regulado por la ONPE. Hay límites de gasto y obligación de reportar aportes.`,
 
-  domain: "condorlatam.com",
+  events: [
+    { id: "debate-jne-1", type: "debate", title: "Debate Presidencial JNE — Fecha 1", date: "2026-03-23", startTime: "20:00", endTime: "22:30", organizer: "JNE", topics: ["Seguridad ciudadana", "Lucha contra el crimen"], broadcastUrl: "https://www.youtube.com/live/JNE", broadcastChannels: ["TV Perú", "JNE Media", "Movistar 552"] },
+    { id: "debate-jne-2", type: "debate", title: "Debate Presidencial JNE — Fecha 2", date: "2026-03-24", startTime: "20:00", endTime: "22:30", organizer: "JNE", topics: ["Integridad pública", "Lucha contra la corrupción"], broadcastUrl: "https://www.youtube.com/live/JNE", broadcastChannels: ["TV Perú", "JNE Media", "Movistar 552"] },
+    { id: "debate-jne-3", type: "debate", title: "Debate Presidencial JNE — Fecha 3", date: "2026-03-25", startTime: "20:00", endTime: "22:30", organizer: "JNE", topics: ["Seguridad ciudadana", "Anticorrupción"], broadcastUrl: "https://www.youtube.com/live/JNE", broadcastChannels: ["TV Perú", "JNE Media", "Movistar 552"] },
+    { id: "debate-jne-4", type: "debate", title: "Debate Presidencial JNE — Fecha 4", date: "2026-03-30", startTime: "20:00", endTime: "22:30", organizer: "JNE", broadcastUrl: "https://www.youtube.com/live/JNE", broadcastChannels: ["TV Perú", "JNE Media", "Movistar 552"] },
+    { id: "debate-jne-5", type: "debate", title: "Debate Presidencial JNE — Fecha 5", date: "2026-03-31", startTime: "20:00", endTime: "22:30", organizer: "JNE", broadcastUrl: "https://www.youtube.com/live/JNE", broadcastChannels: ["TV Perú", "JNE Media", "Movistar 552"] },
+    { id: "debate-jne-6", type: "debate", title: "Debate Presidencial JNE — Fecha 6", date: "2026-04-01", startTime: "20:00", endTime: "22:30", organizer: "JNE", broadcastUrl: "https://www.youtube.com/live/JNE", broadcastChannels: ["TV Perú", "JNE Media", "Movistar 552"] },
+  ],
+
+  domain: "www.condorlatam.com",
 };
 
 // =============================================================================
@@ -290,7 +318,7 @@ const COLOMBIA_CONFIG: CountryConfig = {
 - FINANCIAMIENTO: El Estado financia parcialmente las campañas (reposición de votos). Hay topes de gasto.
 - ENCUESTAS: Deben ser publicadas con ficha técnica completa. Prohibida su publicación 7 días antes de la elección (ley de "veda de encuestas").`,
 
-  domain: "condorlatam.com",
+  domain: "www.condorlatam.com",
 };
 
 // =============================================================================
@@ -320,4 +348,101 @@ export function getElectionCountdown(code: CountryCode): number {
   const now = new Date();
   const diff = electionDate.getTime() - now.getTime();
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+/** Days until the second round (runoff). Returns null if no runoff date or already past. */
+export function getRunoffCountdown(code: CountryCode): number | null {
+  const config = COUNTRIES[code];
+  if (!config.electionDateSecondRound) return null;
+  const runoffDate = new Date(config.electionDateSecondRound + "T08:00:00");
+  const now = new Date();
+  const diff = runoffDate.getTime() - now.getTime();
+  if (diff <= 0) return null;
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * True when we are between the first round (D+1) and the runoff (D-1) for a country
+ * that has confirmed runoff candidates. Used to decide whether the home page should
+ * be a runoff-focused matchup.
+ */
+export function isInRunoffPhase(code: CountryCode): boolean {
+  const config = COUNTRIES[code];
+  if (!config.runoffCandidateSlugs || !config.electionDateSecondRound) return false;
+  const tz = config.timezone;
+  const todayLocal = new Date().toLocaleDateString("en-CA", { timeZone: tz });
+  const firstRound = new Date(config.electionDate + "T12:00:00");
+  const runoff = new Date(config.electionDateSecondRound + "T12:00:00");
+  const todayObj = new Date(todayLocal + "T12:00:00");
+  // After first round day, strictly before runoff day
+  return todayObj.getTime() > firstRound.getTime() && todayObj.getTime() < runoff.getTime();
+}
+
+// ── Event helpers ──────────────────────────────────────────────────────────
+
+function eventToDateRange(event: ElectoralEvent, tz: string) {
+  // Build local datetime strings and convert using timezone
+  const startStr = `${event.date}T${event.startTime}:00`;
+  const endStr = `${event.date}T${event.endTime}:00`;
+  // For server-side, use simple offset approach (Peru = UTC-5, Colombia = UTC-5)
+  const offsetHours = tz === "America/Lima" ? 5 : tz === "America/Bogota" ? 5 : 5;
+  const start = new Date(new Date(startStr).getTime() + offsetHours * 60 * 60 * 1000);
+  const end = new Date(new Date(endStr).getTime() + offsetHours * 60 * 60 * 1000);
+  return { start, end };
+}
+
+/** Event happening RIGHT NOW */
+export function getActiveEvent(code: CountryCode): ElectoralEvent | null {
+  const config = COUNTRIES[code];
+  if (!config.events?.length) return null;
+  const now = new Date();
+  for (const event of config.events) {
+    const { start, end } = eventToDateRange(event, config.timezone);
+    if (now >= start && now <= end) return event;
+  }
+  return null;
+}
+
+/** Next upcoming event (within 7 days) */
+export function getNextEvent(code: CountryCode): ElectoralEvent | null {
+  const config = COUNTRIES[code];
+  if (!config.events?.length) return null;
+  const now = new Date();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  let closest: ElectoralEvent | null = null;
+  let closestDiff = Infinity;
+  for (const event of config.events) {
+    const { start } = eventToDateRange(event, config.timezone);
+    const diff = start.getTime() - now.getTime();
+    if (diff > 0 && diff < sevenDays && diff < closestDiff) {
+      closest = event;
+      closestDiff = diff;
+    }
+  }
+  return closest;
+}
+
+/** Event that ended in the last 24h (for post-event banners) */
+export function getRecentEvent(code: CountryCode): ElectoralEvent | null {
+  const config = COUNTRIES[code];
+  if (!config.events?.length) return null;
+  const now = new Date();
+  const twentyFourHours = 24 * 60 * 60 * 1000;
+  for (const event of config.events) {
+    const { end } = eventToDateRange(event, config.timezone);
+    const diff = now.getTime() - end.getTime();
+    if (diff > 0 && diff < twentyFourHours) return event;
+  }
+  return null;
+}
+
+/** All future events for a country */
+export function getUpcomingEvents(code: CountryCode): ElectoralEvent[] {
+  const config = COUNTRIES[code];
+  if (!config.events?.length) return [];
+  const now = new Date();
+  return config.events.filter((event) => {
+    const { end } = eventToDateRange(event, config.timezone);
+    return end.getTime() > now.getTime();
+  });
 }

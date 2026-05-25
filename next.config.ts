@@ -1,6 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // ─── Image optimization: proxy external candidate photos ────────
+  // Wikimedia's upload.wikimedia.org/thumb/* endpoint aggressively
+  // rate-limits (HTTP 429) when hotlinked from a shared IP. Routing
+  // through `/_next/image` lets Next's optimizer cache on our edge so
+  // the origin is hit once instead of per-visitor.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "mpesije.jne.gob.pe" },
+    ],
+    // 1 day cache on our edge — photos rarely change
+    minimumCacheTTL: 60 * 60 * 24,
+  },
+
   // ─── SEO: Redirect old routes ──────────────────────────
   async redirects() {
     return [

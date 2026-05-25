@@ -6,8 +6,9 @@ import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import { getSupabase } from "@/lib/supabase";
 import HomeClient from "./home-client";
 import { EnVivoClient } from "./en-vivo/en-vivo-client";
+import { RunoffHomeClient } from "./runoff-home-client";
 import type { HomepageBlock } from "@/lib/types/homepage-blocks";
-import { getActiveEvent, getNextEvent, getRecentEvent, getUpcomingEvents, getCountryConfig, type CountryCode } from "@/lib/config/countries";
+import { getActiveEvent, getNextEvent, getRecentEvent, getUpcomingEvents, getCountryConfig, isInRunoffPhase, type CountryCode } from "@/lib/config/countries";
 
 export async function generateMetadata({
   params,
@@ -17,6 +18,21 @@ export async function generateMetadata({
   const { country } = await params;
   const countryCode = country as CountryCode;
   const seo = getCountrySeo(country);
+
+  if (isInRunoffPhase(countryCode)) {
+    return {
+      title: `Segunda Vuelta — Elecciones ${seo.name} ${seo.year}`,
+      description: `Balotaje ${seo.name} ${seo.year}: Keiko Fujimori vs Roberto Sánchez. Encuestas, propuestas comparadas, cobertura y verificación con IA — CONDOR.`,
+      keywords: getCountryKeywords(country, "home"),
+      alternates: seo.alternates,
+      openGraph: {
+        ...seo.openGraph,
+        title: `Segunda Vuelta — Elecciones ${seo.name} ${seo.year}`,
+        description: `Balotaje ${seo.name} ${seo.year}: head-to-head, encuestas y comparador de propuestas. CONDOR — Inteligencia Electoral.`,
+        type: "website",
+      },
+    };
+  }
 
   if (shouldUseLiveHome(countryCode)) {
     return {
@@ -132,20 +148,24 @@ async function fetchHomepageBlocks(country: string): Promise<HomepageBlock[]> {
 }
 
 // Check if we're in the post-election results window for a country
-// Window: election day + 7 days (while ONPE count is still in progress)
+// Window: election day + 7 days (while official count is still in progress).
+// Considers both the first round date and the runoff date if defined.
 function isElectionWindow(countryCode: CountryCode): boolean {
   const config = getCountryConfig(countryCode);
   if (!config) return false;
   const tz = countryCode === "pe" ? "America/Lima" : "America/Bogota";
   const localDate = new Date().toLocaleDateString("en-CA", { timeZone: tz });
-  const electionDate = new Date(config.electionDate + "T12:00:00");
   const localDateObj = new Date(localDate + "T12:00:00");
-  const daysDiff = Math.floor((localDateObj.getTime() - electionDate.getTime()) / 86400000);
-  return daysDiff >= 0 && daysDiff <= 7;
+  const targets = [config.electionDate, config.electionDateSecondRound].filter(Boolean) as string[];
+  for (const d of targets) {
+    const electionDate = new Date(d + "T12:00:00");
+    const daysDiff = Math.floor((localDateObj.getTime() - electionDate.getTime()) / 86400000);
+    if (daysDiff >= 0 && daysDiff <= 7) return true;
+  }
+  return false;
 }
 
 function shouldUseLiveHome(countryCode: CountryCode): boolean {
-  if (countryCode === "pe") return true;
   return isElectionWindow(countryCode);
 }
 
@@ -157,9 +177,33 @@ export default async function HomePage({
   const { country } = await params;
   const countryCode = country as CountryCode;
 
-  // Live mode: show full coverage hub as homepage.
-  // - Any country, during the election-week window (election day + 7d).
-  // - Peru permanently from first round through second round + 7d.
+  // Runoff mode: between the first round and the runoff, the home is 100%
+  // a head-to-head of the two finalists. ONPE first-round results stay on /en-vivo.
+  if (isInRunoffPhase(countryCode)) {
+    const config = getCountryConfig(countryCode);
+    const runoffSlugs = config?.runoffCandidateSlugs;
+    if (runoffSlugs) {
+      const [candidates, articles] = await Promise.all([
+        fetchCandidates(country),
+        fetchArticles(country),
+      ]);
+      const bySlug = new Map(candidates.map((c) => [c.slug, c]));
+      const a = bySlug.get(runoffSlugs[0]);
+      const b = bySlug.get(runoffSlugs[1]);
+      if (a && b) {
+        return (
+          <RunoffHomeClient
+            finalists={[a, b]}
+            articles={articles}
+            candidatesForPhotos={candidates}
+          />
+        );
+      }
+    }
+  }
+
+  // Live mode: show full coverage hub as homepage during election week
+  // (first round or runoff day + 7d).
   if (shouldUseLiveHome(countryCode)) {
     const [candidates, topCandidates, articles, factChecks, briefing, homepageBlocks] = await Promise.all([
       fetchCandidates(country),
