@@ -129,6 +129,35 @@ async function fetchLatestBriefing(country: string): Promise<PublicBriefing | nu
   }
 }
 
+/** Fetch the N most recent briefings (today first), for the runoff "Pulso" timeline. */
+async function fetchRecentBriefings(country: string, limit = 3): Promise<PublicBriefing[]> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("brain_briefings")
+      .select("editorial_summary, briefing_date, top_stories, poll_movements, health_status")
+      .eq("country_code", country)
+      .order("briefing_date", { ascending: false })
+      .limit(limit);
+    if (!data || data.length === 0) return [];
+    const todayStr = new Date().toISOString().split("T")[0];
+    return data.map((row) => {
+      const briefing = row as PublicBriefing;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const healthStatus = (row as any).health_status;
+      if (healthStatus?.key_takeaways) briefing.key_takeaways = healthStatus.key_takeaways;
+      if (healthStatus?.timeline) briefing.timeline = healthStatus.timeline;
+      const briefingDate = new Date(briefing.briefing_date + "T12:00:00");
+      const ageMs = Date.now() - briefingDate.getTime();
+      briefing._ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+      briefing._isToday = briefing.briefing_date === todayStr;
+      return briefing;
+    });
+  } catch {
+    return [];
+  }
+}
+
 async function fetchHomepageBlocks(country: string): Promise<HomepageBlock[]> {
   try {
     const supabase = getSupabase();
@@ -183,9 +212,10 @@ export default async function HomePage({
     const config = getCountryConfig(countryCode);
     const runoffSlugs = config?.runoffCandidateSlugs;
     if (runoffSlugs) {
-      const [candidates, articles] = await Promise.all([
+      const [candidates, articles, briefings] = await Promise.all([
         fetchCandidates(country),
         fetchArticles(country),
+        fetchRecentBriefings(country, 3),
       ]);
       const bySlug = new Map(candidates.map((c) => [c.slug, c]));
       const a = bySlug.get(runoffSlugs[0]);
@@ -196,6 +226,7 @@ export default async function HomePage({
             finalists={[a, b]}
             articles={articles}
             candidatesForPhotos={candidates}
+            briefings={briefings}
           />
         );
       }

@@ -17,6 +17,9 @@ import {
   MapPin,
   ArrowUpRight,
   Scale,
+  Sparkles,
+  Activity,
+  Newspaper,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +27,7 @@ import { useCountry } from "@/lib/config/country-context";
 import { useChartTheme } from "@/lib/echarts-theme";
 import { CATEGORIES_LABELS, type Candidate, type Category, type CandidateProposal } from "@/lib/data/candidates";
 import type { NewsArticle } from "@/lib/data/news";
+import type { PublicBriefing } from "./page";
 import { cn } from "@/lib/utils";
 import { LiveNewsFeed } from "./en-vivo/live-news-feed";
 import { MediaSourcesPanel } from "./en-vivo/media-sources-panel";
@@ -34,6 +38,7 @@ interface RunoffHomeClientProps {
   finalists: [Candidate, Candidate];
   articles: NewsArticle[];
   candidatesForPhotos: Candidate[];
+  briefings?: PublicBriefing[];
 }
 
 const TREND_ICON = {
@@ -382,6 +387,182 @@ function RunoffHero({ finalists }: { finalists: [Candidate, Candidate] }) {
   );
 }
 
+/** Friendly relative-day label (Hoy / Ayer / Anteayer / fecha). */
+function relativeDayLabel(dateStr: string): string {
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  if (dateStr === todayStr) return "Hoy";
+  const d = new Date(dateStr + "T12:00:00");
+  const diffDays = Math.round((today.getTime() - d.getTime()) / 86_400_000);
+  if (diffDays === 1) return "Ayer";
+  if (diffDays === 2) return "Anteayer";
+  return d.toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long" });
+}
+
+/**
+ * DayPulse — editorial summary card for the runoff home.
+ * Shows today's AI-generated briefing (editorial_summary + 2-3 top headlines)
+ * with a compact timeline of the previous two days underneath.
+ */
+function DayPulse({ briefings, finalists }: { briefings: PublicBriefing[]; finalists: [Candidate, Candidate] }) {
+  if (!briefings || briefings.length === 0) return null;
+  const [today, ...prior] = briefings;
+  const todayStories = (today.top_stories ?? []).slice(0, 3);
+
+  // Extract poll deltas for the two finalists from today's poll_movements.
+  const movements = (today.poll_movements ?? []).filter((m) => {
+    const name = m.candidate?.toLowerCase() ?? "";
+    return finalists.some(
+      (f) =>
+        name.includes(f.shortName.toLowerCase().split(" ").pop() || "") ||
+        name.includes(f.name.toLowerCase().split(" ").pop() || "")
+    );
+  });
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+      className="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-sm"
+    >
+      {/* Header bar */}
+      <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-3 border-b border-stone-100 bg-gradient-to-r from-primary/[0.04] via-white to-white">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+            <Activity className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-wider text-stone-900">
+              Pulso del balotaje
+            </h2>
+            <p className="text-[10px] text-stone-500 -mt-0.5">
+              Resumen diario generado por CONDOR AI
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-stone-500">
+          <Sparkles className="h-3 w-3 text-primary" />
+          {today._isToday ? (
+            <span>Actualizado hoy</span>
+          ) : (
+            <span>Hace {today._ageHours ?? 0}h</span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-0 lg:divide-x divide-stone-100">
+        {/* TODAY — editorial summary + top stories */}
+        <div className="p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-white pulse-dot" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-white">
+                {relativeDayLabel(today.briefing_date)}
+              </span>
+            </span>
+            <span className="text-[11px] text-stone-500 capitalize">
+              {new Date(today.briefing_date + "T12:00:00").toLocaleDateString("es-PE", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </span>
+          </div>
+
+          <p className="text-sm sm:text-base leading-relaxed text-stone-700 font-serif italic">
+            “{today.editorial_summary}”
+          </p>
+
+          {/* Poll deltas if any */}
+          {movements.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 border-t border-stone-100">
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                Movimientos en encuestas
+              </span>
+              {movements.slice(0, 4).map((m) => {
+                const up = m.direction === "up";
+                const stable = m.direction === "stable";
+                const Icon = up ? TrendingUp : stable ? Minus : TrendingDown;
+                const color = up ? "text-emerald-600" : stable ? "text-stone-400" : "text-rose-600";
+                const delta = (m.current - m.previous).toFixed(1);
+                return (
+                  <span key={m.candidate} className={cn("inline-flex items-center gap-1 text-[11px] font-semibold font-mono tabular-nums", color)}>
+                    <Icon className="h-3 w-3" />
+                    {m.candidate.split(" ").slice(-1)[0]} {delta.startsWith("-") ? "" : "+"}{delta}pp
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Top stories */}
+          {todayStories.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-stone-100">
+              <div className="flex items-center gap-1.5">
+                <Newspaper className="h-3 w-3 text-stone-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+                  Lo que mueve la agenda
+                </span>
+              </div>
+              <ul className="space-y-1.5">
+                {todayStories.map((s, i) => (
+                  <li key={`${s.title}-${i}`} className="flex items-start gap-2.5 text-[13px] leading-snug text-stone-700">
+                    <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary/70" />
+                    <span>
+                      <span className="font-semibold text-stone-900">{s.title}</span>
+                      {s.source && <span className="text-[11px] text-stone-400 ml-1.5">· {s.source}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* PRIOR DAYS — timeline */}
+        <div className="p-5 sm:p-6 bg-stone-50/40">
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+              Cómo veníamos
+            </span>
+          </div>
+          {prior.length === 0 ? (
+            <p className="text-[11px] text-stone-400 italic">Sin briefings de días anteriores.</p>
+          ) : (
+            <ol className="relative space-y-4 border-l border-stone-200 pl-4">
+              {prior.map((b) => {
+                const dayStories = (b.top_stories ?? []).slice(0, 1);
+                return (
+                  <li key={b.briefing_date} className="relative">
+                    <span className="absolute -left-[1.30rem] top-1.5 h-2 w-2 rounded-full bg-stone-300 ring-4 ring-stone-50" />
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-stone-700 capitalize">
+                        {relativeDayLabel(b.briefing_date)}
+                      </span>
+                      <span className="text-[10px] font-mono text-stone-400">
+                        {new Date(b.briefing_date + "T12:00:00").toLocaleDateString("es-PE", { day: "numeric", month: "short" })}
+                      </span>
+                    </div>
+                    <p className="text-[12px] leading-snug text-stone-600 line-clamp-3">
+                      {b.editorial_summary}
+                    </p>
+                    {dayStories[0] && (
+                      <p className="mt-1.5 text-[11px] text-stone-500 italic line-clamp-2">
+                        → {dayStories[0].title}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
 function RunoffPollsChart({ finalists }: { finalists: [Candidate, Candidate] }) {
   const ct = useChartTheme();
   const [a, b] = finalists;
@@ -578,7 +759,7 @@ function ProposalsCompare({ finalists }: { finalists: [Candidate, Candidate] }) 
   );
 }
 
-export function RunoffHomeClient({ finalists, articles, candidatesForPhotos }: RunoffHomeClientProps) {
+export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, briefings = [] }: RunoffHomeClientProps) {
   const country = useCountry();
   const finalistSlugSet = useMemo(
     () => new Set(finalists.map((f) => f.slug)),
@@ -601,6 +782,10 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos }: R
   return (
     <div className="space-y-6">
       <RunoffHero finalists={finalists} />
+
+      {briefings.length > 0 && (
+        <DayPulse briefings={briefings} finalists={finalists} />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
