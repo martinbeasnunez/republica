@@ -171,7 +171,7 @@ function FinalistPortrait({
             {candidate.shortName || candidate.name}
           </h2>
           <p className="text-xs text-stone-500 pt-0.5">
-            {candidate.profession} · {candidate.region} · {candidate.age} años
+            {candidate.age} años
           </p>
         </div>
 
