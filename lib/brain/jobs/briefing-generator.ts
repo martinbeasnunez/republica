@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CountryCode } from "@/lib/config/countries";
+import { getCountryConfig, isInRunoffPhase, type CountryCode } from "@/lib/config/countries";
 import { getOpenAI } from "@/lib/ai/openai";
 import { BRAIN_PROMPTS } from "@/lib/brain/prompts";
 import { logAction, logBriefing } from "@/lib/brain/audit";
+import { fetchElectionTimelines, type ParsedTimelineItem } from "@/lib/scraper/fetch-timelines";
 
 // =============================================================================
 // TYPES
@@ -68,7 +69,28 @@ export async function runBriefingGenerator(
 
     const todayStr = new Date().toISOString().split("T")[0];
 
+    // ─── Election day detection (use Peru/Colombia time, not UTC) ──
+    const config = getCountryConfig(countryCode);
+    const tz = countryCode === "pe" ? "America/Lima" : "America/Bogota";
+    const localDate = new Date().toLocaleDateString("en-CA", { timeZone: tz }); // YYYY-MM-DD
+    // Election window: election day + day after (ONPE count still in progress)
+    let isElectionDay = false;
+    if (config) {
+      if (localDate === config.electionDate) {
+        isElectionDay = true;
+      } else {
+        const elDate = new Date(config.electionDate + "T12:00:00");
+        const dayAfter = new Date(elDate);
+        dayAfter.setDate(dayAfter.getDate() + 1);
+        if (localDate === dayAfter.toISOString().split("T")[0]) {
+          isElectionDay = true;
+        }
+      }
+    }
+
     // ─── 1. Check if briefing already exists today ──────────
+    // On election day: UPDATE existing briefing instead of skipping
+    // On normal days: skip if already exists (idempotent)
     const { data: existing } = await supabase
       .from("brain_briefings")
       .select("id, editorial_summary")
@@ -76,7 +98,7 @@ export async function runBriefingGenerator(
       .eq("briefing_date", todayStr)
       .limit(1);
 
-    if (existing && existing.length > 0) {
+    if (existing && existing.length > 0 && !isElectionDay) {
       console.log(
         `[brain][briefing][${countryCode}] Briefing already exists for ${todayStr}, skipping`
       );
@@ -86,7 +108,56 @@ export async function runBriefingGenerator(
       return result;
     }
 
+    if (isElectionDay && existing && existing.length > 0) {
+      console.log(
+        `[brain][briefing][${countryCode}] Election day — updating existing briefing`
+      );
+    }
+
     // ─── 2. Gather context data ─────────────────────────────
+
+    // On election day, fetch ONLY today's articles for context
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let recentNews: any[] | null = null;
+    if (isElectionDay) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const { data } = await supabase
+        .from("news_articles")
+        .select("title, summary, source, published_at")
+        .eq("country_code", countryCode)
+        .gte("created_at", todayStart.toISOString())
+        .order("published_at", { ascending: false })
+        .limit(30);
+
+      recentNews = data;
+      if (recentNews && recentNews.length > 0) {
+        // REPLACE top stories with only today's articles — no old news
+        const todaysStories = recentNews
+          .map((n) => ({
+            title: n.title,
+            summary: n.summary || "",
+            source: n.source,
+            impact_score: 5,
+          }));
+        topStories = todaysStories;
+        console.log(`[brain][briefing][${countryCode}] Election day — using ${todaysStories.length} articles from today only`);
+      } else {
+        console.log(`[brain][briefing][${countryCode}] Election day — no articles from today, using curated top stories`);
+      }
+
+      // Fetch live timelines from news sites
+      const timelines = await fetchElectionTimelines(countryCode);
+      if (timelines.raw.length > 0) {
+        // Store timeline text as a special "article" for the AI
+        topStories.push({
+          title: "COBERTURA EN VIVO — Extractos de timelines de medios peruanos",
+          summary: timelines.raw.slice(0, 4000), // Cap at 4k chars to stay within token limits
+          source: timelines.entries.map((e) => e.source).join(", "),
+          impact_score: 10,
+        });
+      }
+    }
 
     // Poll movements: compare current vs 3 days ago
     const pollMovements = await getPollMovements(supabase, countryCode);
@@ -103,7 +174,8 @@ export async function runBriefingGenerator(
       topStories,
       pollMovements,
       recentFactChecks,
-      dataIssues
+      dataIssues,
+      isElectionDay
     );
 
     if (!aiResult) {
@@ -113,24 +185,133 @@ export async function runBriefingGenerator(
     }
 
     // ─── 4. Save briefing ───────────────────────────────────
-    const briefingId = await logBriefing(supabase, {
-      run_id: runId,
-      country_code: countryCode,
-      briefing_date: todayStr,
-      top_stories: topStories,
-      poll_movements: pollMovements,
-      new_fact_checks: recentFactChecks.map((fc) => ({
-        claim: fc.claim,
-        verdict: fc.verdict,
-      })),
-      editorial_summary: aiResult.editorial_summary,
-      data_issues: dataIssues,
-      health_status: {
-        last_scrape_ok: true, // TODO: check actual scrape health
-        last_verify_ok: true,
-        data_quality_score: 0.9,
-      },
-    });
+    // On election day, delete old briefing and create fresh one
+    // But preserve locked timeline if it exists
+    let briefingId: string | null = null;
+    let lockedTimeline: ParsedTimelineItem[] | null = null;
+    if (isElectionDay && existing && existing.length > 0) {
+      const existingId = existing[0].id;
+      // Check for locked timeline before deleting
+      const { data: prevData } = await supabase
+        .from("brain_briefings")
+        .select("health_status")
+        .eq("id", existingId)
+        .limit(1);
+      const prevHs = prevData?.[0]?.health_status as Record<string, unknown> | undefined;
+      if (prevHs?.timeline_locked === true && Array.isArray(prevHs?.timeline)) {
+        lockedTimeline = prevHs.timeline as ParsedTimelineItem[];
+        console.log(`[brain][briefing][${countryCode}] Preserving locked timeline (${lockedTimeline.length} entries)`);
+      }
+      await supabase
+        .from("brain_briefings")
+        .delete()
+        .eq("id", existingId);
+      console.log(`[brain][briefing][${countryCode}] Election day — deleted old briefing ${existingId}, creating fresh one`);
+    }
+    {
+      briefingId = await logBriefing(supabase, {
+        run_id: runId,
+        country_code: countryCode,
+        briefing_date: todayStr,
+        top_stories: topStories,
+        poll_movements: pollMovements,
+        new_fact_checks: recentFactChecks.map((fc) => ({
+          claim: fc.claim,
+          verdict: fc.verdict,
+        })),
+        editorial_summary: aiResult.editorial_summary,
+        data_issues: dataIssues,
+        health_status: {
+          last_scrape_ok: true,
+          last_verify_ok: true,
+          data_quality_score: 0.9,
+        },
+      });
+    }
+
+    // On election day, store key_takeaways + timeline
+    if (briefingId && isElectionDay) {
+      let timelineEntries: ParsedTimelineItem[] = [];
+
+      // 1. Get RPP liveblog entries
+      try {
+        const tl = await fetchElectionTimelines(countryCode);
+        if (tl.parsed.length > 0) {
+          timelineEntries = await summarizeTimelineBlocks(tl.parsed, countryCode);
+        }
+      } catch { /* skip */ }
+
+      // 2. Always add a "current" block from the AI briefing + latest news
+      const peruNow = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Lima" }));
+      const h = peruNow.getHours();
+      const halfHour = Math.floor(peruNow.getMinutes() / 30) * 30;
+      const period = h < 12 ? "a.m." : "p.m.";
+      const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+      const currentBlockTime = `${displayH}:${String(halfHour).padStart(2, "0")} ${period}`;
+
+      // Only add if we don't already have this block from RPP
+      if (!timelineEntries.some((t) => t.time === currentBlockTime)) {
+        // Use the editorial summary as the current block
+        const currentSummary = aiResult.editorial_summary || "";
+        if (currentSummary.length > 10) {
+          const sources = recentNews
+            ? [...new Set(recentNews.slice(0, 5).map((a) => a.source))].join(", ")
+            : "CONDOR AI";
+          timelineEntries.unshift({
+            time: currentBlockTime,
+            text: currentSummary,
+            source: sources,
+          });
+        }
+      }
+
+      // 3. Preserve previous blocks from DB
+      try {
+        const { data: prev } = await supabase
+          .from("brain_briefings")
+          .select("health_status")
+          .eq("id", briefingId)
+          .limit(1);
+        const prevTl = (prev?.[0]?.health_status as Record<string, unknown>)?.timeline as ParsedTimelineItem[] | undefined;
+        if (prevTl) {
+          for (const old of prevTl) {
+            if (!timelineEntries.some((t) => t.time === old.time)) {
+              timelineEntries.push(old);
+            }
+          }
+        }
+      } catch { /* skip */ }
+
+      // Sort descending
+      timelineEntries.sort((a, b) => {
+        const parseT = (t: string) => {
+          const parts = t.match(/(\d{1,2}):(\d{2})/);
+          if (!parts) return 0;
+          let hr = parseInt(parts[1]);
+          const mn = parseInt(parts[2]);
+          if (t.includes("p.m.") && hr !== 12) hr += 12;
+          return hr * 60 + mn;
+        };
+        return parseT(b.time) - parseT(a.time);
+      });
+
+      // Use locked timeline if preserved from before delete, otherwise use generated
+      const finalTimeline = lockedTimeline || timelineEntries;
+
+      await supabase
+        .from("brain_briefings")
+        .update({
+          health_status: {
+            last_scrape_ok: true,
+            last_verify_ok: true,
+            data_quality_score: 0.9,
+            key_takeaways: aiResult.key_takeaways || [],
+            timeline: finalTimeline,
+            ...(lockedTimeline ? { timeline_locked: true } : {}),
+          },
+        })
+        .eq("id", briefingId);
+    }
 
     result.briefing_id = briefingId;
     result.editorial_summary = aiResult.editorial_summary;
@@ -166,6 +347,94 @@ export async function runBriefingGenerator(
 }
 
 // =============================================================================
+// TIMELINE SUMMARIZER
+// =============================================================================
+
+/**
+ * Group timeline entries into ~30 min blocks and summarize each with AI.
+ * Returns summarized entries like:
+ *   "9:00 - 9:30 a.m." → "3 key things that happened"
+ */
+async function summarizeTimelineBlocks(
+  entries: ParsedTimelineItem[],
+  countryCode: CountryCode
+): Promise<ParsedTimelineItem[]> {
+  const openai = getOpenAI();
+
+  // Parse time to minutes for grouping
+  const parseMinutes = (t: string): number => {
+    const parts = t.match(/(\d{1,2}):(\d{2})/);
+    if (!parts) return 0;
+    let h = parseInt(parts[1]);
+    const m = parseInt(parts[2]);
+    if (t.toLowerCase().includes("p.m") && h !== 12) h += 12;
+    if (t.toLowerCase().includes("a.m") && h === 12) h = 0;
+    return h * 60 + m;
+  };
+
+  // Group into 30-min blocks
+  const blocks = new Map<string, ParsedTimelineItem[]>();
+  for (const entry of entries) {
+    const mins = parseMinutes(entry.time);
+    const blockStart = Math.floor(mins / 30) * 30;
+    const h = Math.floor(blockStart / 60);
+    const m = blockStart % 60;
+    const period = h < 12 ? "a.m." : "p.m.";
+    const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    const blockKey = `${displayH}:${String(m).padStart(2, "0")} ${period}`;
+    if (!blocks.has(blockKey)) blocks.set(blockKey, []);
+    blocks.get(blockKey)!.push(entry);
+  }
+
+  // Summarize each block with AI
+  const results: ParsedTimelineItem[] = [];
+  const sortedBlocks = [...blocks.entries()].sort((a, b) => {
+    return parseMinutes(b[0]) - parseMinutes(a[0]); // most recent first
+  });
+
+  for (const [blockTime, blockEntries] of sortedBlocks.slice(0, 8)) {
+    const sources = [...new Set(blockEntries.map((e) => e.source))];
+    const entriesText = blockEntries.map((e) => `- ${e.text}`).join("\n");
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "Eres un editor de noticias. Resume las siguientes entradas de un timeline electoral en EXACTAMENTE 2-3 frases cortas y concretas. Solo hechos, sin opinión. En español. Máximo 150 caracteres por frase. NO uses bullet points, solo texto corrido separado por puntos.",
+          },
+          {
+            role: "user",
+            content: `Entradas del bloque ${blockTime}:\n${entriesText}`,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 200,
+      });
+
+      const summary = completion.choices[0]?.message?.content?.trim();
+      if (summary && summary.length > 10) {
+        results.push({
+          time: blockTime,
+          text: summary,
+          source: sources.join(", "),
+        });
+      }
+    } catch {
+      // If AI fails, use first entry as fallback
+      results.push({
+        time: blockTime,
+        text: blockEntries[0].text.slice(0, 180),
+        source: sources.join(", "),
+      });
+    }
+  }
+
+  return results;
+}
+
+// =============================================================================
 // DATA GATHERING
 // =============================================================================
 
@@ -177,12 +446,26 @@ async function getPollMovements(
   countryCode: CountryCode
 ): Promise<PollMovement[]> {
   try {
-    const { data: candidates } = await supabase
+    // In runoff phase, restrict movements to the two finalists so the AI doesn't
+    // anchor the editorial summary on candidates that were eliminated in round 1.
+    const config = getCountryConfig(countryCode);
+    const runoffActive = isInRunoffPhase(countryCode) && config?.runoffCandidateSlugs;
+
+    let candidatesQuery = supabase
       .from("candidates")
-      .select("id, short_name, poll_average, poll_trend")
+      .select("id, short_name, poll_average, poll_trend, slug")
       .eq("is_active", true)
       .eq("country_code", countryCode)
       .order("poll_average", { ascending: false });
+
+    if (runoffActive) {
+      candidatesQuery = candidatesQuery.in(
+        "slug",
+        config!.runoffCandidateSlugs as unknown as string[]
+      );
+    }
+
+    const { data: candidates } = await candidatesQuery;
 
     if (!candidates) return [];
 
@@ -287,7 +570,8 @@ async function generateBriefing(
   topStories: TopStory[],
   pollMovements: PollMovement[],
   factChecks: Array<{ claim: string; verdict: string }>,
-  dataIssues: DataIssue[]
+  dataIssues: DataIssue[],
+  isElectionDay = false
 ): Promise<{ editorial_summary: string; key_takeaways: string[] } | null> {
   const openai = getOpenAI();
 
@@ -306,7 +590,8 @@ async function generateBriefing(
     );
   }
 
-  if (pollMovements.length > 0) {
+  // On election day, polls are irrelevant — skip them
+  if (!isElectionDay && pollMovements.length > 0) {
     const notable = pollMovements.filter((p) => p.direction !== "stable");
     if (notable.length > 0) {
       sections.push(
@@ -353,11 +638,15 @@ async function generateBriefing(
       messages: [
         {
           role: "system",
-          content: BRAIN_PROMPTS.briefingWriter(countryCode),
+          content: isElectionDay
+            ? BRAIN_PROMPTS.electionDayAnalyst(countryCode)
+            : BRAIN_PROMPTS.briefingWriter(countryCode),
         },
         {
           role: "user",
-          content: `Genera el briefing editorial del dia basandote en:\n\n${sections.join("\n\n")}`,
+          content: isElectionDay
+            ? `HORA ACTUAL: ${new Date().toLocaleTimeString("es-PE", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit" })} (hora de Lima).\n\nGenera el análisis EN VIVO de la jornada electoral basándote en:\n\n${sections.join("\n\n")}`
+            : `Genera el briefing editorial del dia basandote en:\n\n${sections.join("\n\n")}`,
         },
       ],
       response_format: { type: "json_object" },
