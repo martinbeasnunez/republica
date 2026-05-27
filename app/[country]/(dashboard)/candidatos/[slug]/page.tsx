@@ -4,7 +4,7 @@ import { fetchCandidateBySlug } from "@/lib/data/candidates";
 import { CandidateProfileClient } from "./candidate-profile-client";
 import { CandidateJsonLd, BreadcrumbJsonLd, FAQPageJsonLd } from "@/components/seo/json-ld";
 import { IDEOLOGY_LABELS } from "@/lib/data/candidates";
-import { getCountryConfig } from "@/lib/config/countries";
+import { getCountryConfig, isInRunoffPhase, type CountryCode } from "@/lib/config/countries";
 import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 
 export async function generateMetadata({ params }: { params: Promise<{ country: string; slug: string }> }): Promise<Metadata> {
@@ -53,8 +53,15 @@ export default async function CandidateProfilePage({
   }
 
   const config = getCountryConfig(country);
-  const domain = config?.domain ?? "condorlatam.com";
+  const domain = config?.domain ?? "www.condorlatam.com";
   const countryName = config?.name ?? "Perú";
+
+  let runoffStatus: "finalist" | "eliminated" | undefined;
+  if (isInRunoffPhase(country as CountryCode) && config?.runoffCandidateSlugs) {
+    runoffStatus = config.runoffCandidateSlugs.includes(slug)
+      ? "finalist"
+      : "eliminated";
+  }
 
   return (
     <>
@@ -115,7 +122,7 @@ export default async function CandidateProfilePage({
           return faqs;
         })()}
       />
-      <CandidateProfileClient candidate={candidate} />
+      <CandidateProfileClient candidate={candidate} runoffStatus={runoffStatus} />
     </>
   );
 }

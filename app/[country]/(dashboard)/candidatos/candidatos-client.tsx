@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Grid3X3, List, SlidersHorizontal } from "lucide-react";
+import { Search, Filter, Grid3X3, List, SlidersHorizontal, Vote } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,15 +20,41 @@ const ideologies: Ideology[] = [
   "derecha",
 ];
 
-export function CandidatosClient({ candidates }: { candidates: Candidate[] }) {
+interface CandidatosClientProps {
+  candidates: Candidate[];
+  /** Slugs of the two finalists; when set the page splits into Finalistas + Eliminados. */
+  runoffSlugs?: [string, string];
+  runoffDateLabel?: string;
+}
+
+export function CandidatosClient({ candidates, runoffSlugs, runoffDateLabel }: CandidatosClientProps) {
   const country = useCountry();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIdeology, setSelectedIdeology] = useState<Ideology | null>(null);
   const [sortBy, setSortBy] = useState<"poll" | "name" | "party">("poll");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  const finalistSet = useMemo(
+    () => new Set(runoffSlugs ?? []),
+    [runoffSlugs]
+  );
+
+  const finalists = useMemo(() => {
+    if (!runoffSlugs) return [] as Candidate[];
+    // Keep them in the order declared (a, b) in config so the leading candidate is anchored consistently.
+    return runoffSlugs
+      .map((slug) => candidates.find((c) => c.slug === slug))
+      .filter(Boolean) as Candidate[];
+  }, [candidates, runoffSlugs]);
+
+  const otherCandidates = useMemo(
+    () => candidates.filter((c) => !finalistSet.has(c.slug)),
+    [candidates, finalistSet]
+  );
+
   const filteredCandidates = useMemo(() => {
-    let result = [...candidates];
+    // When in runoff mode, the filters operate only on the "eliminated" pool.
+    let result = runoffSlugs ? [...otherCandidates] : [...candidates];
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -57,7 +83,9 @@ export function CandidatosClient({ candidates }: { candidates: Candidate[] }) {
     }
 
     return result;
-  }, [candidates, searchQuery, selectedIdeology, sortBy]);
+  }, [candidates, otherCandidates, runoffSlugs, searchQuery, selectedIdeology, sortBy]);
+
+  const inRunoff = runoffSlugs && finalists.length === 2;
 
   return (
     <div className="space-y-6">
@@ -70,7 +98,9 @@ export function CandidatosClient({ candidates }: { candidates: Candidate[] }) {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Candidatos</h1>
           <p className="text-sm text-muted-foreground">
-            {candidates.length} candidatos presidenciales habilitados para 2026
+            {inRunoff
+              ? `2 finalistas en segunda vuelta · ${otherCandidates.length} eliminados en 1ra vuelta`
+              : `${candidates.length} candidatos presidenciales habilitados para 2026`}
           </p>
         </div>
         <Link href={`/${country.code}/candidatos/comparar`}>
@@ -80,6 +110,41 @@ export function CandidatosClient({ candidates }: { candidates: Candidate[] }) {
           </Button>
         </Link>
       </motion.div>
+
+      {/* Finalistas section (runoff mode only) */}
+      {inRunoff && (
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card p-5 sm:p-6"
+        >
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1">
+                <Vote className="h-3.5 w-3.5 text-primary-foreground" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-primary-foreground">
+                  Finalistas
+                </span>
+              </span>
+              <span className="text-xs font-semibold text-muted-foreground">
+                Segunda vuelta {runoffDateLabel ? `· ${runoffDateLabel}` : ""}
+              </span>
+            </div>
+            <Link
+              href={`/${country.code}`}
+              className="text-[11px] text-primary font-bold hover:underline"
+            >
+              Ver matchup en home →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {finalists.map((c, i) => (
+              <CandidateCard key={c.id} candidate={c} index={i} isFinalist />
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       {/* Filters bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -158,6 +223,18 @@ export function CandidatosClient({ candidates }: { candidates: Candidate[] }) {
         ))}
       </div>
 
+      {/* Section header for the rest */}
+      {inRunoff && (
+        <div className="pt-2 border-t border-border/40">
+          <h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground mt-4">
+            Eliminados en 1ra vuelta
+          </h2>
+          <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+            Archivo de los {otherCandidates.length} candidatos que no avanzaron al balotaje. Sus perfiles siguen disponibles para referencia.
+          </p>
+        </div>
+      )}
+
       {/* Results count */}
       <p className="text-xs text-muted-foreground">
         {filteredCandidates.length} candidato
@@ -179,6 +256,7 @@ export function CandidatosClient({ candidates }: { candidates: Candidate[] }) {
             candidate={candidate}
             index={index}
             rank={sortBy === "poll" ? index + 1 : undefined}
+            isEliminated={inRunoff}
           />
         ))}
       </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { isValidCountry, getCountryConfig } from "@/lib/config/countries";
+import { isValidCountry, getCountryConfig, isInRunoffPhase, type CountryCode } from "@/lib/config/countries";
 import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
 import { FAQPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { notFound } from "next/navigation";
@@ -46,10 +46,17 @@ export default async function QuizPage({
     notFound();
   }
 
-  const candidates = await fetchCandidates(country);
+  const allCandidates = await fetchCandidates(country);
   const config = getCountryConfig(country);
   const name = config?.name ?? "Perú";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
+
+  // When the country is in runoff phase, restrict the quiz to the two finalists
+  // so the matching is a head-to-head ("which finalist represents you more?").
+  const runoffActive = isInRunoffPhase(country as CountryCode) && config?.runoffCandidateSlugs;
+  const candidates = runoffActive
+    ? allCandidates.filter((c) => config!.runoffCandidateSlugs!.includes(c.slug))
+    : allCandidates;
 
   const faqQuestions = [
     {
@@ -70,12 +77,95 @@ export default async function QuizPage({
     <>
       <BreadcrumbJsonLd
         items={[
-          { name: "CONDOR", url: `https://condorlatam.com/${country}` },
-          { name: "Quiz Electoral", url: `https://condorlatam.com/${country}/quiz` },
+          { name: "CONDOR", url: `https://www.condorlatam.com/${country}` },
+          { name: "Quiz Electoral", url: `https://www.condorlatam.com/${country}/quiz` },
         ]}
       />
       <FAQPageJsonLd questions={faqQuestions} />
-      <QuizClient candidates={candidates} />
+      <QuizClient candidates={candidates} runoffMode={!!runoffActive} />
+
+      {country === "pe" && (
+        <section className="mt-12 border-t border-border/30 pt-8 pb-4 max-w-3xl mx-auto">
+          <h2 className="text-lg font-bold text-foreground mb-3">
+            Quiz Electoral Perú 2026: Descubre por Quién Votar
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            ¿No sabes por quién votar en las elecciones presidenciales de Perú
+            2026? El Quiz Electoral de CONDOR te ayuda a descubrir qué candidato
+            se parece más a tus ideas. Responde 10 preguntas sobre los temas más
+            importantes del debate electoral — economía, seguridad ciudadana,
+            educación, salud, medio ambiente, reforma política, lucha contra la
+            corrupción y derechos sociales — y nuestro algoritmo calculará tu
+            porcentaje de compatibilidad con cada candidato presidencial
+            inscrito.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            El test electoral es completamente anónimo y gratuito: no
+            recopilamos datos personales ni almacenamos tus respuestas. El
+            algoritmo de compatibilidad compara tus posiciones con las
+            propuestas públicas y declaraciones verificadas de los candidatos,
+            utilizando inteligencia artificial para mantener la información
+            actualizada. Al terminar, obtienes un ranking personalizado con tu
+            porcentaje de afinidad con cada candidato, que puedes compartir en
+            redes sociales.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            Este quiz es una herramienta orientativa para votantes indecisos.
+            Recomendamos complementar los resultados revisando los perfiles
+            completos de los candidatos, sus planes de gobierno y el verificador
+            de hechos de CONDOR. Con más de 35 candidatos en la primera vuelta
+            del 12 de abril de 2026, contar con herramientas de información
+            electoral es clave para un voto consciente e informado.
+          </p>
+          <p className="text-xs text-muted-foreground/50 mt-4">
+            Última actualización: marzo 2026. Quiz desarrollado por CONDOR AI
+            con datos verificados de propuestas y declaraciones públicas.
+          </p>
+        </section>
+      )}
+
+      {country === "co" && (
+        <section className="mt-12 border-t border-border/30 pt-8 pb-4 max-w-3xl mx-auto">
+          <h2 className="text-lg font-bold text-foreground mb-3">
+            Quiz Electoral Colombia 2026: Descubre por Quién Votar
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            ¿No sabes por quién votar en las elecciones presidenciales de
+            Colombia 2026? El Quiz Electoral de CONDOR te ayuda a descubrir qué
+            candidato se alinea más con tus ideas. Responde 10 preguntas sobre
+            los temas centrales del debate colombiano — implementación del
+            Acuerdo de Paz, seguridad ciudadana, reforma agraria, política
+            económica, salud, educación, medio ambiente y lucha contra la
+            corrupción — y nuestro algoritmo calculará tu porcentaje de
+            compatibilidad con cada candidato presidencial, desde Iván Cepeda
+            y Abelardo de la Espriella hasta Claudia López y Daniel Quintero.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            El test electoral es completamente anónimo y gratuito: no
+            recopilamos datos personales ni almacenamos tus respuestas. El
+            algoritmo de compatibilidad compara tus posiciones con las
+            propuestas públicas y declaraciones verificadas de los candidatos
+            colombianos, utilizando inteligencia artificial para mantener la
+            información actualizada. Al terminar, obtienes un ranking
+            personalizado con tu porcentaje de afinidad con cada candidato,
+            que puedes compartir en redes sociales.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+            Este quiz es una herramienta orientativa para votantes indecisos
+            en Colombia. Recomendamos complementar los resultados revisando los
+            perfiles completos de los candidatos, sus planes de gobierno y el
+            verificador de hechos de CONDOR. En un escenario político
+            polarizado tras el gobierno de Gustavo Petro, contar con
+            herramientas de información electoral es clave para un voto
+            consciente e informado en las elecciones colombianas de 2026.
+          </p>
+          <p className="text-xs text-muted-foreground/50 mt-4">
+            Última actualización: marzo 2026. Quiz desarrollado por CONDOR AI
+            con datos verificados de propuestas y declaraciones públicas de
+            candidatos colombianos.
+          </p>
+        </section>
+      )}
     </>
   );
 }

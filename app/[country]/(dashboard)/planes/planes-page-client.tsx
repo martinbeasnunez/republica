@@ -11,10 +11,13 @@ import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 
 interface PlanesPageClientProps {
   candidates: Candidate[];
+  /** Slugs of the runoff finalists. When set, the page defaults to the comparator tab with both pre-selected. */
+  runoffSlugs?: [string, string];
 }
 
-export function PlanesPageClient({ candidates }: PlanesPageClientProps) {
-  const [tab, setTab] = useState("planes");
+export function PlanesPageClient({ candidates, runoffSlugs }: PlanesPageClientProps) {
+  const [tab, setTab] = useState(runoffSlugs ? "comparar" : "planes");
+  const inRunoff = !!runoffSlugs;
 
   return (
     <div className="space-y-6">
@@ -30,7 +33,9 @@ export function PlanesPageClient({ candidates }: PlanesPageClientProps) {
           </h1>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-          Explora y compara los planes de gobierno de cada candidato
+          {inRunoff
+            ? "Comparador del balotaje: propuestas de los dos finalistas lado a lado"
+            : "Explora y compara los planes de gobierno de cada candidato"}
         </p>
       </motion.div>
 
@@ -86,7 +91,7 @@ export function PlanesPageClient({ candidates }: PlanesPageClientProps) {
         </TabsContent>
 
         <TabsContent value="comparar" className="mt-4">
-          <CompararPlanesClient candidates={candidates} />
+          <CompararPlanesClient candidates={candidates} initialSelectedSlugs={runoffSlugs} />
         </TabsContent>
       </Tabs>
 

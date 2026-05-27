@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fetchCandidates } from "@/lib/data/candidates";
 import { getCountrySeo, getCountryKeywords } from "@/lib/seo/metadata";
+import { getCountryConfig, isInRunoffPhase, type CountryCode } from "@/lib/config/countries";
 import { PlanesPageClient } from "./planes-page-client";
 
 export async function generateMetadata({
@@ -34,6 +35,10 @@ export default async function PlanesPage({
 }) {
   const { country } = await params;
   const candidates = await fetchCandidates(country);
+  const config = getCountryConfig(country);
+  const runoffSlugs = isInRunoffPhase(country as CountryCode) && config?.runoffCandidateSlugs
+    ? config.runoffCandidateSlugs
+    : undefined;
 
-  return <PlanesPageClient candidates={candidates} />;
+  return <PlanesPageClient candidates={candidates} runoffSlugs={runoffSlugs} />;
 }

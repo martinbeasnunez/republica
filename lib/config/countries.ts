@@ -318,6 +318,31 @@ const COLOMBIA_CONFIG: CountryConfig = {
 - FINANCIAMIENTO: El Estado financia parcialmente las campañas (reposición de votos). Hay topes de gasto.
 - ENCUESTAS: Deben ser publicadas con ficha técnica completa. Prohibida su publicación 7 días antes de la elección (ley de "veda de encuestas").`,
 
+  events: [
+    {
+      id: "co-primera-vuelta",
+      type: "debate",
+      title: "Día E — Primera Vuelta Presidencial Colombia 2026",
+      date: "2026-05-31",
+      startTime: "08:00",
+      endTime: "16:00",
+      organizer: "Registraduría Nacional",
+      topics: ["Elección Presidencial"],
+      broadcastChannels: ["Canal Uno", "Caracol TV", "RCN", "Señal Colombia"],
+    },
+    {
+      id: "co-segunda-vuelta",
+      type: "debate",
+      title: "Día E — Segunda Vuelta Presidencial Colombia 2026",
+      date: "2026-06-21",
+      startTime: "08:00",
+      endTime: "16:00",
+      organizer: "Registraduría Nacional",
+      topics: ["Balotaje Presidencial"],
+      broadcastChannels: ["Canal Uno", "Caracol TV", "RCN", "Señal Colombia"],
+    },
+  ],
+
   domain: "www.condorlatam.com",
 };
 

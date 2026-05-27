@@ -8,6 +8,7 @@ import { useChartTheme } from "@/lib/echarts-theme";
 import { TrendingUp, TrendingDown, Minus, Info, AlertTriangle } from "lucide-react";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 import { useCountry } from "@/lib/config/country-context";
+import { cn } from "@/lib/utils";
 import {
   getSourceInfo,
   getPollsterColor,
@@ -35,15 +36,35 @@ function formatShortDate(dateStr: string): string {
   return d.toLocaleDateString("es", { day: "numeric", month: "short" });
 }
 
-export default function EncuestasClient({ candidates }: { candidates: Candidate[] }) {
+interface EncuestasClientProps {
+  candidates: Candidate[];
+  runoffSlugs?: [string, string];
+}
+
+export default function EncuestasClient({ candidates, runoffSlugs }: EncuestasClientProps) {
   const ct = useChartTheme();
   const country = useCountry();
   const topCandidates = candidates;
+
+  const finalists = runoffSlugs
+    ? (runoffSlugs.map((slug) => candidates.find((c) => c.slug === slug)).filter(Boolean) as Candidate[])
+    : [];
+  const inRunoff = runoffSlugs && finalists.length === 2;
+  const [finA, finB] = finalists;
+  const matchupDelta = inRunoff ? Math.abs(finA.pollAverage - finB.pollAverage) : 0;
+  const matchupLeader = inRunoff
+    ? (finA.pollAverage >= finB.pollAverage ? finA : finB)
+    : null;
 
   // === Source detection ===
   const allPolls = topCandidates.flatMap((c) => c.pollHistory);
   const sourceInfo = getSourceInfo(allPolls);
   const pollsterMeta = POLLSTER_META[country.code] || {};
+
+  // === Last update date ===
+  const lastPollDate = allPolls.length > 0
+    ? allPolls.reduce((latest, p) => (p.date > latest ? p.date : latest), allPolls[0].date)
+    : null;
 
   // === Build date-aware data ===
   const withData = topCandidates.filter(
@@ -362,17 +383,52 @@ export default function EncuestasClient({ candidates }: { candidates: Candidate[
     })
   );
 
+  // ── Veda electoral: 7 días antes de la elección, las encuestadoras no pueden
+  //    publicar nuevos resultados (CO y PE). Mostramos un banner avisando.
+  const electionDate = new Date(country.electionDate + "T12:00:00");
+  const now = new Date();
+  const daysToElection = Math.floor((electionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const inVeda = daysToElection >= 0 && daysToElection <= 7;
+  const electionDateFormatted = electionDate.toLocaleDateString(country.locale.replace("_", "-"), {
+    day: "numeric",
+    month: "long",
+  });
+
   return (
     <div className="space-y-6">
+      {inVeda && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-950/60 via-amber-900/30 to-stone-900/40 px-5 py-4"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-amber-200">
+                VEDA ELECTORAL ACTIVA
+              </p>
+              <p className="text-xs text-amber-100/80 leading-relaxed">
+                A {daysToElection} día{daysToElection === 1 ? "" : "s"} de la elección ({electionDateFormatted}).
+                Por ley, las encuestadoras no pueden publicar nuevos resultados durante los 7 días previos a la votación.
+                Los datos mostrados corresponden a la última encuesta válida.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-foreground">
-            {sourceInfo.isSingleSource
-              ? `Encuestas — ${sourceInfo.sourceName}`
-              : "Agregador de Encuestas"}
+            {inRunoff
+              ? "Encuestas Segunda Vuelta"
+              : sourceInfo.isSingleSource
+                ? `Encuestas — ${sourceInfo.sourceName}`
+                : "Agregador de Encuestas"}
           </h1>
           {sourceInfo.isSingleSource && (
             <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-mono font-medium text-amber-400">
@@ -382,11 +438,107 @@ export default function EncuestasClient({ candidates }: { candidates: Candidate[
           )}
         </div>
         <p className="text-sm text-muted-foreground">
-          {sourceInfo.isSingleSource
-            ? `Resultado de ${sourceInfo.sourceName} para ${country.name}. Promedios de múltiples firmas son más confiables.`
-            : `Promedio ponderado de ${sourceInfo.sourceCount} encuestadoras de ${country.name}`}
+          {inRunoff
+            ? `Balotaje ${finA.shortName} vs ${finB.shortName} · ${sourceInfo.sourceCount} encuestadoras seguidas`
+            : sourceInfo.isSingleSource
+              ? `Resultado de ${sourceInfo.sourceName} para ${country.name}. Promedios de múltiples firmas son más confiables.`
+              : `Promedio ponderado de ${sourceInfo.sourceCount} encuestadoras de ${country.name}`}
         </p>
+        {lastPollDate && (
+          <p className="text-xs text-muted-foreground/70 mt-1 font-mono">
+            Última encuesta: {new Date(lastPollDate + "T12:00:00").toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" })}
+            {" · "}
+            {sourceInfo.pollsterNames.join(", ")}
+          </p>
+        )}
       </motion.div>
+
+      {/* Runoff matchup hero */}
+      {inRunoff && matchupLeader && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <Card className="bg-gradient-to-br from-primary/10 via-card to-card border-2 border-primary/30 overflow-hidden">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow">
+                    Balotaje
+                  </span>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Promedio actual de encuestadoras
+                  </span>
+                </div>
+                <span className="text-[11px] text-muted-foreground font-mono">
+                  Δ {matchupDelta.toFixed(1)} pp
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {finalists.map((c) => {
+                  const isLeader = c.id === matchupLeader.id;
+                  return (
+                    <div
+                      key={c.id}
+                      className={cn(
+                        "rounded-xl p-4 border-2 bg-card",
+                        isLeader ? "border-primary/60" : "border-border"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: c.partyColor }}
+                        />
+                        <span className="text-sm font-bold text-foreground truncate">
+                          {c.shortName || c.name}
+                        </span>
+                        {isLeader && (
+                          <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-primary">
+                            Arriba
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mb-2">{c.party}</p>
+                      <div className="font-mono text-3xl sm:text-4xl font-black tabular-nums text-foreground">
+                        {c.pollAverage.toFixed(1)}<span className="text-base text-muted-foreground">%</span>
+                      </div>
+                      <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            backgroundColor: c.partyColor,
+                            width: `${Math.min(100, (c.pollAverage / 60) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="text-[11px] text-muted-foreground mt-3 leading-snug">
+                {matchupDelta < 5
+                  ? <>Carrera <strong>muy reñida</strong>: la diferencia ({matchupDelta.toFixed(1)} pp) cae dentro del margen de error de la mayoría de encuestas (±{DEFAULT_MOE} pp).</>
+                  : <>{matchupLeader.shortName} lidera por {matchupDelta.toFixed(1)} puntos en el promedio.</>}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {inRunoff && (
+        <div className="pt-2">
+          <h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground">
+            Histórico — 1ra vuelta
+          </h2>
+          <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+            Promedios y series de tiempo para los principales candidatos durante la primera vuelta.
+          </p>
+        </div>
+      )}
 
       {/* "Si las elecciones fueran hoy" */}
       <Card className="bg-card border-border overflow-hidden">

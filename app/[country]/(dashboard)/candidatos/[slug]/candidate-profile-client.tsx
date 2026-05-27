@@ -19,6 +19,8 @@ import {
   Scale,
   Scan,
   ChevronRight,
+  Vote,
+  CircleSlash,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,9 +40,11 @@ const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
 interface CandidateProfileClientProps {
   candidate: Candidate;
+  /** Marks this candidate's status in the runoff (only set during the runoff window). */
+  runoffStatus?: "finalist" | "eliminated";
 }
 
-export function CandidateProfileClient({ candidate }: CandidateProfileClientProps) {
+export function CandidateProfileClient({ candidate, runoffStatus }: CandidateProfileClientProps) {
   const country = useCountry();
   const ct = useChartTheme();
 
@@ -146,6 +150,18 @@ export function CandidateProfileClient({ candidate }: CandidateProfileClientProp
             <div className="flex-1">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div>
+                  {runoffStatus === "finalist" && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 mb-2 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow">
+                      <Vote className="h-3 w-3" />
+                      Finalista — 2da Vuelta
+                    </span>
+                  )}
+                  {runoffStatus === "eliminated" && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <CircleSlash className="h-3 w-3" />
+                      Eliminado en 1ra vuelta
+                    </span>
+                  )}
                   <h1 className="text-xl font-bold text-foreground sm:text-3xl">
                     {candidate.name}
                   </h1>

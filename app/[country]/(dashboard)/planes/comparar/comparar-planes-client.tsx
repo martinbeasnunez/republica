@@ -291,12 +291,19 @@ function CategoryCard({
 
 interface CompararPlanesClientProps {
   candidates: Candidate[];
+  /** Optional candidate slugs to pre-select when the page loads (e.g. runoff finalists). */
+  initialSelectedSlugs?: string[];
 }
 
-export function CompararPlanesClient({ candidates }: CompararPlanesClientProps) {
+export function CompararPlanesClient({ candidates, initialSelectedSlugs }: CompararPlanesClientProps) {
   const country = useCountry();
   const authority = ELECTORAL_AUTHORITY[country.code] ?? "JNE";
-  const [selected, setSelected] = useState<Candidate[]>([]);
+  const [selected, setSelected] = useState<Candidate[]>(() => {
+    if (!initialSelectedSlugs || initialSelectedSlugs.length === 0) return [];
+    return initialSelectedSlugs
+      .map((slug) => candidates.find((c) => c.slug === slug))
+      .filter(Boolean) as Candidate[];
+  });
 
   const toggleCandidate = (candidate: Candidate) => {
     if (selected.find((c) => c.id === candidate.id)) {

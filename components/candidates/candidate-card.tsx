@@ -2,20 +2,25 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, User } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Candidate } from "@/lib/data/candidates";
 import { IDEOLOGY_LABELS } from "@/lib/data/candidates";
 import Link from "next/link";
 import { useCountry } from "@/lib/config/country-context";
+import { CandidatePhoto } from "@/components/candidates/candidate-photo";
 
 interface CandidateCardProps {
   candidate: Candidate;
   index: number;
   rank?: number;
+  /** Show "Finalista 2da vuelta" treatment (highlighted border, badge) */
+  isFinalist?: boolean;
+  /** Show "Eliminado en 1ra vuelta" muted treatment */
+  isEliminated?: boolean;
 }
 
-export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
+export function CandidateCard({ candidate, index, rank, isFinalist, isEliminated }: CandidateCardProps) {
   const country = useCountry();
   const trendIcon = {
     up: <TrendingUp className="h-3 w-3 text-emerald" />,
@@ -30,16 +35,33 @@ export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
       transition={{ duration: 0.3, delay: index * 0.05 }}
     >
       <Link href={`/${country.code}/candidatos/${candidate.slug}`}>
-        <div className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+        <div className={cn(
+          "group relative overflow-hidden rounded-xl border bg-card transition-all duration-300 hover:shadow-lg",
+          isFinalist
+            ? "border-primary/60 ring-2 ring-primary/20 hover:border-primary hover:shadow-primary/10"
+            : isEliminated
+              ? "border-border/50 opacity-75 hover:opacity-100 hover:border-primary/30"
+              : "border-border hover:border-primary/30 hover:shadow-primary/5"
+        )}>
           {/* Top color band */}
           <div
-            className="h-1 w-full"
+            className={cn("w-full", isFinalist ? "h-1.5" : "h-1")}
             style={{ backgroundColor: candidate.partyColor }}
           />
 
           <div className="p-5">
+            {/* Finalist badge */}
+            {isFinalist && (
+              <div className="absolute top-3 right-3">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-primary-foreground shadow">
+                  <Vote className="h-2.5 w-2.5" />
+                  Finalista
+                </span>
+              </div>
+            )}
+
             {/* Rank badge */}
-            {rank && (
+            {!isFinalist && rank && (
               <div className="absolute top-3 right-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted font-mono text-xs font-bold text-muted-foreground">
                   #{rank}
@@ -56,18 +78,12 @@ export function CandidateCard({ candidate, index, rank }: CandidateCardProps) {
                   borderColor: candidate.partyColor,
                 }}
               >
-                {candidate.photo && (candidate.photo.startsWith("http") || candidate.photo.startsWith("/")) ? (
-                  <img
-                    src={candidate.photo}
-                    alt={candidate.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <User
-                    className="h-7 w-7"
-                    style={{ color: candidate.partyColor }}
-                  />
-                )}
+                <CandidatePhoto
+                  photo={candidate.photo}
+                  name={candidate.name}
+                  partyColor={candidate.partyColor}
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors truncate">

@@ -15,6 +15,8 @@ import {
   Vote,
   Users,
   MapPin,
+  ArrowUpRight,
+  Scale,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -64,7 +66,12 @@ function useCountdown(target: Date) {
   return { days, hours, minutes, seconds, diff };
 }
 
-function FinalistCard({
+/**
+ * FinalistPortrait — the editorial half of the head-to-head hero.
+ * Designed to feel like an election-night magazine spread: party color floods the panel,
+ * portrait dominates, candidate name in display typography, poll % as huge serifable numeral.
+ */
+function FinalistPortrait({
   candidate,
   side,
   leading,
@@ -74,70 +81,204 @@ function FinalistCard({
   leading: boolean;
 }) {
   const TrendIcon = TREND_ICON[candidate.pollTrend];
+  const isLeft = side === "left";
   return (
     <Link
       href={`/pe/candidatos/${candidate.slug}`}
       className={cn(
-        "group relative flex-1 rounded-2xl border-2 bg-card/95 backdrop-blur p-5 sm:p-6 transition-all hover:shadow-xl",
-        leading
-          ? "border-primary shadow-lg shadow-primary/20"
-          : "border-border hover:border-primary/40"
+        "group relative flex-1 overflow-hidden block",
+        // Mobile: padding box; Desktop: edge-to-edge half
+        "p-5 sm:p-6 md:p-8"
       )}
+      style={{
+        // Subtle party-color wash that bleeds in from the candidate's outer edge.
+        background: isLeft
+          ? `linear-gradient(135deg, ${candidate.partyColor}26 0%, ${candidate.partyColor}08 40%, transparent 80%)`
+          : `linear-gradient(-135deg, ${candidate.partyColor}26 0%, ${candidate.partyColor}08 40%, transparent 80%)`,
+      }}
     >
-      {leading && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow">
-          Arriba en encuestas
-        </div>
-      )}
+      {/* Decorative party-color accent line */}
+      <div
+        className={cn(
+          "absolute top-0 h-1 w-24 sm:w-32",
+          isLeft ? "left-6 sm:left-8 md:left-10" : "right-6 sm:right-8 md:right-10"
+        )}
+        style={{ backgroundColor: candidate.partyColor }}
+      />
 
-      <div className={cn("flex items-center gap-4", side === "right" && "flex-row-reverse text-right")}>
-        <div className="relative h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0 overflow-hidden rounded-full border-4" style={{ borderColor: candidate.partyColor }}>
-          {candidate.photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={candidate.photo} alt={candidate.name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full bg-muted" />
-          )}
+      {/* Use a fixed-row grid so the equivalent rows align across the two finalists,
+          even when one side is missing the leading pill or the legal note.
+          Rows: [pill] [portrait] [name] [stats] [legal] [cta]. */}
+      <div
+        className={cn(
+          "grid h-full gap-3 sm:gap-4",
+          "grid-rows-[1.75rem_auto_auto_auto_3rem_1rem]",
+          !isLeft && "justify-items-end text-right"
+        )}
+      >
+        {/* Row 1 — Leading pill (reserved height even when not leader) */}
+        <div className="self-start">
+          {leading ? (
+            <div
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
+              style={{ backgroundColor: candidate.partyColor, color: "white" }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-white pulse-dot" />
+              <span className="text-[9px] font-black uppercase tracking-widest">
+                Lidera el promedio
+              </span>
+            </div>
+          ) : null}
         </div>
-        <div className="min-w-0">
-          <h3 className="text-lg sm:text-xl font-black text-foreground leading-tight">
-            {candidate.shortName || candidate.name}
-          </h3>
-          <p className="text-xs font-semibold mt-0.5" style={{ color: candidate.partyColor }}>
+
+        {/* Row 2 — Portrait */}
+        <div className="relative">
+          <div
+            className="relative h-24 w-24 sm:h-28 sm:w-28 md:h-36 md:w-36 overflow-hidden rounded-2xl"
+            style={{
+              boxShadow: `0 20px 60px -15px ${candidate.partyColor}66`,
+              outline: `4px solid ${candidate.partyColor}`,
+              outlineOffset: "2px",
+            }}
+          >
+            {candidate.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={candidate.photo}
+                alt={candidate.name}
+                className="h-full w-full object-cover grayscale-[15%] group-hover:grayscale-0 transition-all duration-500"
+              />
+            ) : (
+              <div className="h-full w-full bg-muted" />
+            )}
+          </div>
+        </div>
+
+        {/* Row 3 — Name + party */}
+        <div className={cn("space-y-1", !isLeft && "text-right")}>
+          <p
+            className="text-[10px] font-black uppercase tracking-[0.2em]"
+            style={{ color: candidate.partyColor }}
+          >
             {candidate.party}
           </p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            {candidate.profession} · {candidate.region}
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-stone-900 leading-[0.95]">
+            {candidate.shortName || candidate.name}
+          </h2>
+          <p className="text-xs text-stone-500 pt-0.5">
+            {candidate.profession} · {candidate.region} · {candidate.age} años
           </p>
         </div>
-      </div>
 
-      <div className={cn("mt-5 flex items-baseline gap-2", side === "right" && "justify-end")}>
-        <span className="text-4xl sm:text-5xl font-black font-mono tabular-nums text-foreground">
-          {candidate.pollAverage.toFixed(1)}
-        </span>
-        <span className="text-lg font-bold text-muted-foreground">%</span>
-        <div className={cn("ml-2 flex items-center gap-1 text-xs font-semibold", TREND_COLOR[candidate.pollTrend])}>
-          <TrendIcon className="h-3.5 w-3.5" />
-          <span className="capitalize">{candidate.pollTrend === "stable" ? "estable" : candidate.pollTrend === "up" ? "sube" : "baja"}</span>
+        {/* Row 4 — Massive poll number + trend */}
+        <div className={cn(!isLeft && "text-right")}>
+          <div className={cn("flex items-baseline gap-1 font-mono tabular-nums", !isLeft && "justify-end")}>
+            <span
+              className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-none"
+              style={{ color: candidate.partyColor }}
+            >
+              {candidate.pollAverage.toFixed(1)}
+            </span>
+            <span className="text-xl sm:text-2xl font-black text-stone-400">%</span>
+          </div>
+          <div className={cn("mt-1 flex items-center gap-1.5", !isLeft && "justify-end")}>
+            <div className={cn("inline-flex items-center gap-1 text-xs font-bold", TREND_COLOR[candidate.pollTrend])}>
+              <TrendIcon className="h-3.5 w-3.5" />
+              <span>{candidate.pollTrend === "stable" ? "estable" : candidate.pollTrend === "up" ? "subiendo" : "bajando"}</span>
+            </div>
+            <span className="text-[10px] text-stone-400">
+              · {candidate.pollHistory.length} encuestas
+            </span>
+          </div>
         </div>
-      </div>
-      <p className={cn("text-[10px] text-muted-foreground mt-1", side === "right" && "text-right")}>
-        Promedio reciente · {candidate.pollHistory.length} encuestas
-      </p>
 
-      {candidate.hasLegalIssues && candidate.legalNote && (
-        <div className={cn("mt-3 flex items-start gap-1.5 text-[10px] text-amber-700", side === "right" && "flex-row-reverse text-right")}>
-          <ShieldAlert className="h-3 w-3 flex-shrink-0 mt-0.5" />
-          <span className="leading-snug">{candidate.legalNote}</span>
+        {/* Row 5 — Legal note (reserved height even when none) */}
+        <div className={cn("self-start", !isLeft && "w-full")}>
+          {candidate.hasLegalIssues && candidate.legalNote ? (
+            <div className={cn("flex items-start gap-1.5 text-[10px] text-amber-700 max-w-xs", !isLeft && "flex-row-reverse ml-auto")}>
+              <ShieldAlert className="h-3 w-3 flex-shrink-0 mt-0.5" />
+              <span className="leading-snug">{candidate.legalNote}</span>
+            </div>
+          ) : null}
         </div>
-      )}
 
-      <div className={cn("mt-4 flex items-center gap-1 text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity", side === "right" && "justify-end")}>
-        Ver perfil completo
-        <ChevronRight className="h-3.5 w-3.5" />
+        {/* Row 6 — Hover CTA */}
+        <div
+          className={cn(
+            "flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity self-start",
+            !isLeft && "flex-row-reverse"
+          )}
+          style={{ color: candidate.partyColor }}
+        >
+          Ver perfil completo
+          <ArrowUpRight className="h-3.5 w-3.5" />
+        </div>
       </div>
     </Link>
+  );
+}
+
+/** Horizontal "balance" bar — both party colors fill proportional to poll %, sharing space. */
+function BalanceBar({ finalists }: { finalists: [Candidate, Candidate] }) {
+  const [a, b] = finalists;
+  const total = a.pollAverage + b.pollAverage;
+  const aPct = (a.pollAverage / total) * 100;
+  const bPct = 100 - aPct;
+  const delta = Math.abs(a.pollAverage - b.pollAverage);
+  const tight = delta < 5;
+
+  return (
+    <div className="relative">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Scale className="h-3.5 w-3.5 text-stone-500" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">
+            Reparto del promedio actual
+          </span>
+        </div>
+        <span className={cn(
+          "text-[10px] font-mono font-bold px-2 py-0.5 rounded-full",
+          tight ? "bg-amber-100 text-amber-800" : "bg-stone-200 text-stone-700"
+        )}>
+          {tight ? "Empate técnico" : "Δ"} {delta.toFixed(1)} pp
+        </span>
+      </div>
+
+      <div className="relative h-10 sm:h-12 overflow-hidden rounded-xl bg-stone-200 shadow-inner">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${aPct}%` }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute inset-y-0 left-0 flex items-center justify-end pr-3"
+          style={{ backgroundColor: a.partyColor }}
+        >
+          <span className="text-white font-mono font-black text-sm sm:text-base tabular-nums drop-shadow">
+            {a.pollAverage.toFixed(1)}%
+          </span>
+        </motion.div>
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${bPct}%` }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute inset-y-0 right-0 flex items-center justify-start pl-3"
+          style={{ backgroundColor: b.partyColor }}
+        >
+          <span className="text-white font-mono font-black text-sm sm:text-base tabular-nums drop-shadow">
+            {b.pollAverage.toFixed(1)}%
+          </span>
+        </motion.div>
+        {/* 50% marker */}
+        <div className="absolute inset-y-0 left-1/2 w-px bg-white/50" />
+      </div>
+
+      <p className="text-[11px] text-stone-500 mt-2 leading-snug">
+        {tight ? (
+          <>La diferencia de <strong className="text-stone-700">{delta.toFixed(1)} pp</strong> cae dentro del margen de error (±2.5pp) de la mayoría de encuestas. Carrera virtualmente empatada.</>
+        ) : (
+          <><strong className="text-stone-700">{(a.pollAverage > b.pollAverage ? a.shortName : b.shortName)}</strong> lidera por {delta.toFixed(1)} puntos en el promedio ponderado de encuestadoras.</>
+        )}
+      </p>
+    </div>
   );
 }
 
@@ -148,11 +289,10 @@ function RunoffHero({ finalists }: { finalists: [Candidate, Candidate] }) {
     [country.electionDateSecondRound]
   );
   const { days, hours, minutes, seconds } = useCountdown(runoffDate);
-  const formattedDate = runoffDate.toLocaleDateString("es-PE", {
+  const dateLong = runoffDate.toLocaleDateString("es-PE", {
     weekday: "long",
     day: "numeric",
     month: "long",
-    year: "numeric",
     timeZone: "America/Lima",
   });
 
@@ -161,76 +301,82 @@ function RunoffHero({ finalists }: { finalists: [Candidate, Candidate] }) {
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-stone-50 to-stone-100"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="relative overflow-hidden rounded-3xl bg-stone-50 border border-stone-200/60 shadow-xl shadow-stone-900/5"
     >
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 20% 30%, currentColor 1px, transparent 1px), radial-gradient(circle at 80% 70%, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+      {/* Decorative dot grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.025]"
+        style={{
+          backgroundImage: "radial-gradient(circle, #000 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+        }}
+      />
 
-      <div className="relative px-5 sm:px-8 py-6 sm:py-8">
-        {/* Top label */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1">
-              <Vote className="h-3.5 w-3.5 text-primary-foreground" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary-foreground">
-                Segunda Vuelta
-              </span>
+      {/* Top ribbon — segunda vuelta + date + countdown */}
+      <div className="relative bg-stone-900 text-stone-100 px-6 sm:px-10 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-white pulse-dot" />
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">
+              Segunda Vuelta
             </span>
-            <span className="text-xs font-semibold text-muted-foreground">
-              Elecciones Generales {country.name} 2026
+          </span>
+          <span className="hidden sm:inline text-[11px] font-semibold capitalize text-stone-300">
+            {dateLong} · 2026
+          </span>
+        </div>
+        <div className="flex items-center gap-3 sm:gap-4 font-mono tabular-nums">
+          <span className="text-[9px] uppercase tracking-widest text-stone-400 hidden sm:inline">Faltan</span>
+          {[
+            { label: "d", value: days },
+            { label: "h", value: hours },
+            { label: "m", value: minutes },
+            { label: "s", value: seconds },
+          ].map((u, i) => (
+            <div key={u.label} className="flex items-baseline gap-1">
+              <span className="text-base sm:text-lg font-black text-white">{pad(u.value)}</span>
+              <span className="text-[9px] uppercase tracking-widest text-stone-500">{u.label}</span>
+              {i < 3 && <span className="text-stone-700 ml-1 hidden sm:inline">·</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Head-to-head — full split, no padding wrappers, edge to edge */}
+      <div className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr]">
+        <FinalistPortrait candidate={a} side="left" leading={a.id === leadingId} />
+
+        {/* Center VS divider */}
+        <div className="relative flex md:flex-col items-center justify-center py-4 md:py-0 md:px-2 bg-stone-100 md:bg-transparent">
+          {/* Vertical line on desktop */}
+          <div className="hidden md:block absolute inset-y-8 left-1/2 -translate-x-1/2 w-px bg-stone-200" />
+          {/* Horizontal line on mobile */}
+          <div className="md:hidden absolute inset-x-8 top-1/2 -translate-y-1/2 h-px bg-stone-200" />
+          <div className="relative bg-stone-50 px-3 py-2 md:py-3 md:px-2">
+            <span
+              className="block text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter italic"
+              style={{
+                background: "linear-gradient(135deg, #8B1A1A, #C42B2B 50%, #E84040)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+                textShadow: "0 8px 24px rgba(139,26,26,0.25)",
+              }}
+            >
+              vs
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
-            <span className="font-medium capitalize">{formattedDate}</span>
-          </div>
         </div>
 
-        {/* Head-to-head */}
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-5 items-stretch">
-          <FinalistCard candidate={a} side="left" leading={a.id === leadingId} />
+        <FinalistPortrait candidate={b} side="right" leading={b.id === leadingId} />
+      </div>
 
-          <div className="flex md:flex-col items-center justify-center gap-2 px-2">
-            <div className="hidden md:block text-[10px] font-black uppercase tracking-widest text-muted-foreground">VS</div>
-            <div className="md:hidden h-px flex-1 bg-border" />
-            <div className="md:hidden text-[10px] font-black uppercase tracking-widest text-muted-foreground">VS</div>
-            <div className="md:hidden h-px flex-1 bg-border" />
-            <div className="hidden md:block h-24 w-px bg-border" />
-          </div>
-
-          <FinalistCard candidate={b} side="right" leading={b.id === leadingId} />
-        </div>
-
-        {/* Countdown */}
-        <div className="mt-6 rounded-2xl bg-card border border-border px-5 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                Faltan para el balotaje
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Domingo 7 de junio · 8:00 a 17:00 (hora Lima)
-              </p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 font-mono tabular-nums">
-              {[
-                { label: "días", value: days },
-                { label: "hrs", value: hours },
-                { label: "min", value: minutes },
-                { label: "seg", value: seconds },
-              ].map((u, i) => (
-                <div key={u.label} className="flex items-center gap-2 sm:gap-3">
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-black text-primary">{pad(u.value)}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{u.label}</div>
-                  </div>
-                  {i < 3 && <span className="text-2xl sm:text-3xl font-black text-muted-foreground/30">:</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Balance bar foot */}
+      <div className="relative bg-white/60 backdrop-blur border-t border-stone-200/60 px-6 sm:px-10 py-5">
+        <BalanceBar finalists={finalists} />
       </div>
     </motion.section>
   );

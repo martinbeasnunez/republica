@@ -233,9 +233,11 @@ function AnimatedNumber({ value, delay = 0 }: { value: number; delay?: number })
 
 interface QuizClientProps {
   candidates: Candidate[];
+  /** When true, the candidate set is the two runoff finalists — copy and CTAs shift to "balotaje" framing. */
+  runoffMode?: boolean;
 }
 
-export default function QuizClient({ candidates }: QuizClientProps) {
+export default function QuizClient({ candidates, runoffMode = false }: QuizClientProps) {
   const country = useCountry();
   const countryName = country.name;
   const capital = country.capital;
@@ -256,13 +258,20 @@ export default function QuizClient({ candidates }: QuizClientProps) {
   const results = useMemo(() => {
     if (!showResults) return [];
 
-    return candidates
+    // Only include candidates with meaningful quiz data (at least 5 of 10 positions defined)
+    const eligibleCandidates = candidates.filter(
+      (c) => Object.keys(c.quizPositions).length >= 5
+    );
+
+    return eligibleCandidates
       .map((candidate) => {
         let totalScore = 0;
         let maxScore = 0;
 
         Object.entries(answers).forEach(([topic, userAnswer]) => {
-          const candidatePosition = candidate.quizPositions[topic] ?? 0;
+          // Only score on topics where the candidate has an explicit position
+          if (!(topic in candidate.quizPositions)) return;
+          const candidatePosition = candidate.quizPositions[topic];
           const diff = Math.abs(userAnswer - candidatePosition);
           const maxDiff = 4; // -2 to +2
           totalScore += maxDiff - diff;
@@ -366,7 +375,7 @@ export default function QuizClient({ candidates }: QuizClientProps) {
   const handleShare = async () => {
     if (!results[0]) return;
     const top = results[0];
-    const quizUrl = `https://condorlatam.com/${countryCode}/quiz`;
+    const quizUrl = `https://www.condorlatam.com/${countryCode}/quiz`;
     const shareText = `Mi candidato #1 es ${top.candidate.shortName} con ${top.compatibility}% de compatibilidad 🗳️ Descubre el tuyo en CONDOR:`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
@@ -885,13 +894,21 @@ export default function QuizClient({ candidates }: QuizClientProps) {
             <span className="font-mono text-sm font-bold text-white">C</span>
           </div>
           <h1 className="text-2xl font-bold text-gradient">
-            Descubre Tu Candidato
+            {runoffMode ? "Quiz del Balotaje" : "Descubre Tu Candidato"}
           </h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Responde {resolvedQuestions.length} preguntas y descubre con qué candidato
-          eres más compatible
+          {runoffMode
+            ? `Responde ${resolvedQuestions.length} preguntas y descubre cuál de los dos finalistas te representa más.`
+            : `Responde ${resolvedQuestions.length} preguntas y descubre con qué candidato eres más compatible`}
         </p>
+        {runoffMode && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+              Segunda Vuelta · 7 de junio 2026
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Progress */}
