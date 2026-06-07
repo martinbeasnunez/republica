@@ -421,16 +421,16 @@ export function EnVivoClient({
           </>
         )}
         {RefreshIndicator}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {articles.length > 0 && (
-              <LiveNewsFeed articles={hotArticles} candidatePhotos={candidatePhotos} />
-            )}
-          </div>
-          <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
-            <MediaSourcesPanel />
-            {ElectionDataCard}
-          </div>
+        {/*
+          On runoff day the AI Pulse above already does the work of a real-time
+          news feed (reads RSS + DB + fact-checks every 5 min and summarizes).
+          A second "Noticias en Tiempo Real" list below was redundant and noisy
+          — we removed it. The full news view stays at /[country]/noticias.
+          Below: lightweight horizontal row with media sources + election data.
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <MediaSourcesPanel />
+          {ElectionDataCard}
         </div>
       </div>
     );
