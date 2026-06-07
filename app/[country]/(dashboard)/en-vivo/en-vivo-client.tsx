@@ -1,317 +1,476 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCountry } from "@/lib/config/country-context";
-import { motion } from "framer-motion";
-import dynamic from "next/dynamic";
-import {
-  Radio,
-  Clock,
-  Users,
-  TrendingUp,
-  BarChart3,
-  MapPin,
-  RefreshCw,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import type { Candidate } from "@/lib/data/candidates";
+import type { NewsArticle } from "@/lib/data/news";
+import type { FactCheck } from "@/lib/data/fact-checks";
+import type { HomepageBlock } from "@/lib/types/homepage-blocks";
+import type { ElectoralEvent } from "@/lib/config/countries";
+import type { PublicBriefing } from "../page";
+import { LiveHeader } from "./live-header";
+import { ExitPollResults } from "./exit-poll-results";
+import { RegistraduriaResults } from "./registraduria-results";
+import { FlashResults } from "./flash-results";
+import { ElectionPulse } from "./election-pulse";
+import { LiveTimeline } from "./live-timeline";
+import { LiveBroadcast } from "./live-broadcast";
+import { LiveNewsFeed } from "./live-news-feed";
+import { LiveBriefing } from "./live-briefing";
+import { LiveAnalysis } from "./live-analysis";
+import { AIPulse } from "./ai-pulse";
+import { FactCheckSpotlight } from "./fact-check-spotlight";
+import { PollStandingsSidebar } from "./poll-standings-sidebar";
+import { MediaSourcesPanel } from "./media-sources-panel";
+import { CondorAIHero } from "./condor-ai-hero";
+import { CondorAIPulse } from "./condor-ai-pulse";
+import { ShareModal } from "./share-modal";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, Vote, MapPin, RefreshCw, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useChartTheme } from "@/lib/echarts-theme";
-import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
 
-const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
-
-interface EnVivoClientProps {
-  topCandidates: Candidate[];
+interface PulseUpdate {
+  id: string;
+  generated_at: string;
+  summary: string;
+  metrics: Record<string, unknown> | null;
+  phase: string | null;
 }
 
-export function EnVivoClient({ topCandidates }: EnVivoClientProps) {
-  const ct = useChartTheme();
-  const country = useCountry();
-  const [actasProcessed, setActasProcessed] = useState(0);
-  const [isLive, setIsLive] = useState(false);
+interface EnVivoClientProps {
+  candidates?: Candidate[];
+  topCandidates: Candidate[];
+  articles?: NewsArticle[];
+  factChecks?: FactCheck[];
+  briefing?: PublicBriefing | null;
+  homepageBlocks?: HomepageBlock[];
+  activeEvent?: ElectoralEvent | null;
+  nextEvent?: ElectoralEvent | null;
+  upcomingEvents?: ElectoralEvent[];
+  /** CONDOR AI pulse feed — newest first */
+  pulses?: PulseUpdate[];
+}
 
-  // Simulated progress
-  useEffect(() => {
-    // In production, this would be SSE from the electoral authority
-    const timer = setInterval(() => {
-      setActasProcessed((prev) => Math.min(prev + 0.1, 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+// ── Election phase detection ───────────────────────────────────────────────
+type Phase = "pre" | "election-day" | "post";
 
-  // Simulated vote counts (would be real-time from electoral authority)
-  const liveResults = topCandidates.map((c, i) => ({
-    ...c,
-    votes: 0,
-    percentage: 0,
-    actasWon: 0,
-  }));
-
-  const electionDate = new Date(country.electionDate + "T08:00:00");
+/**
+ * Compute the live coverage phase relative to the next-upcoming election.
+ * Once the first round has passed, the phase anchors to the runoff date so the
+ * live hub doesn't get stuck in "post" forever between rounds.
+ */
+function getPhase(
+  electionDate: string,
+  electionDateSecondRound: string | undefined,
+  timezone: string
+): { phase: Phase; activeDate: string; isRunoff: boolean } {
   const now = new Date();
-  const isElectionDay = now >= electionDate;
+  const todayLocal = now.toLocaleDateString("en-CA", { timeZone: timezone });
+  // If first round is in the past and we have a runoff, anchor to runoff.
+  let activeDate = electionDate;
+  let isRunoff = false;
+  if (electionDateSecondRound && todayLocal > electionDate) {
+    activeDate = electionDateSecondRound;
+    isRunoff = true;
+  }
+  if (todayLocal === activeDate) return { phase: "election-day", activeDate, isRunoff };
+  if (todayLocal > activeDate) return { phase: "post", activeDate, isRunoff };
+  return { phase: "pre", activeDate, isRunoff };
+}
 
-  const gaugeOption = {
-    backgroundColor: "transparent",
-    series: [
-      {
-        type: "gauge" as const,
-        startAngle: 180,
-        endAngle: 0,
-        min: 0,
-        max: 100,
-        radius: "100%",
-        center: ["50%", "75%"],
-        progress: {
-          show: true,
-          width: 18,
-          itemStyle: { color: "#8B1A1A" },
-        },
-        pointer: { show: false },
-        axisLine: {
-          lineStyle: { width: 18, color: [[1, ct.axis.lineColor]] },
-        },
-        axisTick: { show: false },
-        splitLine: { show: false },
-        axisLabel: { show: false },
-        title: { show: false },
-        detail: {
-          valueAnimation: true,
-          fontSize: 28,
-          fontFamily: "JetBrains Mono, monospace",
-          fontWeight: "bold",
-          color: ct.text.primary,
-          formatter: "{value}%",
-          offsetCenter: [0, "-15%"],
-        },
-        data: [{ value: actasProcessed }],
-      },
-    ],
-  };
+export function EnVivoClient({
+  candidates,
+  topCandidates,
+  articles = [],
+  factChecks = [],
+  briefing = null,
+  homepageBlocks = [],
+  activeEvent,
+  nextEvent,
+  upcomingEvents = [],
+  pulses = [],
+}: EnVivoClientProps) {
+  const country = useCountry();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const allCandidates = candidates || topCandidates;
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [minutesSinceRefresh, setMinutesSinceRefresh] = useState(0);
 
+  // Optional override `?phase=election-day|post|pre` — useful for previewing
+  // the day-of layout before D-day. Falls back to the real calendar phase.
+  const phaseOverride = searchParams?.get("phase");
+  const phaseInfo = getPhase(country.electionDate, country.electionDateSecondRound, country.timezone);
+  const phase: Phase = (phaseOverride === "pre" || phaseOverride === "election-day" || phaseOverride === "post")
+    ? phaseOverride
+    : phaseInfo.phase;
+  const isRunoffWindow = phaseInfo.isRunoff;
+  const activeElectionDate = phaseInfo.activeDate;
+
+  // Days until election (for víspera previews) — anchored to whichever election is current.
+  const electionDate = new Date(activeElectionDate + "T12:00:00");
+  const daysToElection = Math.floor((electionDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+  // Veda electoral activa: CO prohíbe publicar encuestas 7 días antes y hasta el cierre.
+  // Durante ese período cualquier "ranking de encuestas" en pantalla es stale y ruidoso.
+  const inPollBlackout = country.code === "co" && daysToElection >= 0 && daysToElection <= 7;
+
+  // Official live results scrapers:
+  //   PE → ONPE (ExitPollResults + /api/onpe-results)
+  //   CO → Registraduría (RegistraduriaResults + /api/registraduria-results)
+  const officialResultsAvailable = country.code === "pe" || country.code === "co";
+  const showOfficialResults = (phase === "election-day" || phase === "post") && officialResultsAvailable;
+  const OfficialResultsComponent = country.code === "co" ? RegistraduriaResults : ExitPollResults;
+
+  // Candidate photos for news image matching
+  const candidatePhotos = allCandidates
+    .filter((c) => c.photo)
+    .map((c) => ({ shortName: c.shortName, name: c.name, photo: c.photo, partyColor: c.partyColor }));
+
+  // ── Runoff finalists (only when country is mid-runoff window) ──────────────
+  const finalistSlugs = country.runoffCandidateSlugs;
+  const finalists = useMemo(() => {
+    if (!isRunoffWindow || !finalistSlugs) return [] as Candidate[];
+    return finalistSlugs
+      .map((slug) => allCandidates.find((c) => c.slug === slug))
+      .filter(Boolean) as Candidate[];
+  }, [allCandidates, finalistSlugs, isRunoffWindow]);
+  const showFinalistsStrip = isRunoffWindow && finalists.length === 2;
+
+  // ── Filter "hot" articles for the day-E live feed ──────────────────────
+  // En día E o post-elección, el feed de "Noticias en Tiempo Real" sólo debe
+  // mostrar noticias DEL DÍA (≥ 00:00 hora local del país). Notas de ayer o
+  // más viejas no son "tiempo real" — son contexto que ya pasó.
+  const hotArticles = useMemo(() => {
+    if (phase === "pre") return articles; // víspera: dejamos todo
+    // Day-of cutoff = 00:00 local time of the country (epoch ms)
+    const localMidnightStr = new Date().toLocaleString("en-CA", {
+      timeZone: country.timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    const localMidnight = new Date(`${localMidnightStr}T00:00:00`).getTime();
+    return articles.filter((a) => {
+      if (!a.time) return false;
+      const t = new Date(a.time).getTime();
+      return Number.isFinite(t) && t >= localMidnight;
+    });
+  }, [articles, phase, country.timezone]);
+
+  // Timeline entries from Brain briefing.timeline (if present)
+  const timelineEntries =
+    briefing?.timeline?.map((t) => ({
+      time: typeof t === "object" && "time" in t ? String(t.time) : "",
+      text: typeof t === "object" && "text" in t ? String(t.text) : "",
+      source: typeof t === "object" && "source" in t ? String(t.source) : "",
+    })) ?? [];
+
+  // Auto-refresh every 5 minutes
+  const doRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    router.refresh();
+    setLastRefresh(Date.now());
+    setTimeout(() => setIsRefreshing(false), 2000);
+  }, [router]);
+
+  useEffect(() => {
+    const autoRefresh = setInterval(doRefresh, 5 * 60 * 1000);
+    const trackTime = setInterval(() => {
+      setMinutesSinceRefresh(Math.floor((Date.now() - lastRefresh) / 60000));
+    }, 30000);
+    return () => { clearInterval(autoRefresh); clearInterval(trackTime); };
+  }, [doRefresh, lastRefresh]);
+
+  // ── Track preconteo % to decide layout priority ─────────────────────────
+  // Cuando el preconteo arranca (>0% escrutado), el dato duro pasa arriba y
+  // el Pulse AI baja a segundo plano. Antes del cierre el Pulse domina.
+  const [preconteoActive, setPreconteoActive] = useState(false);
+  useEffect(() => {
+    if (!showOfficialResults || country.code !== "co") return;
+    const check = async () => {
+      try {
+        const res = await fetch("/api/registraduria-results");
+        if (!res.ok) return;
+        const json = await res.json();
+        const pct = Number(json?.progress?.percentage ?? 0);
+        if (Number.isFinite(pct)) setPreconteoActive(pct > 0);
+      } catch { /* keep previous value */ }
+    };
+    check();
+    const id = setInterval(check, 60_000);
+    return () => clearInterval(id);
+  }, [showOfficialResults, country.code]);
+
+  // Shared: unique source count for briefing badge
+  const uniqueSources = new Set(articles.map((a) => a.source)).size;
+
+  // Shared auto-refresh indicator
+  const RefreshIndicator = (
+    <div className="flex items-center justify-between px-1">
+      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 pulse-dot" />
+        <span className="font-mono">
+          {isRefreshing ? "Actualizando..." : minutesSinceRefresh > 0 ? `Actualizado hace ${minutesSinceRefresh}m` : "Actualizado ahora"}
+        </span>
+        <span className="text-muted-foreground/40">· auto-refresh cada 5 min</span>
+      </div>
+      <button
+        onClick={doRefresh}
+        disabled={isRefreshing}
+        className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-medium transition-colors disabled:opacity-50"
+      >
+        <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""}`} />
+        Actualizar
+      </button>
+    </div>
+  );
+
+  // CONDOR AI block — Pulse feed when available, else Hero (briefing/preconteo fallback)
+  const AIBlock = pulses.length > 0
+    ? <CondorAIPulse initialPulses={pulses} />
+    : (
+      <CondorAIHero
+        candidates={allCandidates}
+        articles={articles}
+        factChecks={factChecks}
+        briefing={briefing}
+      />
+    );
+
+  // ── Finalists head-to-head strip (runoff election day / window) ───────────
+  // Compact strip: party-color band, portrait, name. Sits between LiveHeader and
+  // the ONPE counter so the runoff context is unmissable.
+  const FinalistsStrip = showFinalistsStrip ? (
+    <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-sm">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 bg-gradient-to-r from-stone-50 to-white border-b border-stone-100">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-0.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-white pulse-dot" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-white">
+              Finalistas
+            </span>
+          </span>
+          <span className="text-[11px] font-semibold text-stone-600">
+            Balotaje presidencial — domingo 7 de junio
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center gap-1 text-[10px] text-stone-500 font-mono">
+          <Clock className="h-3 w-3" />
+          <span>Mesas 8:00 a.m. — 5:00 p.m. (Lima)</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-stone-100">
+        {finalists.map((c, i) => (
+          <div
+            key={c.id}
+            className={cn(
+              "flex items-center gap-3 sm:gap-4 p-3 sm:p-4",
+              i === 1 && "flex-row-reverse text-right"
+            )}
+            style={{
+              background: i === 0
+                ? `linear-gradient(90deg, ${c.partyColor}10 0%, transparent 80%)`
+                : `linear-gradient(-90deg, ${c.partyColor}10 0%, transparent 80%)`,
+            }}
+          >
+            <div
+              className="relative h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 overflow-hidden rounded-xl"
+              style={{ outline: `3px solid ${c.partyColor}`, outlineOffset: "2px" }}
+            >
+              {c.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={c.photo} alt={c.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-muted" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p
+                className="text-[9px] font-black uppercase tracking-[0.18em] mb-0.5"
+                style={{ color: c.partyColor }}
+              >
+                {c.party}
+              </p>
+              <p className="text-sm sm:text-base font-black tracking-tight text-stone-900 leading-tight truncate">
+                {c.shortName || c.name}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
+  // Shared right-column "Datos de la Elección" card
+  const ElectionDataCard = (
+    <Card className="bg-card border-border">
+      <CardContent className="p-5 space-y-3">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          Datos de la Elección
+        </h3>
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-3">
+            <Users className="h-4 w-4 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-foreground">{country.electorateSize}</p>
+              <p className="text-[10px] text-muted-foreground">Electores habilitados</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Vote className="h-4 w-4 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-foreground">{country.electionType}</p>
+              <p className="text-[10px] text-muted-foreground">{country.electionSystem}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-xs font-medium text-foreground">{country.departments.length} departamentos</p>
+              {country.legislatureInfo && (
+                <p className="text-[10px] text-muted-foreground">{country.legislatureInfo}</p>
+              )}
+            </div>
+          </div>
+          {country.electionDateSecondRound && (
+            <div className="pt-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
+                Segunda vuelta:{" "}
+                <span className="font-medium text-foreground">
+                  {new Date(country.electionDateSecondRound + "T12:00:00").toLocaleDateString(country.locale.replace("_", "-"), {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // ════════════════════════════════════════════════════════════════════════
+  // MODE A: POST-ELECCIÓN con conteo oficial disponible (PE post 12 abril)
+  // Conteo oficial es la estrella. Noticias del runoff abajo. Sin pre-election
+  // pulses ni AI briefings que no apliquen.
+  // ════════════════════════════════════════════════════════════════════════
+  if (showOfficialResults) {
+    return (
+      <div className="space-y-6">
+        <ShareModal />
+        <LiveHeader activeEvent={activeEvent} nextEvent={nextEvent} />
+        {FinalistsStrip}
+        {/*
+          Fase-aware reorder:
+          - Preconteo activo (% > 0) → CONTEO arriba protagonista, Pulse abajo
+          - Sin datos (% === 0) → Pulse arriba (es la única vitrina en vivo)
+        */}
+        {preconteoActive ? (
+          <>
+            <OfficialResultsComponent />
+            {AIBlock}
+          </>
+        ) : (
+          <>
+            {AIBlock}
+            <OfficialResultsComponent />
+          </>
+        )}
+        {RefreshIndicator}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {articles.length > 0 && (
+              <LiveNewsFeed articles={hotArticles} candidatePhotos={candidatePhotos} />
+            )}
+          </div>
+          <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
+            <MediaSourcesPanel />
+            {ElectionDataCard}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // MODE B: ELECTION-DAY sin scraper aún (CO el 31 may si Fase 2 no está)
+  // Foco en boca de urna, broadcast en vivo, noticias en tiempo real.
+  // ════════════════════════════════════════════════════════════════════════
+  if (phase === "election-day") {
+    return (
+      <div className="space-y-6">
+        <ShareModal />
+        <LiveHeader activeEvent={activeEvent} nextEvent={nextEvent} />
+        {FinalistsStrip}
+        {AIBlock}
+        <FlashResults articles={articles} />
+        {RefreshIndicator}
+        <ElectionPulse articles={articles} factChecks={factChecks} briefing={briefing} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {articles.length > 0 && (
+              <LiveNewsFeed articles={hotArticles} candidatePhotos={candidatePhotos} />
+            )}
+            {factChecks.length > 0 && <FactCheckSpotlight factChecks={factChecks} />}
+            <AIPulse articles={articles} factChecks={factChecks} candidates={allCandidates} />
+          </div>
+          <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
+            <LiveBroadcast />
+            {!inPollBlackout && <PollStandingsSidebar candidates={allCandidates} />}
+            <MediaSourcesPanel />
+            {ElectionDataCard}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  // MODE C: PRE-ELECCIÓN (CO ahora, días antes del E)
+  // Briefing AI + 5 categorías de cobertura + encuestas + fact-checks +
+  // canales en vivo + noticias en tiempo real. La versión PRO completa.
+  // ════════════════════════════════════════════════════════════════════════
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Radio className="h-5 w-5 text-rose" />
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">En Vivo</h1>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-rose/10 border border-rose/20 px-2 sm:px-3 py-1">
-            <span className="h-2 w-2 rounded-full bg-rose pulse-dot" />
-            <span className="text-[10px] sm:text-[11px] font-bold text-rose">
-              {isElectionDay ? "EN VIVO" : "PRONTO"}
-            </span>
-          </div>
+        <ShareModal />
+        <LiveHeader activeEvent={activeEvent} nextEvent={nextEvent} />
+        {FinalistsStrip}
+
+      {/* CONDOR AI: Pulse feed cuando ya hay pulses, Hero como fallback */}
+      {AIBlock}
+
+      {/* ═══ Preview del preconteo en víspera (CO, D-1) ═══
+          El componente ya maneja "Preconteo aún no inicia" hasta 4 p.m. del día E. */}
+      {country.code === "co" && daysToElection >= 0 && daysToElection <= 1 && <RegistraduriaResults />}
+
+      <FlashResults articles={articles} />
+
+      {timelineEntries.length > 0 && <LiveTimeline entries={timelineEntries} />}
+
+      {RefreshIndicator}
+
+      <ElectionPulse articles={articles} factChecks={factChecks} briefing={briefing} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {articles.length > 0 && (
+            <LiveNewsFeed articles={hotArticles} candidatePhotos={candidatePhotos} />
+          )}
+          {factChecks.length > 0 && <FactCheckSpotlight factChecks={factChecks} />}
+          <AIPulse articles={articles} factChecks={factChecks} candidates={allCandidates} />
         </div>
-        <p className="text-sm text-muted-foreground mt-1">
-          Resultados electorales en tiempo real
-        </p>
-      </motion.div>
-
-      {!isElectionDay ? (
-        /* Pre-election state */
-        <Card className="bg-card border-border">
-          <CardContent className="py-16 text-center">
-            <Radio className="h-16 w-16 text-muted-foreground mx-auto mb-6 opacity-30" />
-            <h2 className="text-xl font-bold text-foreground mb-2">
-              La transmisión en vivo comenzará el día de la elección
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-              El día de la elección, este dashboard mostrará los resultados
-              oficiales de {country.electoralBodies[0]?.acronym ?? "la autoridad electoral"} en tiempo real con actualizaciones cada 5
-              minutos.
-            </p>
-
-            {/* Countdown */}
-            <div className="flex items-center justify-center gap-4 sm:gap-8">
-              {(() => {
-                const diff = electionDate.getTime() - now.getTime();
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor(
-                  (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-                );
-                const minutes = Math.floor(
-                  (diff % (1000 * 60 * 60)) / (1000 * 60)
-                );
-
-                return (
-                  <>
-                    <div className="text-center">
-                      <p className="font-mono text-2xl sm:text-4xl font-bold tabular-nums text-gradient">
-                        {days}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                        Días
-                      </p>
-                    </div>
-                    <span className="text-xl sm:text-2xl text-muted-foreground">:</span>
-                    <div className="text-center">
-                      <p className="font-mono text-2xl sm:text-4xl font-bold tabular-nums text-gradient">
-                        {hours}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                        Horas
-                      </p>
-                    </div>
-                    <span className="text-xl sm:text-2xl text-muted-foreground">:</span>
-                    <div className="text-center">
-                      <p className="font-mono text-2xl sm:text-4xl font-bold tabular-nums text-gradient">
-                        {minutes}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                        Minutos
-                      </p>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-
-            {/* Preview of what it will look like */}
-            <div className="mt-12">
-              <p className="text-xs text-muted-foreground mb-4 uppercase tracking-wider">
-                Vista previa del dashboard en vivo
-              </p>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 opacity-50">
-                <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <BarChart3 className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <p className="text-xs font-medium text-foreground">
-                    Resultados en tiempo real
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Conteo de votos por candidato
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <MapPin className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <p className="text-xs font-medium text-foreground">
-                    Mapa en vivo
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Resultados por departamento
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border bg-card p-4 text-center">
-                  <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <p className="text-xs font-medium text-foreground">
-                    Proyecciones
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Con modelo estadístico
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Election day - live results */
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Main results */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Actas processed gauge */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">
-                    Actas Procesadas
-                  </CardTitle>
-                  <Button variant="ghost" size="sm" className="gap-2 text-xs">
-                    <RefreshCw className="h-3 w-3" />
-                    Actualizar
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ReactECharts
-                  option={gaugeOption}
-                  style={{ height: 200 }}
-                  opts={{ renderer: "canvas" }}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Live vote bars */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-sm">
-                  Resultados Parciales
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {liveResults.map((r) => (
-                  <div key={r.id} className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: r.partyColor }}
-                        />
-                        <span className="text-sm font-medium text-foreground">
-                          {r.shortName}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs text-muted-foreground tabular-nums">
-                          {r.votes.toLocaleString()} votos
-                        </span>
-                        <span className="font-mono text-sm font-bold tabular-nums text-foreground">
-                          {r.percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full transition-all duration-1000"
-                        style={{
-                          backgroundColor: r.partyColor,
-                          width: `${r.percentage}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Side panel */}
-          <div className="space-y-4">
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Estado
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Actas procesadas</span>
-                  <span className="font-mono tabular-nums">0 / 86,488</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Votos contados</span>
-                  <span className="font-mono tabular-nums">0</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Última actualización</span>
-                  <span className="text-xs">Esperando datos...</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
+          {!inPollBlackout && <PollStandingsSidebar candidates={allCandidates} />}
+          <LiveBroadcast />
+          <MediaSourcesPanel />
+          {ElectionDataCard}
         </div>
-      )}
-
-      <WhatsAppCTA context="en-vivo" />
+      </div>
     </div>
   );
 }
