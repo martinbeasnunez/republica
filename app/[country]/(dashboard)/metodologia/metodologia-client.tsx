@@ -230,6 +230,13 @@ export default function MetodologiaClient() {
                   sources: m.pollSources,
                 },
                 {
+                  title: "Quiz de Afinidad Electoral",
+                  page: "/quiz",
+                  description:
+                    "El quiz compara tus posiciones en 10 ejes temáticos (economía, seguridad, medio ambiente, educación, etc.) con las posiciones programáticas de cada candidato. Todos los ejes pesan igual — ningún tema vale más que otro.\n\nEscala de respuestas: −2 (muy en contra) → −1 → 0 (neutro) → +1 → +2 (muy a favor).\n\nPor cada eje donde el candidato tiene posición documentada:\n• Diferencia = |tu respuesta − posición del candidato| (0 a 4)\n• Puntos = 4 − diferencia (4 = acuerdo total, 0 = desacuerdo total)\n\nEjemplo: tú respondes +2 en seguridad, el candidato tiene +1 → diferencia 1 → sumas 3 de 4 puntos posibles.\n\nEl puntaje final es la suma de puntos en todos los ejes con posición documentada. Solo participan candidatos con posición registrada en al menos 5 ejes; quienes no tienen suficiente información programática pública no se incluyen para no distorsionar el resultado.\n\nLas posiciones de los candidatos provienen de sus planes de gobierno oficiales y declaraciones públicas verificadas.",
+                  sources: [`Planes de gobierno oficiales ${country.code === "co" ? "CNE" : "JNE"}`, "Declaraciones públicas verificadas"],
+                },
+                {
                   title: "Noticias",
                   page: "/noticias",
                   description: m.newsDescription,

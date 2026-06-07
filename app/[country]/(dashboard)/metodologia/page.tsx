@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ country: 
   const config = getCountryConfig(country);
   const name = config?.name ?? "Latinoamérica";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
-  const domain = config?.domain ?? "condorlatam.com";
+  const domain = config?.domain ?? "www.condorlatam.com";
 
   return {
     title: "Metodología y Fuentes — Transparencia CONDOR",

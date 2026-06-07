@@ -25,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCountry } from "@/lib/config/country-context";
 import { useChartTheme } from "@/lib/echarts-theme";
-import { CATEGORIES_LABELS, type Candidate, type Category, type CandidateProposal } from "@/lib/data/candidates";
+import { CATEGORIES_LABELS, type Candidate, type Category, type CandidateProposal, type PollDataPoint } from "@/lib/data/candidates";
 import type { NewsArticle } from "@/lib/data/news";
 import type { PublicBriefing } from "./page";
 import { cn } from "@/lib/utils";
@@ -72,6 +72,60 @@ function useCountdown(target: Date) {
 }
 
 /**
+ * Runoff standing — derive each finalist's two-way poll average from ONLY the
+ * polls taken AFTER the first round. Mixing first-round (multi-candidate) polls
+ * with runoff (head-to-head) polls produces a misleading "tie". Dedupes by
+ * date+pollster so duplicate scraped rows don't skew the mean. Falls back to the
+ * stored average if there are no post-first-round polls yet.
+ */
+function runoffStanding(c: Candidate, firstRoundDate: string) {
+  const polls = c.pollHistory.filter((p) => p.date > firstRoundDate);
+  if (polls.length === 0) {
+    return { average: c.pollAverage, trend: c.pollTrend, history: c.pollHistory };
+  }
+  const byKey = new Map<string, { date: string; pollster: string; values: number[] }>();
+  for (const p of polls) {
+    const key = `${p.date}|${p.pollster.trim().toLowerCase()}`;
+    const existing = byKey.get(key);
+    if (existing) existing.values.push(p.value);
+    else byKey.set(key, { date: p.date, pollster: p.pollster.trim(), values: [p.value] });
+  }
+  const history: PollDataPoint[] = Array.from(byKey.values())
+    .map((e) => ({ date: e.date, pollster: e.pollster, value: e.values.reduce((a, b) => a + b, 0) / e.values.length }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // Recency-weighted average — mirrors the house poll model so recent runoff
+  // polls dominate older ones (e.g. a month-old runoff poll barely counts).
+  const now = Date.now();
+  const weightFor = (d: string) => {
+    const days = Math.floor((now - new Date(d + "T12:00:00").getTime()) / 86_400_000);
+    if (days <= 7) return 0.5;
+    if (days <= 14) return 0.3;
+    if (days <= 30) return 0.2;
+    return 0.05;
+  };
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (const p of history) {
+    const w = weightFor(p.date);
+    weightedSum += p.value * w;
+    totalWeight += w;
+  }
+  const average =
+    totalWeight > 0
+      ? Math.round((weightedSum / totalWeight) * 10) / 10
+      : Math.round((history.reduce((s, p) => s + p.value, 0) / history.length) * 10) / 10;
+
+  let trend: Candidate["pollTrend"] = "stable";
+  if (history.length >= 2) {
+    const delta = history[history.length - 1].value - history[0].value;
+    if (delta > 0.5) trend = "up";
+    else if (delta < -0.5) trend = "down";
+  }
+  return { average, trend, history };
+}
+
+/**
  * FinalistPortrait — the editorial half of the head-to-head hero.
  * Designed to feel like an election-night magazine spread: party color floods the panel,
  * portrait dominates, candidate name in display typography, poll % as huge serifable numeral.
@@ -80,16 +134,19 @@ function FinalistPortrait({
   candidate,
   side,
   leading,
+  blackout = false,
 }: {
   candidate: Candidate;
   side: "left" | "right";
   leading: boolean;
+  blackout?: boolean;
 }) {
+  const country = useCountry();
   const TrendIcon = TREND_ICON[candidate.pollTrend];
   const isLeft = side === "left";
   return (
     <Link
-      href={`/pe/candidatos/${candidate.slug}`}
+      href={`/${country.code}/candidatos/${candidate.slug}`}
       className={cn(
         "group relative flex-1 overflow-hidden block",
         // Mobile: padding box; Desktop: edge-to-edge half
@@ -121,9 +178,9 @@ function FinalistPortrait({
           !isLeft && "justify-items-end text-right"
         )}
       >
-        {/* Row 1 — Leading pill (reserved height even when not leader) */}
+        {/* Row 1 — Leading pill (reserved height even when not leader; hidden in veda) */}
         <div className="self-start">
-          {leading ? (
+          {leading && !blackout ? (
             <div
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1"
               style={{ backgroundColor: candidate.partyColor, color: "white" }}
@@ -175,26 +232,37 @@ function FinalistPortrait({
           </p>
         </div>
 
-        {/* Row 4 — Massive poll number + trend */}
+        {/* Row 4 — Massive poll number + trend (hidden during the polling blackout) */}
         <div className={cn(!isLeft && "text-right")}>
-          <div className={cn("flex items-baseline gap-1 font-mono tabular-nums", !isLeft && "justify-end")}>
-            <span
-              className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-none"
-              style={{ color: candidate.partyColor }}
-            >
-              {candidate.pollAverage.toFixed(1)}
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-stone-400">%</span>
-          </div>
-          <div className={cn("mt-1 flex items-center gap-1.5", !isLeft && "justify-end")}>
-            <div className={cn("inline-flex items-center gap-1 text-xs font-bold", TREND_COLOR[candidate.pollTrend])}>
-              <TrendIcon className="h-3.5 w-3.5" />
-              <span>{candidate.pollTrend === "stable" ? "estable" : candidate.pollTrend === "up" ? "subiendo" : "bajando"}</span>
+          {blackout ? (
+            <div className={cn("flex items-center gap-1.5 text-stone-400", !isLeft && "justify-end")}>
+              <span className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">—</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest leading-tight max-w-[7rem]">
+                Encuestas en veda
+              </span>
             </div>
-            <span className="text-[10px] text-stone-400">
-              · {candidate.pollHistory.length} encuestas
-            </span>
-          </div>
+          ) : (
+            <>
+              <div className={cn("flex items-baseline gap-1 font-mono tabular-nums", !isLeft && "justify-end")}>
+                <span
+                  className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-none"
+                  style={{ color: candidate.partyColor }}
+                >
+                  {candidate.pollAverage.toFixed(1)}
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-stone-400">%</span>
+              </div>
+              <div className={cn("mt-1 flex items-center gap-1.5", !isLeft && "justify-end")}>
+                <div className={cn("inline-flex items-center gap-1 text-xs font-bold", TREND_COLOR[candidate.pollTrend])}>
+                  <TrendIcon className="h-3.5 w-3.5" />
+                  <span>{candidate.pollTrend === "stable" ? "estable" : candidate.pollTrend === "up" ? "subiendo" : "bajando"}</span>
+                </div>
+                <span className="text-[10px] text-stone-400">
+                  · {candidate.pollHistory.length} encuestas
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Row 5 — Legal note (reserved height even when none) */}
@@ -287,18 +355,18 @@ function BalanceBar({ finalists }: { finalists: [Candidate, Candidate] }) {
   );
 }
 
-function RunoffHero({ finalists }: { finalists: [Candidate, Candidate] }) {
+function RunoffHero({ finalists, blackout = false }: { finalists: [Candidate, Candidate]; blackout?: boolean }) {
   const country = useCountry();
   const runoffDate = useMemo(
     () => new Date(country.electionDateSecondRound + "T08:00:00-05:00"),
     [country.electionDateSecondRound]
   );
   const { days, hours, minutes, seconds } = useCountdown(runoffDate);
-  const dateLong = runoffDate.toLocaleDateString("es-PE", {
+  const dateLong = runoffDate.toLocaleDateString(`es-${country.code.toUpperCase()}`, {
     weekday: "long",
     day: "numeric",
     month: "long",
-    timeZone: "America/Lima",
+    timeZone: country.timezone,
   });
 
   const [a, b] = finalists;
@@ -352,7 +420,7 @@ function RunoffHero({ finalists }: { finalists: [Candidate, Candidate] }) {
 
       {/* Head-to-head — full split, no padding wrappers, edge to edge */}
       <div className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr]">
-        <FinalistPortrait candidate={a} side="left" leading={a.id === leadingId} />
+        <FinalistPortrait candidate={a} side="left" leading={a.id === leadingId} blackout={blackout} />
 
         {/* Center VS divider */}
         <div className="relative flex md:flex-col items-center justify-center py-4 md:py-0 md:px-2 bg-stone-100 md:bg-transparent">
@@ -376,14 +444,32 @@ function RunoffHero({ finalists }: { finalists: [Candidate, Candidate] }) {
           </div>
         </div>
 
-        <FinalistPortrait candidate={b} side="right" leading={b.id === leadingId} />
+        <FinalistPortrait candidate={b} side="right" leading={b.id === leadingId} blackout={blackout} />
       </div>
 
-      {/* Balance bar foot */}
+      {/* Balance bar foot — replaced by a legal notice during the polling blackout */}
       <div className="relative bg-white/60 backdrop-blur border-t border-stone-200/60 px-6 sm:px-10 py-5">
-        <BalanceBar finalists={finalists} />
+        {blackout ? <VedaNotice /> : <BalanceBar finalists={finalists} />}
       </div>
     </motion.section>
+  );
+}
+
+/** Legal notice shown in place of poll figures during Colombia's pre-election polling blackout. */
+function VedaNotice() {
+  return (
+    <div className="flex items-start gap-2.5">
+      <Scale className="h-4 w-4 text-stone-500 flex-shrink-0 mt-0.5" />
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-stone-500">
+          Veda electoral de encuestas
+        </p>
+        <p className="text-[11px] text-stone-500 mt-1 leading-snug max-w-prose">
+          La ley colombiana prohíbe publicar encuestas desde 7 días antes y hasta el cierre de las urnas.
+          Las cifras de intención de voto se reactivan al cerrar la jornada del balotaje.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -404,13 +490,14 @@ function relativeDayLabel(dateStr: string): string {
  * Shows today's AI-generated briefing (editorial_summary + 2-3 top headlines)
  * with a compact timeline of the previous two days underneath.
  */
-function DayPulse({ briefings, finalists }: { briefings: PublicBriefing[]; finalists: [Candidate, Candidate] }) {
+function DayPulse({ briefings, finalists, blackout = false }: { briefings: PublicBriefing[]; finalists: [Candidate, Candidate]; blackout?: boolean }) {
   if (!briefings || briefings.length === 0) return null;
   const [today, ...prior] = briefings;
   const todayStories = (today.top_stories ?? []).slice(0, 3);
 
   // Extract poll deltas for the two finalists from today's poll_movements.
-  const movements = (today.poll_movements ?? []).filter((m) => {
+  // Suppressed entirely during the polling blackout (publishing poll data is illegal).
+  const movements = blackout ? [] : (today.poll_movements ?? []).filter((m) => {
     const name = m.candidate?.toLowerCase() ?? "";
     return finalists.some(
       (f) =>
@@ -565,6 +652,7 @@ function DayPulse({ briefings, finalists }: { briefings: PublicBriefing[]; final
 
 function RunoffPollsChart({ finalists }: { finalists: [Candidate, Candidate] }) {
   const ct = useChartTheme();
+  const country = useCountry();
   const [a, b] = finalists;
 
   // Pair polls by date+pollster across both candidates and order by date.
@@ -660,7 +748,7 @@ function RunoffPollsChart({ finalists }: { finalists: [Candidate, Candidate] }) 
               {pollsterCount} encuestadoras · últimas {dates.length} mediciones
             </p>
           </div>
-          <Link href="/pe/encuestas" className="text-[11px] text-primary font-bold hover:underline flex items-center gap-1">
+          <Link href={`/${country.code}/encuestas`} className="text-[11px] text-primary font-bold hover:underline flex items-center gap-1">
             Ver todas
             <ChevronRight className="h-3 w-3" />
           </Link>
@@ -674,6 +762,7 @@ function RunoffPollsChart({ finalists }: { finalists: [Candidate, Candidate] }) 
 }
 
 function ProposalsCompare({ finalists }: { finalists: [Candidate, Candidate] }) {
+  const country = useCountry();
   const [a, b] = finalists;
 
   // Union of categories present in either candidate's proposals.
@@ -705,7 +794,7 @@ function ProposalsCompare({ finalists }: { finalists: [Candidate, Candidate] }) 
               Comparación directa por temática
             </p>
           </div>
-          <Link href="/pe/planes/comparar" className="text-[11px] text-primary font-bold hover:underline flex items-center gap-1">
+          <Link href={`/${country.code}/planes/comparar`} className="text-[11px] text-primary font-bold hover:underline flex items-center gap-1">
             Comparador completo
             <ChevronRight className="h-3 w-3" />
           </Link>
@@ -761,6 +850,29 @@ function ProposalsCompare({ finalists }: { finalists: [Candidate, Candidate] }) 
 
 export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, briefings = [] }: RunoffHomeClientProps) {
   const country = useCountry();
+
+  // Polling blackout (veda): Colombia bans publishing polls from 7 days before
+  // the runoff through the close of voting. Preview the blackout state with ?veda=1.
+  const [vedaPreview, setVedaPreview] = useState(false);
+  useEffect(() => {
+    setVedaPreview(new URLSearchParams(window.location.search).get("veda") === "1");
+  }, []);
+  const daysToRunoff = country.electionDateSecondRound
+    ? Math.floor((new Date(country.electionDateSecondRound + "T12:00:00").getTime() - Date.now()) / 86_400_000)
+    : Infinity;
+  const inPollBlackout = vedaPreview || (country.code === "co" && daysToRunoff >= 0 && daysToRunoff <= 7);
+
+  // Replace each finalist's blended (first-round + runoff) poll stats with a
+  // standing computed from runoff-only polls. Keeps the head-to-head honest.
+  const adjustedFinalists = useMemo(
+    () =>
+      finalists.map((c) => {
+        const s = runoffStanding(c, country.electionDate);
+        return { ...c, pollAverage: s.average, pollTrend: s.trend, pollHistory: s.history };
+      }) as [Candidate, Candidate],
+    [finalists, country.electionDate]
+  );
+
   const finalistSlugSet = useMemo(
     () => new Set(finalists.map((f) => f.slug)),
     [finalists]
@@ -779,18 +891,41 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, bri
     .filter((c) => c.photo)
     .map((c) => ({ shortName: c.shortName, name: c.name, photo: c.photo, partyColor: c.partyColor }));
 
+  // Country-specific facts for the "Datos del Balotaje" sidebar.
+  const isCo = country.code === "co";
+  const runoffDateLabel = country.electionDateSecondRound
+    ? new Date(country.electionDateSecondRound + "T12:00:00").toLocaleDateString(`es-${country.code.toUpperCase()}`, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: country.timezone,
+      })
+    : "";
+  const votingLabel = isCo ? "Voto voluntario" : "Voto obligatorio";
+  const votingSub = isCo ? "Ciudadanos desde los 18 años · sin sanción" : "18 a 70 años · multa por no votar";
+  const closeHour = isCo ? "16:00" : "17:00";
+  const resultsAuthority = isCo ? "Registraduría" : "ONPE";
+
   return (
     <div className="space-y-6">
-      <RunoffHero finalists={finalists} />
+      <RunoffHero finalists={adjustedFinalists} blackout={inPollBlackout} />
 
       {briefings.length > 0 && (
-        <DayPulse briefings={briefings} finalists={finalists} />
+        <DayPulse briefings={briefings} finalists={adjustedFinalists} blackout={inPollBlackout} />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <RunoffPollsChart finalists={finalists} />
-          <ProposalsCompare finalists={finalists} />
+          {inPollBlackout ? (
+            <Card className="bg-card border-border">
+              <CardContent className="p-5">
+                <VedaNotice />
+              </CardContent>
+            </Card>
+          ) : (
+            <RunoffPollsChart finalists={adjustedFinalists} />
+          )}
+          <ProposalsCompare finalists={adjustedFinalists} />
           {filtered.length > 0 && (
             <LiveNewsFeed articles={filtered} candidatePhotos={candidatePhotos} />
           )}
@@ -806,7 +941,7 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, bri
                 <div className="flex items-center gap-3">
                   <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
                   <div>
-                    <p className="text-xs font-medium text-foreground">7 de junio 2026</p>
+                    <p className="text-xs font-medium text-foreground capitalize">{runoffDateLabel}</p>
                     <p className="text-[10px] text-muted-foreground">Segunda vuelta presidencial</p>
                   </div>
                 </div>
@@ -820,25 +955,25 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, bri
                 <div className="flex items-center gap-3">
                   <Vote className="h-4 w-4 text-primary flex-shrink-0" />
                   <div>
-                    <p className="text-xs font-medium text-foreground">Voto obligatorio</p>
-                    <p className="text-[10px] text-muted-foreground">18 a 70 años · multa por no votar</p>
+                    <p className="text-xs font-medium text-foreground">{votingLabel}</p>
+                    <p className="text-[10px] text-muted-foreground">{votingSub}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                   <div>
                     <p className="text-xs font-medium text-foreground">{country.departments.length} departamentos</p>
-                    <p className="text-[10px] text-muted-foreground">Mesas de 8:00 a 17:00 h</p>
+                    <p className="text-[10px] text-muted-foreground">Mesas de 8:00 a {closeHour} h</p>
                   </div>
                 </div>
               </div>
 
               <div className="pt-3 border-t border-border">
                 <Link
-                  href="/pe/en-vivo"
+                  href={`/${country.code}/en-vivo`}
                   className="flex items-center justify-between text-[11px] text-muted-foreground hover:text-foreground"
                 >
-                  <span>Resultados oficiales 1ra vuelta (ONPE)</span>
+                  <span>Resultados oficiales 1ra vuelta ({resultsAuthority})</span>
                   <ExternalLink className="h-3 w-3" />
                 </Link>
               </div>
@@ -854,10 +989,10 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, bri
                 ¿Con quién coincides más?
               </h3>
               <p className="text-[11px] text-muted-foreground mb-3 leading-snug">
-                Compara tus posturas con las de Keiko Fujimori y Roberto Sánchez en 15 preguntas.
+                Compara tus posturas con las de {finalists[0].shortName || finalists[0].name} y {finalists[1].shortName || finalists[1].name} en 15 preguntas.
               </p>
               <Link
-                href="/pe/quiz"
+                href={`/${country.code}/quiz`}
                 className="inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold px-4 py-2 hover:bg-primary/90 transition-colors"
               >
                 Tomar el quiz

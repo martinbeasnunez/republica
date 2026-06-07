@@ -1,8 +1,11 @@
 import { NextRequest } from "next/server";
 import { getOpenAI, SYSTEM_PROMPTS } from "@/lib/ai/openai";
 import { fetchCandidates } from "@/lib/data/candidates";
-import { fetchNewsContext } from "@/lib/data/news";
+import { fetchArticles } from "@/lib/data/news";
 import type { CountryCode } from "@/lib/config/countries";
+
+// Max articles for chat context (keeps tokens under control)
+const MAX_NEWS_FOR_CHAT = 30;
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,31 +34,34 @@ export async function POST(req: NextRequest) {
       // Feedback mode: no need to load candidates/news (saves tokens)
       systemContent = SYSTEM_PROMPTS.feedbackCollector(cc);
     } else {
-      // Electoral assistant mode: load full context
-      let candidates: Awaited<ReturnType<typeof fetchCandidates>> = [];
-      let newsContext = "";
-      try {
-        [candidates, newsContext] = await Promise.all([
-          fetchCandidates(cc),
-          fetchNewsContext(cc),
-        ]);
-      } catch (dataErr) {
-        console.error("Error fetching context data:", dataErr);
-      }
+      const [candidates, articles] = await Promise.all([
+        fetchCandidates(cc),
+        fetchArticles(cc),
+      ]);
 
+      // Compact candidate context: key data only, no full bios
       const candidateContext = candidates
         .map((c) => {
           const latestPoll = c.pollHistory.length > 0
             ? c.pollHistory[c.pollHistory.length - 1]
             : null;
           const latestPollInfo = latestPoll
-            ? ` Ultima encuesta: ${latestPoll.value}% (${latestPoll.pollster}, ${latestPoll.date}).`
+            ? ` Última encuesta: ${latestPoll.value}% (${latestPoll.pollster}, ${latestPoll.date}).`
             : "";
-          return `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años, región ${c.region}. Promedio encuestas recientes: ${c.pollAverage}%.${latestPollInfo} Tendencia: ${c.pollTrend}. ${c.bio}. Propuestas clave: ${c.keyProposals.map((p) => p.title).join(", ")}.${c.hasLegalIssues ? ` NOTA LEGAL: ${c.legalNote}` : ""}`;
+          const proposals = c.keyProposals.slice(0, 3).map((p) => p.title).join(", ");
+          return `- ${c.name} (${c.party}, ${c.ideology}): ${c.profession}, ${c.age} años. Promedio: ${c.pollAverage}%.${latestPollInfo} Tendencia: ${c.pollTrend}. Propuestas: ${proposals}.${c.hasLegalIssues ? ` LEGAL: ${c.legalNote}` : ""}`;
         })
         .join("\n");
 
-      systemContent = `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS VERIFICADAS EN LA PLATAFORMA CONDOR:\n${newsContext}`;
+      // Compact news context: recent articles, title + source only
+      const newsContext = articles
+        .slice(0, MAX_NEWS_FOR_CHAT)
+        .map((a, i) =>
+          `${i + 1}. "${a.title}" — ${a.source} (${a.time})${a.sourceUrl ? ` [${a.sourceUrl}]` : ""}`
+        )
+        .join("\n");
+
+      systemContent = `${SYSTEM_PROMPTS.electoralAssistant(cc)}\n\nCANDIDATOS REGISTRADOS:\n${candidateContext}\n\nNOTICIAS RECIENTES (${articles.length} total, mostrando ${Math.min(articles.length, MAX_NEWS_FOR_CHAT)}):\n${newsContext}`;
     }
 
     // Truncate context to stay within ~80k chars (~20k tokens) to leave room for conversation

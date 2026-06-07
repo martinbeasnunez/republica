@@ -187,6 +187,15 @@ export async function runProfileResearcher(
           );
         });
 
+        // Skip candidates with no articles — don't waste API calls on empty profiles
+        if (mentioningArticles.length === 0) {
+          console.log(
+            `[brain][profile-researcher][${countryCode}] ${candidate.short_name}: No articles found, skipping`
+          );
+          result.skipped++;
+          continue;
+        }
+
         const profileData = await researchCandidate(
           candidate as CandidateRow,
           mentioningArticles,

@@ -386,6 +386,80 @@ async function getTopCandidates(
 // AI HELPER
 // =============================================================================
 
+/**
+ * Validates that poll numbers in AI-generated blocks match real candidate data.
+ * Rejects blocks where numbers deviate >5pp from real data or where titles
+ * contain fabricated percentages.
+ */
+function validatePollNumbers(
+  blocks: HomepageComposerAIResponse["blocks"],
+  realCandidates: Array<{ short_name: string; slug: string; poll_average: number }>
+): HomepageComposerAIResponse["blocks"] {
+  // Build a lookup: slug → poll_average, also name fragments → poll_average
+  const pollLookup = new Map<string, number>();
+  for (const c of realCandidates) {
+    pollLookup.set(c.slug, c.poll_average);
+    // Also index by last name fragments for fuzzy matching
+    const nameParts = c.short_name.toLowerCase().split(/\s+/);
+    for (const part of nameParts) {
+      if (part.length >= 4) pollLookup.set(part, c.poll_average);
+    }
+  }
+
+  const TOLERANCE = 5; // ±5pp tolerance
+  const MAX_REALISTIC = 35; // No PE/CO candidate realistically exceeds 35%
+
+  return blocks.filter((block) => {
+    // Check poll_shift blocks: validate content values against real data
+    if (block.block_type === "poll_shift" && block.content) {
+      const content = block.content as {
+        candidate_slug?: string;
+        candidate_name?: string;
+        current_value?: number;
+        previous_value?: number;
+      };
+
+      const slug = content.candidate_slug;
+      const realPoll = slug ? pollLookup.get(slug) : undefined;
+
+      if (realPoll !== undefined && content.current_value !== undefined) {
+        const diff = Math.abs(content.current_value - realPoll);
+        if (diff > TOLERANCE) {
+          console.warn(
+            `[brain][homepage-composer] REJECTED poll_shift block: "${block.title}" — AI says ${content.current_value}% but real is ${realPoll}% (diff ${diff.toFixed(1)}pp > ${TOLERANCE}pp tolerance)`
+          );
+          return false;
+        }
+      }
+
+      // Reject clearly unrealistic values
+      if (content.current_value !== undefined && content.current_value > MAX_REALISTIC) {
+        console.warn(
+          `[brain][homepage-composer] REJECTED poll_shift block: "${block.title}" — value ${content.current_value}% exceeds realistic max (${MAX_REALISTIC}%)`
+        );
+        return false;
+      }
+    }
+
+    // Check all block titles/subtitles for percentage patterns that look fabricated
+    const textToCheck = [block.title, block.subtitle].filter(Boolean).join(" ");
+    const pctMatches = textToCheck.match(/(\d+(?:\.\d+)?)\s*%/g);
+    if (pctMatches) {
+      for (const match of pctMatches) {
+        const pct = parseFloat(match);
+        if (pct > MAX_REALISTIC) {
+          console.warn(
+            `[brain][homepage-composer] REJECTED block "${block.title}" — contains unrealistic percentage ${pct}% in title/subtitle`
+          );
+          return false;
+        }
+      }
+    }
+
+    return true;
+  });
+}
+
 async function composeBlocks(
   countryCode: CountryCode,
   briefing: BriefingContext | null,
@@ -503,9 +577,16 @@ async function composeBlocks(
 
     const parsed = JSON.parse(content) as HomepageComposerAIResponse;
 
-    // Validate
+    // Validate structure
     if (!parsed.blocks || !Array.isArray(parsed.blocks)) return null;
     if (parsed.blocks.length === 0 || parsed.blocks.length > 6) return null;
+
+    // Validate poll numbers against real data to prevent hallucinations
+    parsed.blocks = validatePollNumbers(parsed.blocks, topCandidates);
+    if (parsed.blocks.length === 0) {
+      console.warn(`[brain][homepage-composer] All blocks rejected by poll validation`);
+      return null;
+    }
 
     return parsed;
   } catch (err) {

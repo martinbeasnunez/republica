@@ -46,11 +46,11 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* CONDOR custom accent colors */
-  --color-emerald: #10b981;
-  --color-rose: #ef4444;
-  --color-amber: #f59e0b;
-  --color-sky: #3b82f6;
+  /* CONDOR custom accent colors — WCAG AA contrast ≥ 4.5:1 on #f8f9fb */
+  --color-emerald: #047857;
+  --color-rose: #dc2626;
+  --color-amber: #b45309;
+  --color-sky: #2563eb;
   --color-indigo: #8B1A1A;
   --color-indigo-glow: #A52525;
   --color-rojo: #8B1A1A;
@@ -141,6 +141,11 @@
   --surface-1: #0d0d12;
   --surface-2: #14141e;
   --surface-3: #1a1a28;
+  /* Lighter accents for dark backgrounds — WCAG AA contrast ≥ 4.5:1 on #08060a */
+  --color-emerald: #34d399;
+  --color-rose: #f87171;
+  --color-amber: #fbbf24;
+  --color-sky: #60a5fa;
 }
 
 @layer base {

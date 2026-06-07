@@ -26,21 +26,24 @@ export function PollShiftBlock({ block, onClick }: Props) {
           style={{ backgroundColor: c.party_color || "#6366f1" }}
         />
 
-        <div className="flex-1 p-4">
-          {/* Header row */}
-          <div className="flex items-center gap-2 mb-3">
+        <div className="flex-1 p-4 sm:p-5">
+          {/* Header — human question */}
+          <div className="flex items-center gap-2 mb-2">
             {isUp ? (
-              <TrendingUp className="h-[18px] w-[18px] text-emerald" />
+              <TrendingUp className="h-4 w-4 text-emerald" />
             ) : (
-              <TrendingDown className="h-[18px] w-[18px] text-rose" />
+              <TrendingDown className="h-4 w-4 text-rose" />
             )}
-            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              Movimiento en encuestas
+            <span className={cn(
+              "text-[11px] sm:text-xs font-semibold",
+              isUp ? "text-emerald-700" : "text-rose-700"
+            )}>
+              {isUp ? "¿Quién está subiendo?" : "¿Quién está cayendo?"}
             </span>
           </div>
 
           {/* Candidate name */}
-          <p className="text-sm font-bold text-foreground mb-1 line-clamp-1">
+          <p className="text-base sm:text-lg font-bold text-foreground mb-0.5 line-clamp-1">
             {c.candidate_name}
           </p>
 

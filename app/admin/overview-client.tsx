@@ -16,6 +16,7 @@ import {
   Smartphone,
   Monitor,
   Tablet,
+  CalendarDays,
   Link2,
   ExternalLink,
   MapPin,
@@ -45,6 +46,16 @@ interface AdminData {
   desktopCount: number;
   tabletCount: number;
   dailyViews: { date: string; views: number }[];
+  dailyBreakdown: {
+    date: string;
+    total: number;
+    search: number;
+    social: number;
+    direct: number;
+    referral: number;
+    sessions: number;
+    topReferrers: { name: string; count: number }[];
+  }[];
   topPages: { page: string; count: number }[];
   acquisition: Record<string, AcquisitionPeriod>;
   totalNews: number;
@@ -669,6 +680,102 @@ export function AdminOverviewClient({ data }: { data: AdminData }) {
           </Card>
         </motion.div>
       </div>
+
+      {/* ── TRÁFICO DIARIO — Desglose por día ── */}
+      {data.dailyBreakdown.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Tráfico diario (últimos 7 días)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 pr-3 font-mono text-[10px] uppercase text-muted-foreground">Fecha</th>
+                      <th className="text-right py-2 px-2 font-mono text-[10px] uppercase text-muted-foreground">Total</th>
+                      <th className="text-right py-2 px-2 font-mono text-[10px] uppercase text-muted-foreground">Sesiones</th>
+                      <th className="text-right py-2 px-2 font-mono text-[10px] uppercase text-muted-foreground">
+                        <span className="text-emerald">Búsqueda</span>
+                      </th>
+                      <th className="text-right py-2 px-2 font-mono text-[10px] uppercase text-muted-foreground">Social</th>
+                      <th className="text-right py-2 px-2 font-mono text-[10px] uppercase text-muted-foreground">Directo</th>
+                      <th className="text-left py-2 pl-4 font-mono text-[10px] uppercase text-muted-foreground hidden lg:table-cell">Top fuentes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...data.dailyBreakdown].reverse().map((day) => {
+                      const date = new Date(day.date + "T12:00:00");
+                      const isToday = day.date === data.dailyViews[data.dailyViews.length - 1]?.date;
+                      const dayLabel = isToday
+                        ? "Hoy"
+                        : date.toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" });
+                      const searchPct = day.total > 0 ? Math.round((day.search / day.total) * 100) : 0;
+
+                      return (
+                        <tr
+                          key={day.date}
+                          className={`border-b border-border/50 ${isToday ? "bg-primary/5" : "hover:bg-muted/30"}`}
+                        >
+                          <td className="py-2 pr-3">
+                            <span className={`font-mono tabular-nums ${isToday ? "font-bold text-foreground" : "text-foreground"}`}>
+                              {dayLabel}
+                            </span>
+                          </td>
+                          <td className="text-right py-2 px-2 font-mono tabular-nums font-bold text-foreground">
+                            {day.total}
+                          </td>
+                          <td className="text-right py-2 px-2 font-mono tabular-nums text-muted-foreground">
+                            {day.sessions}
+                          </td>
+                          <td className="text-right py-2 px-2">
+                            <span className="font-mono tabular-nums font-bold text-emerald">
+                              {day.search}
+                            </span>
+                            {searchPct > 0 && (
+                              <span className="text-[9px] text-muted-foreground ml-1">
+                                ({searchPct}%)
+                              </span>
+                            )}
+                          </td>
+                          <td className="text-right py-2 px-2 font-mono tabular-nums text-indigo">
+                            {day.social || "—"}
+                          </td>
+                          <td className="text-right py-2 px-2 font-mono tabular-nums text-muted-foreground">
+                            {day.direct}
+                          </td>
+                          <td className="py-2 pl-4 hidden lg:table-cell">
+                            {day.topReferrers.length > 0 ? (
+                              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                                {day.topReferrers.map((r) => (
+                                  <span key={r.name} className="text-[10px] text-muted-foreground">
+                                    {formatReferrer(r.name)}{" "}
+                                    <span className="font-mono font-medium text-foreground">{r.count}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/40">solo directo</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* ── ADQUISICIÓN — De dónde vienen los usuarios ── */}
       {(() => {

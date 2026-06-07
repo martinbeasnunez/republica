@@ -12,7 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { country, id } = await params;
   const config = getCountryConfig(country);
-  const domain = config?.domain ?? "condorlatam.com";
+  const domain = config?.domain ?? "www.condorlatam.com";
   const candidates = await fetchCandidates(country);
   const candidate = candidates.find((c) => c.id === id);
   const name = candidate?.name;

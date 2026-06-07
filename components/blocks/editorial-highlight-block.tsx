@@ -21,11 +21,11 @@ export function EditorialHighlightBlock({ block, onClick }: Props) {
         CONDOR // ANÁLISIS EDITORIAL // AI-GENERATED
       </div>
 
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         {/* Header row */}
         <div className="flex items-center gap-2 mb-3">
-          <Brain className="h-5 w-5 text-primary" />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-primary">
+          <Brain className="h-4.5 w-4.5 text-primary" />
+          <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-primary">
             Análisis CONDOR
           </span>
         </div>
@@ -37,7 +37,7 @@ export function EditorialHighlightBlock({ block, onClick }: Props) {
 
         {/* Body summary */}
         {c.body && (
-          <p className="text-[11px] text-muted-foreground line-clamp-3 mb-3">
+          <p className="text-xs text-muted-foreground line-clamp-3 mb-3">
             {c.body}
           </p>
         )}

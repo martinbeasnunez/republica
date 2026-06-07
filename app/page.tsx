@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "CONDOR — Elige tu país | Inteligencia Electoral LATAM",
   description:
     "CONDOR es la plataforma de inteligencia electoral con IA para Latinoamérica. Selecciona tu país para comenzar.",
-  alternates: { canonical: "https://condorlatam.com" },
+  alternates: { canonical: "https://www.condorlatam.com" },
   openGraph: {
     title: "CONDOR — Elige tu país",
     description:

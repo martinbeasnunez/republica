@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
+import { Radar, Activity } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { useCountry } from "@/lib/config/country-context";
@@ -54,7 +55,10 @@ export function DynamicBlocks({ blocks }: DynamicBlocksProps) {
   const { trackEvent } = useAnalytics();
   const impressionsSent = useRef(false);
 
-  const sortedBlocks = [...blocks].sort((a, b) => a.position - b.position);
+  // Filter out engagement_cta blocks (deprecated — they link to nonexistent pages)
+  const sortedBlocks = [...blocks]
+    .filter((b) => b.block_type !== "engagement_cta")
+    .sort((a, b) => a.position - b.position);
 
   // ── Track impressions once when blocks render ──
   useEffect(() => {
@@ -165,55 +169,51 @@ export function DynamicBlocks({ blocks }: DynamicBlocksProps) {
   );
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-border bg-card">
-      {/* Background texture layers */}
-      <div className="absolute inset-0 grid-overlay opacity-[0.03]" />
-      <div className="absolute inset-0 data-stream" />
-
-      <div className="relative z-10">
-        {/* Classification header */}
-        <div className="classification-header px-4 py-2 text-center">
-          CONDOR &nbsp;// &nbsp;RADAR DE INTELIGENCIA &nbsp;// &nbsp;
-          {sortedBlocks.length} SEÑALES DETECTADAS &nbsp;// &nbsp;EN VIVO
-        </div>
-
-        {/* Section title area */}
-        <div className="px-4 sm:px-6 pt-4 pb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald pulse-dot" />
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h2 className="text-base sm:text-lg font-bold text-foreground">
-              Lo que CONDOR detecta hoy
-            </h2>
+    <section className="space-y-4">
+      {/* Section header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Radar className="h-4.5 w-4.5 text-primary" />
           </div>
-          <p className="text-[11px] text-muted-foreground font-mono">
-            {sortedBlocks.length} señales activas &middot; Actualizado cada 4h
-          </p>
+          <div>
+            <h2 className="text-base sm:text-lg font-extrabold text-foreground leading-tight">
+              CONDOR AI detecta
+            </h2>
+            <p className="text-[11px] text-muted-foreground">
+              Señales importantes que deberías conocer
+            </p>
+          </div>
         </div>
+        <Badge variant="secondary" className="text-[10px] font-mono gap-1.5 h-6 px-2.5">
+          <Activity className="h-3 w-3 text-emerald" />
+          <span className="font-bold text-foreground">{sortedBlocks.length}</span>
+          alertas
+        </Badge>
+      </div>
 
-        {/* Grid */}
-        <div className="px-4 sm:px-6 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {sortedBlocks.map((block, index) => {
-            const Component =
-              BLOCK_COMPONENTS[block.block_type as HomepageBlockType];
-            if (!Component) return null;
+      {/* Cards grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {sortedBlocks.map((block, index) => {
+          const Component =
+            BLOCK_COMPONENTS[block.block_type as HomepageBlockType];
+          if (!Component) return null;
 
-            return (
-              <motion.div
-                key={block.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.35 }}
-                whileHover={{ y: -2 }}
-              >
-                <Component
-                  block={block}
-                  onClick={() => handleBlockClick(block)}
-                />
-              </motion.div>
-            );
-          })}
-        </div>
+          return (
+            <motion.div
+              key={block.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08, duration: 0.35 }}
+              whileHover={{ y: -2 }}
+            >
+              <Component
+                block={block}
+                onClick={() => handleBlockClick(block)}
+              />
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );

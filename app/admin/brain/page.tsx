@@ -85,6 +85,8 @@ export interface BrainData {
     lastRunTime: string | null;
     actionsToday: number;
     pollAnomalies: number;
+    pollsInserted: number;
+    pollsRejected: number;
   };
   // Actions by job
   actionsByJob: Record<string, number>;
@@ -103,6 +105,20 @@ export interface BrainData {
     system: string;
     message: string;
   }>;
+  // Site audit
+  siteAudit: {
+    overall_score: number;
+    overall_status: string;
+    content_score: number;
+    freshness_score: number;
+    quality_score: number;
+    seo_score: number;
+    trend_direction: string | null;
+    trend_delta: number;
+    audit_date: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    report: any;
+  } | null;
   // Homepage blocks
   homepageBlocks: Array<{
     id: string;
@@ -198,6 +214,14 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
     };
   });
 
+  // ── Site audit (latest report)
+  const { data: siteAuditRaw } = await supabase
+    .from("site_audit_reports")
+    .select("overall_score, overall_status, content_score, freshness_score, quality_score, seo_score, trend_direction, trend_delta, audit_date, report")
+    .eq("country_code", country)
+    .order("audit_date", { ascending: false })
+    .limit(1);
+
   // ── Homepage blocks (last 20, active + inactive for history)
   const { data: homepageBlocksRaw } = await supabase
     .from("homepage_blocks")
@@ -225,6 +249,12 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
       pollAnomalies: actions.filter(
         (a) => a.entity_type === "poll" && a.action_type === "flag"
       ).length,
+      pollsInserted: actions.filter(
+        (a) => a.job === "poll-updater" && a.action_type === "create"
+      ).length,
+      pollsRejected: actions.filter(
+        (a) => a.job === "poll-updater" && a.action_type === "flag"
+      ).length,
     },
     actionsByJob,
     actionsByType,
@@ -248,6 +278,7 @@ async function getBrainData(country: CountryCode): Promise<BrainData> {
           message: a.description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, ""),
         }));
     })(),
+    siteAudit: siteAuditRaw?.[0] || null,
     homepageBlocks: (homepageBlocksRaw || []) as BrainData["homepageBlocks"],
   };
 }
@@ -369,12 +400,15 @@ export default async function AdminBrainPage({
         lastRunTime: null,
         actionsToday: 0,
         pollAnomalies: 0,
+        pollsInserted: 0,
+        pollsRejected: 0,
       },
       actionsByJob: {},
       actionsByType: {},
       recentRuns: [],
       healthChecks: [],
       healthAlerts: [],
+      siteAudit: null,
       homepageBlocks: [],
     };
   }

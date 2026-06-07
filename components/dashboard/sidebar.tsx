@@ -24,6 +24,7 @@ import {
   Menu,
   Globe,
   MessageSquare,
+  Brain,
 } from "lucide-react";
 import { useState } from "react";
 import { Changelog } from "@/components/dashboard/changelog";
@@ -46,6 +47,7 @@ export const navigation = [
   { name: "Candidatos", href: "/candidatos", icon: Users },
   { name: "Encuestas", href: "/encuestas", icon: BarChart3 },
   { name: "Noticias", href: "/noticias", icon: Newspaper },
+  { name: "Análisis IA", href: "/analisis", icon: Brain },
   // ─── Herramientas ───
   { name: "Quiz Electoral", href: "/quiz", icon: HelpCircle },
   { name: "Planes de Gobierno", href: "/planes", icon: FileText },
@@ -191,14 +193,7 @@ function CountrySwitcher({ collapsed }: { collapsed?: boolean }) {
           <Globe className="h-3 w-3 opacity-40" />
         </button>
       ))}
-      {/* Link to country landing */}
-      <Link
-        href="/?select=true"
-        className="flex items-center justify-center gap-1.5 pt-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <Globe className="h-3 w-3" />
-        Ver todos los países
-      </Link>
+      {/* TODO: uncomment when more countries are added */}
     </div>
   );
 }
@@ -352,29 +347,9 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Collapse */}
-      <div className="border-t border-border p-3 space-y-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full justify-center text-muted-foreground hover:text-foreground"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              <span className="text-xs">Colapsar</span>
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Election countdown + changelog */}
+      {/* Changelog link */}
       {!collapsed && (
-        <div className="border-t border-border p-4">
-          <ElectionCountdown />
+        <div className="border-t border-border p-3">
           <Changelog />
         </div>
       )}

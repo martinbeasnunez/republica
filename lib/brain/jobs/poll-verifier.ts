@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CountryCode } from "@/lib/config/countries";
 import { logAction } from "@/lib/brain/audit";
+import { getRecentFlags } from "@/lib/brain/memory";
 
 // =============================================================================
 // TYPES
@@ -42,10 +43,32 @@ const SPIKE_THRESHOLD = 5.0;
 const MIN_POLL_VALUE = 0.3;
 const MAX_POLL_VALUE = 50.0;
 
-/** Known valid pollsters by country */
+/** Known valid pollsters by country — aligned with poll-updater validator whitelist */
 const VALID_POLLSTERS: Record<string, string[]> = {
-  pe: ["ipsos", "datum", "iep", "cpi"],
-  co: ["invamer", "yancep", "cifras y conceptos", "centro nacional de consultoria", "datexco", "guarumo", "cnc"],
+  pe: [
+    "ipsos",
+    "datum",
+    "iep",
+    "cpi",
+    "atlasintel",
+    "atlas intel",
+  ],
+  co: [
+    "invamer",
+    "yancep",
+    "yanhaas",
+    "cifras y conceptos",
+    "centro nacional de consultoria",
+    "cnc",
+    "datexco",
+    "guarumo",
+    "guarumo/ecoanalitica",
+    "gad3",
+    "atlasintel",
+    "atlas intel",
+    "celag",
+    "ecoanalitica",
+  ],
 };
 
 // =============================================================================
@@ -250,12 +273,22 @@ export async function runPollVerifier(
       }
     }
 
-    // Flag significant anomalies in audit trail
+    // Flag significant anomalies in audit trail (skip already-flagged ones)
     const significantAnomalies = anomalies.filter(
       (a) => a.severity === "high" || a.severity === "medium"
     );
 
-    for (const anomaly of significantAnomalies.slice(0, 10)) {
+    // Load recent flags to avoid re-flagging the same anomalies
+    const recentFlagMap = await getRecentFlags(supabase, "data-integrity", countryCode, 7);
+
+    const newAnomalies = significantAnomalies.filter((anomaly) => {
+      const prevFlags = recentFlagMap.get(anomaly.poll.candidate_id) || [];
+      // Skip if a flag with the same core reason already exists
+      const reasonPrefix = anomaly.reason.substring(0, 40);
+      return !prevFlags.some((f) => f.description.includes(reasonPrefix));
+    });
+
+    for (const anomaly of newAnomalies.slice(0, 10)) {
       await logAction(supabase, {
         run_id: runId,
         job: "data-integrity",
@@ -274,8 +307,9 @@ export async function runPollVerifier(
       result.flagged++;
     }
 
+    const skippedDupes = significantAnomalies.length - newAnomalies.length;
     console.log(
-      `[brain][poll-verifier][${countryCode}] Done: ${result.analyzed} analyzed, ${result.anomalies} anomalies, ${result.flagged} flagged, ${result.removed} dupes removed`
+      `[brain][poll-verifier][${countryCode}] Done: ${result.analyzed} analyzed, ${result.anomalies} anomalies, ${result.flagged} flagged (${skippedDupes} already flagged), ${result.removed} dupes removed`
     );
 
     return result;

@@ -5,19 +5,25 @@ export async function POST(req: NextRequest) {
   try {
     const { phone, interests } = await req.json();
 
-    // Validate phone (Peru format: +51 9xx xxx xxx)
+    // Validate phone — supports Peru (+51 9XXXXXXXX) and Colombia (+57 3XXXXXXXXX)
     const cleanPhone = phone?.replace(/[\s\-()]/g, "");
-    if (!cleanPhone || !/^\+?51?\d{9}$/.test(cleanPhone)) {
+    const isPeru = /^\+?51\d{9}$/.test(cleanPhone || "");
+    const isColombia = /^\+?57\d{10}$/.test(cleanPhone || "");
+
+    if (!cleanPhone || (!isPeru && !isColombia)) {
       return NextResponse.json(
-        { error: "Numero de telefono invalido. Usa formato peruano: 9XX XXX XXX" },
+        {
+          error:
+            "Numero de telefono invalido. Usa formato peruano (+51 9XX XXX XXX) o colombiano (+57 3XX XXX XXXX)",
+        },
         { status: 400 }
       );
     }
 
-    // Normalize to +51XXXXXXXXX
+    // Normalize: ensure leading '+'
     const normalizedPhone = cleanPhone.startsWith("+")
       ? cleanPhone
-      : `+51${cleanPhone.replace(/^51/, "")}`;
+      : `+${cleanPhone}`;
 
     // Validate interests
     const validInterests = ["encuestas", "noticias", "alertas", "verificacion"];

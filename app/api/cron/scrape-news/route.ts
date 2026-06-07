@@ -10,7 +10,21 @@ import {
 import { COUNTRY_CODES, type CountryCode } from "@/lib/config/countries";
 
 /** Max new articles to classify per run per country (controls OpenAI costs) */
-const MAX_NEW_ARTICLES = 20;
+const MAX_NEW_ARTICLES = 50;
+
+/** Electoral keywords to pre-filter articles before sending to OpenAI */
+const ELECTORAL_KEYWORDS = [
+  "eleccion", "electoral", "candidat", "voto", "votac", "sufragio",
+  "segunda vuelta", "fujimori", "lopez aliaga", "nieto", "belmont",
+  "alvarez", "sanchez", "lopez chau", "onpe", "jne", "jee",
+  "congreso", "senado", "diputado", "presidencial", "acta",
+  "conteo", "escrutinio", "mesa de sufragio", "dni",
+];
+
+function hasElectoralKeyword(title: string, summary?: string): boolean {
+  const text = (title + " " + (summary || "")).toLowerCase();
+  return ELECTORAL_KEYWORDS.some((kw) => text.includes(kw));
+}
 
 export const maxDuration = 300;
 
@@ -99,8 +113,20 @@ async function scrapeCountry(countryCode: CountryCode) {
       return stats;
     }
 
-    // ─── 3. Classify new articles with OpenAI (parallel, batches of 5) ──
-    const toClassify = diversifyBySource(newArticles, MAX_NEW_ARTICLES, countryCode);
+    // ─── 3. Pre-filter by electoral keywords, then classify with OpenAI ──
+    // Articles with electoral keywords in title/summary are prioritized
+    const electoralArticles = newArticles.filter((a) =>
+      hasElectoralKeyword(a.title)
+    );
+    const nonElectoralArticles = newArticles.filter(
+      (a) => !hasElectoralKeyword(a.title)
+    );
+    // Prefer keyword-matched articles, fall back to rest if space remains
+    const prioritized = [...electoralArticles, ...nonElectoralArticles];
+    const toClassify = diversifyBySource(prioritized, MAX_NEW_ARTICLES, countryCode);
+    console.log(
+      `[scrape-news][${countryCode}] Pre-filter: ${electoralArticles.length} electoral-keyword, ${nonElectoralArticles.length} other, classifying ${toClassify.length}`
+    );
     const classified = [];
     const allPollData: PollDataExtracted[] = [];
 
@@ -150,12 +176,70 @@ async function scrapeCountry(countryCode: CountryCode) {
       stats.inserted = inserted?.length || 0;
     }
 
-    // ─── 5. Insert poll data & recalculate averages ─────────
+    // ─── 5. Auto-create new candidates & insert poll data ──
     if (allPollData.length > 0) {
       console.log(
         `[scrape-news][${countryCode}] Processing ${allPollData.length} poll data points...`
       );
 
+      // 5a. Auto-create any new candidates found in poll data
+      // GUARD: Skip garbage candidates (unknown, desconocido, generic slugs, too-short names)
+      const BLOCKED_PATTERNS = /unknown|desconocido|candidato|generic|test|placeholder|null|undefined/i;
+      const newCandidates = allPollData.filter(
+        (p) =>
+          p._is_new_candidate &&
+          p._candidate_name &&
+          p._candidate_name.length >= 4 &&
+          !BLOCKED_PATTERNS.test(p.candidate_id) &&
+          !BLOCKED_PATTERNS.test(p._candidate_name)
+      );
+      const seenNewIds = new Set<string>();
+      for (const nc of newCandidates) {
+        if (seenNewIds.has(nc.candidate_id)) continue;
+        seenNewIds.add(nc.candidate_id);
+
+        // Check if candidate already exists (might have been created by another poll)
+        const { data: existing } = await supabase
+          .from("candidates")
+          .select("id")
+          .eq("id", nc.candidate_id)
+          .single();
+
+        if (!existing) {
+          const slug = nc.candidate_id;
+          const name = nc._candidate_name || slug;
+          const shortName = name.split(" ").slice(-2).join(" "); // Last 2 words as short name
+
+          const { error: createErr } = await supabase.from("candidates").insert({
+            id: slug,
+            slug,
+            name,
+            short_name: shortName,
+            party: "",
+            party_slug: "",
+            party_color: "#6b7280",
+            photo: "",
+            age: 0,
+            profession: "",
+            region: "",
+            ideology: "centro",
+            bio: "",
+            poll_average: 0,
+            poll_trend: "stable",
+            has_legal_issues: false,
+            country_code: countryCode,
+            key_proposals: [],
+          });
+
+          if (createErr) {
+            console.error(`[scrape-news][${countryCode}] Auto-create candidate ${slug} error:`, createErr);
+          } else {
+            console.log(`[scrape-news][${countryCode}] Auto-created new candidate: ${name} (${slug})`);
+          }
+        }
+      }
+
+      // 5b. Deduplicate and insert polls
       const seenPolls = new Set<string>();
       const uniquePolls = allPollData.filter((p) => {
         const key = `${p.candidate_id}:${p.date}`;
@@ -181,9 +265,11 @@ async function scrapeCountry(countryCode: CountryCode) {
       });
 
       if (newPolls.length > 0) {
+        // Strip internal fields before inserting
+        const cleanPolls = newPolls.map(({ _is_new_candidate, _candidate_name, ...rest }) => rest);
         const { error: pollError } = await supabase
           .from("poll_data_points")
-          .insert(newPolls);
+          .insert(cleanPolls);
 
         if (pollError) {
           console.error(`[scrape-news][${countryCode}] Poll insert error:`, pollError);

@@ -1,8 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/cron/scrape-news",
-      "schedule": "0 12 * * *"
+      "path": "/api/cron/scrape-news?country=pe",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/condor-brain?country=pe",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/scrape-news?country=co",
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/update-polls",
@@ -13,12 +21,12 @@
       "schedule": "40 12 * * *"
     },
     {
-      "path": "/api/cron/condor-brain?country=pe",
-      "schedule": "0 13 * * *"
-    },
-    {
       "path": "/api/cron/condor-brain?country=co",
       "schedule": "5 13 * * *"
+    },
+    {
+      "path": "/api/cron/pulse-update?country=co",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -257,9 +257,9 @@ export function WhatsAppCaptureModal() {
                             setError(null);
                             setPhone(e.target.value.replace(/[^\d\s]/g, ""));
                           }}
-                          placeholder="999 999 999"
+                          placeholder={country.code === "co" ? "310 272 1841" : "999 999 999"}
                           className="w-full rounded-xl border border-border bg-background pl-12 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald/50 focus:border-emerald font-mono tabular-nums"
-                          maxLength={12}
+                          maxLength={country.code === "co" ? 13 : 12}
                           disabled={isSubmitting}
                           autoFocus
                           onKeyDown={(e) =>

@@ -69,12 +69,12 @@ export function FactCheckAlertBlock({ block, onClick }: Props) {
         config.glowClass
       )}
     >
-      <div className="p-4">
-        {/* Header with icon and type label */}
-        <div className="flex items-center gap-2 mb-3">
-          <ShieldAlert className={cn("h-5 w-5", config.iconColor)} />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            Fact Check
+      <div className="p-4 sm:p-5">
+        {/* Header — human question */}
+        <div className="flex items-center gap-2 mb-2">
+          <ShieldAlert className={cn("h-4 w-4", config.iconColor)} />
+          <span className={cn("text-[11px] sm:text-xs font-semibold", config.iconColor)}>
+            {c.verdict === "FALSO" ? "¿Es verdad? No." : c.verdict === "VERDADERO" ? "¿Es verdad? Sí." : "¿Es verdad? Verifícalo"}
           </span>
         </div>
 
@@ -98,7 +98,7 @@ export function FactCheckAlertBlock({ block, onClick }: Props) {
               config.bgAccent
             )}
           >
-            <p className="text-[11px] text-muted-foreground italic line-clamp-2">
+            <p className="text-xs text-muted-foreground italic line-clamp-2">
               &ldquo;{c.claim}&rdquo;
             </p>
           </div>

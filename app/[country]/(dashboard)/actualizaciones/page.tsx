@@ -16,7 +16,7 @@ export async function generateMetadata({
     title: `Changelog — Condor ${name} ${year}`,
     description: `Log público de la plataforma: historial de cambios, nuevas funcionalidades y mejoras en Condor ${name} ${year}.`,
     alternates: {
-      canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/actualizaciones`,
+      canonical: `https://${config?.domain ?? "www.condorlatam.com"}/${country}/actualizaciones`,
     },
   };
 }

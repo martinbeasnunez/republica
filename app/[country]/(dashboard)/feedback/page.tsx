@@ -16,7 +16,7 @@ export async function generateMetadata({
     title: `Feedback — Condor ${name} ${year}`,
     description: `Comparte tu feedback sobre la plataforma CONDOR ${name} ${year}. Tu opinión ayuda a construir una mejor herramienta para la democracia.`,
     alternates: {
-      canonical: `https://${config?.domain ?? "condorlatam.com"}/${country}/feedback`,
+      canonical: `https://${config?.domain ?? "www.condorlatam.com"}/${country}/feedback`,
     },
   };
 }

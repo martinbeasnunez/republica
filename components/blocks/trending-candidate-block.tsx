@@ -28,26 +28,26 @@ export function TrendingCandidateBlock({ block, onClick }: Props) {
           }}
         />
 
-        <div className="p-4">
+        <div className="p-4 sm:p-5">
           {/* Header row */}
           <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
               En tendencia
             </span>
             <span className="h-2 w-2 rounded-full bg-primary pulse-dot ml-auto" />
           </div>
 
           {/* Candidate name row with party dot */}
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2.5 mb-2">
             <div
-              className="h-3 w-3 rounded-full flex-shrink-0"
+              className="h-3.5 w-3.5 rounded-full flex-shrink-0"
               style={{
                 backgroundColor: c.party_color || "#6366f1",
                 boxShadow: `0 0 0 2px ${(c.party_color || "#6366f1")}40`,
               }}
             />
-            <p className="text-sm font-bold text-foreground line-clamp-1">
+            <p className="text-sm sm:text-base font-bold text-foreground line-clamp-1">
               {c.candidate_name}
             </p>
           </div>

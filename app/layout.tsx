@@ -63,13 +63,13 @@ export const metadata: Metadata = {
     "inteligencia artificial elecciones",
     "elecciones latinoamerica 2026",
   ],
-  metadataBase: new URL("https://condorlatam.com"),
+  metadataBase: new URL("https://www.condorlatam.com"),
   alternates: {
-    canonical: "https://condorlatam.com",
+    canonical: "https://www.condorlatam.com",
     languages: {
-      "es-PE": "https://condorlatam.com/pe",
-      "es-CO": "https://condorlatam.com/co",
-      "x-default": "https://condorlatam.com/pe",
+      "es-PE": "https://www.condorlatam.com/pe",
+      "es-CO": "https://www.condorlatam.com/co",
+      "x-default": "https://www.condorlatam.com/pe",
     },
   },
   openGraph: {
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_ES",
     siteName: "CONDOR",
-    url: "https://condorlatam.com",
+    url: "https://www.condorlatam.com",
   },
   twitter: {
     card: "summary_large_image",
@@ -117,7 +117,8 @@ export default function RootLayout({
       <head>
         <OrganizationJsonLd />
         <WebSiteJsonLd />
-        <ElectionJsonLd />
+        <ElectionJsonLd countryCode="pe" />
+        <ElectionJsonLd countryCode="co" />
       </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}

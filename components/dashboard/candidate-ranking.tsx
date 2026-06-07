@@ -23,9 +23,9 @@ export function CandidateRanking({ candidates }: { candidates: Candidate[] }) {
     <div className="rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border p-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">
+          <h2 className="text-sm font-semibold text-foreground">
             Ranking de Candidatos
-          </h3>
+          </h2>
           <p className="text-xs text-muted-foreground">
             Promedio de encuestas
           </p>
@@ -69,7 +69,7 @@ export function CandidateRanking({ candidates }: { candidates: Candidate[] }) {
                   </p>
                   {candidate.hasLegalIssues && (
                     <Tooltip>
-                      <TooltipTrigger>
+                      <TooltipTrigger aria-label="Alerta legal" className="inline-flex items-center justify-center min-w-[24px] min-h-[24px]">
                         <AlertTriangle className="h-3 w-3 text-amber" />
                       </TooltipTrigger>
                       <TooltipContent>

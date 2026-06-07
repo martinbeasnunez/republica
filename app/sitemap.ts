@@ -97,5 +97,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] Error fetching candidates:", err);
   }
 
-  return [...rootRoute, ...staticRoutes, ...candidateRoutes];
+  // ─── Dynamic editorial analysis routes (SEO content pages) ─
+  let analisisRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const supabase = getSupabase();
+    const { data: briefings } = await supabase
+      .from("brain_briefings")
+      .select("briefing_date, country_code")
+      .not("editorial_summary", "is", null)
+      .order("briefing_date", { ascending: false })
+      .limit(60);
+
+    if (briefings) {
+      // Analisis index pages
+      const analisisIndexRoutes: MetadataRoute.Sitemap = COUNTRY_CODES.map((cc) => ({
+        url: `${BASE_URL}/${cc}/analisis`,
+        lastModified: new Date(),
+        changeFrequency: "daily" as const,
+        priority: 0.9,
+        alternates: buildAlternates("/analisis"),
+      }));
+
+      // Individual analysis pages
+      const analisisDetailRoutes: MetadataRoute.Sitemap = briefings.map((b) => ({
+        url: `${BASE_URL}/${b.country_code}/analisis/${b.briefing_date}`,
+        lastModified: new Date(b.briefing_date + "T12:00:00"),
+        changeFrequency: "weekly" as const,
+        priority: 0.85,
+        alternates: buildAlternates(`/analisis/${b.briefing_date}`),
+      }));
+
+      analisisRoutes = [...analisisIndexRoutes, ...analisisDetailRoutes];
+    }
+  } catch (err) {
+    console.error("[sitemap] Error fetching briefings:", err);
+  }
+
+  return [...rootRoute, ...staticRoutes, ...candidateRoutes, ...analisisRoutes];
 }

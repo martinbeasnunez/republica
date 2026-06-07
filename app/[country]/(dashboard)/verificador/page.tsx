@@ -70,10 +70,10 @@ export default async function VerificadorPage({
     <>
       <BreadcrumbJsonLd
         items={[
-          { name: "CONDOR", url: `https://condorlatam.com/${country}` },
+          { name: "CONDOR", url: `https://www.condorlatam.com/${country}` },
           {
             name: "Verificador de Hechos",
-            url: `https://condorlatam.com/${country}/verificador`,
+            url: `https://www.condorlatam.com/${country}/verificador`,
           },
         ]}
       />
@@ -84,7 +84,7 @@ export default async function VerificadorPage({
           claim={fc.claim}
           verdict={fc.verdict}
           explanation={fc.explanation ?? ""}
-          url={`https://condorlatam.com/${country}/verificador`}
+          url={`https://www.condorlatam.com/${country}/verificador`}
           datePublished={fc.createdAt ?? new Date().toISOString()}
           countryCode={country === "co" ? "co" : "pe"}
         />

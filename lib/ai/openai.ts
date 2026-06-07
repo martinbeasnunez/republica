@@ -66,6 +66,15 @@ export const SYSTEM_PROMPTS = {
 
 FECHA DE HOY: ${today}.
 
+REGLA #0 — FILTRO DE OPINIONES (OBLIGATORIO, ANTES DE CUALQUIER ANÁLISIS):
+Antes de verificar, determina si la afirmación es un HECHO o una OPINIÓN.
+- OPINIÓN = juicio de valor, calificativo subjetivo, ataque personal, predicción sin datos.
+  Ejemplos: "X es una amenaza", "X es el mejor candidato", "X miente", "X es corrupto", "X arremete contra Y".
+- HECHO = dato verificable con evidencia: cifras, eventos, votaciones, declaraciones textuales, estadísticas.
+  Ejemplos: "X tiene 15% en encuestas", "X votó en contra de la ley Y", "X fue condenado por Z".
+→ Si es OPINIÓN → veredicto OBLIGATORIO: "NO_VERIFICABLE", explanation: "Esta afirmación es una opinión o juicio de valor, no un hecho verificable."
+→ Si es HECHO → procede con la verificación normal.
+
 REGLAS CRÍTICAS:
 - NUNCA digas "hasta mi fecha de corte" ni "no tengo información reciente". Recibirás NOTICIAS RECIENTES como contexto.
 - BASA tu análisis en las noticias proporcionadas. Si una noticia confirma un hecho, es VERDADERO.
@@ -77,6 +86,7 @@ REGLAS CRÍTICAS:
 - No tomes posición política ni favorezcas a ningún candidato
 - SIEMPRE identifica QUIÉN hizo la afirmación basándote en las noticias proporcionadas
 - Cita las fuentes de las noticias que usaste para verificar
+- NUNCA marques como VERDADERO una opinión, por más que alguien la haya dicho. Que alguien DIGA algo no lo hace VERDADERO — solo confirma que la persona lo dijo.
 
 ${electoralContext}
 
@@ -234,11 +244,18 @@ REGLAS:
 Dada una lista de titulares y resúmenes de noticias, extrae UNA afirmación verificable por cada titular.
 
 REGLAS:
-- Extrae SOLO afirmaciones reales contenidas en el titular o resumen. NUNCA inventes, distorsiones ni exageres.
-- La afirmación debe ser un hecho concreto y verificable (cifras, declaraciones, eventos, datos).
-- NO incluyas opiniones, predicciones ni valoraciones subjetivas.
-- Si el titular es solo opinión o no contiene un hecho verificable, escribe "SKIP".
-- Mantén la afirmación fiel al contenido original de la noticia.
+- Extrae SOLO afirmaciones FACTUALES contenidas en el titular o resumen. NUNCA inventes, distorsiones ni exageres.
+- La afirmación debe ser un HECHO CONCRETO y VERIFICABLE: cifras, datos, eventos que ocurrieron, declaraciones oficiales, estadísticas.
+- OBLIGATORIO escribir "SKIP" si el titular contiene:
+  * Opiniones ("X es una amenaza", "X es el mejor", "X representa el cambio")
+  * Juicios de valor ("X es corrupto", "X miente", "X es peligroso")
+  * Ataques o críticas entre candidatos/políticos ("X arremete contra Y", "X critica a Y")
+  * Predicciones subjetivas ("X va a ganar", "X no tiene oportunidad")
+  * Calificativos emocionales ("terrible", "excelente", "desastroso")
+  * Editoriales o columnas de opinión
+- SOLO son verificables: hechos con números, fechas, eventos, datos oficiales, votaciones, resultados de encuestas, declaraciones textuales citadas con comillas.
+- EN CASO DE DUDA → "SKIP". Es mejor omitir que verificar algo no verificable.
+- Mantén la afirmación fiel al contenido original.
 - Responde en español.
 
 FORMATO (JSON):

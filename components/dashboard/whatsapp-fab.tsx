@@ -103,6 +103,7 @@ export function WhatsAppFAB() {
                     type="button"
                     onClick={() => setExpanded(false)}
                     className="text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Cerrar"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -125,9 +126,9 @@ export function WhatsAppFAB() {
                         setError(null);
                         setPhone(e.target.value.replace(/[^\d\s]/g, ""));
                       }}
-                      placeholder="999 999 999"
+                      placeholder={country.code === "co" ? "310 272 1841" : "999 999 999"}
                       className="w-full rounded-lg border border-border bg-background pl-11 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-emerald font-mono tabular-nums"
-                      maxLength={12}
+                      maxLength={country.code === "co" ? 13 : 12}
                       disabled={isSubmitting}
                       autoFocus
                     />
@@ -146,6 +147,7 @@ export function WhatsAppFAB() {
                     ) : (
                       <Send className="h-4 w-4" />
                     )}
+                    <span className="sr-only">Suscribirse</span>
                   </button>
                 </div>
 
@@ -183,6 +185,7 @@ export function WhatsAppFAB() {
           ) : (
             <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
           )}
+          <span className="sr-only">{expanded ? "Cerrar" : "Alertas WhatsApp"}</span>
         </button>
       </div>
     </div>

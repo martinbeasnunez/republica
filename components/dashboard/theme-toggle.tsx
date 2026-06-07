@@ -41,6 +41,7 @@ export function ThemeToggle() {
           className="h-8 w-8 text-muted-foreground hover:text-foreground"
         >
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <span className="sr-only">{isDark ? "Modo claro" : "Modo oscuro"}</span>
         </Button>
       </TooltipTrigger>
       <TooltipContent>

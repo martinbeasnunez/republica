@@ -13,7 +13,7 @@ const PHOTO_MAP: Record<string, string> = {
   "co-ivan-cepeda":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Ivan_Cepeda_Congreso.jpg/400px-Ivan_Cepeda_Congreso.jpg",
   "co-abelardo-de-la-espriella":
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/ADLE_OFICIAL.webp/400px-ADLE_OFICIAL.webp",
+    "https://upload.wikimedia.org/wikipedia/commons/b/b1/Doctor_abelardo.jpg",
   "co-claudia-lopez":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Claudia_L%C3%B3pez.png/400px-Claudia_L%C3%B3pez.png",
   "co-sergio-fajardo":

@@ -30,6 +30,10 @@ export interface PollDataExtracted {
   pollster: string;
   date: string; // YYYY-MM-DD
   country_code: string;
+  /** True if candidate_id is not in the known candidates list */
+  _is_new_candidate?: boolean;
+  /** Full candidate name (for auto-creating new candidates) */
+  _candidate_name?: string;
 }
 
 // =============================================================================
@@ -127,7 +131,7 @@ RESPONDE EN JSON:
   "is_breaking": boolean,
   "fact_check": "verified" | "questionable" | null,
   "poll_data": [
-    { "candidate_id": "slug", "value": 12.5, "pollster": "Nombre de la encuestadora" }
+    { "candidate_id": "slug", "candidate_name": "Nombre Completo", "value": 12.5, "pollster": "Nombre de la encuestadora" }
   ]
 }
 
@@ -143,7 +147,7 @@ REGLAS para poll_data (ESTRICTAS — seguir al pie de la letra):
 - Si la noticia es opinion, analisis, columna, desmentido, o editorial, poll_data = []
 - Si el titulo contiene negacion ("NO lidera", "falso que", "desmiente"), poll_data = []
 - Rango valido: 0.5% a 50%. Si el valor es mayor a 50%, poll_data = []
-- Solo incluir candidatos de la lista CONOCIDA
+- Incluir TODOS los candidatos mencionados en la encuesta, incluso si no estan en la lista conocida. Para candidatos no conocidos, usa un slug generado (nombre-apellido en minusculas) y SIEMPRE incluye "candidate_name" con el nombre completo
 - CONTEXTO ELECTORAL: Organismos electorales son ${electoralBodies}`;
 }
 
@@ -236,20 +240,21 @@ export async function classifyArticle(
         .filter(
           (p: { candidate_id?: string; value?: number; pollster?: string }) =>
             p.candidate_id &&
-            validSlugs.includes(p.candidate_id) &&
             typeof p.value === "number" &&
             p.value > 0 &&
             p.value <= 50 && // Hard cap — Colombia candidates poll >30%
             p.pollster &&
             validPollsters.has(p.pollster.toLowerCase().trim())
         )
-        .map((p: { candidate_id: string; value: number; pollster?: string }) => ({
+        .map((p: { candidate_id: string; value: number; pollster?: string; candidate_name?: string }) => ({
           candidate_id: slugToId[p.candidate_id] || p.candidate_id,
           value: Math.round(p.value * 10) / 10, // 1 decimal
-          // Normalize to canonical pollster name (e.g. "invamer" → "Invamer")
           pollster: canonicalPollsters.get(p.pollster!.toLowerCase().trim()) || p.pollster!,
           date: isoDate,
           country_code: countryCode,
+          // Flag unknown candidates so scraper can auto-create them
+          _is_new_candidate: !validSlugs.includes(p.candidate_id),
+          _candidate_name: p.candidate_name || p.candidate_id,
         }));
     }
 

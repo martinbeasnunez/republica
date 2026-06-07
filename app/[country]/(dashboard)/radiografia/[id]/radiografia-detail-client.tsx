@@ -530,15 +530,29 @@ export default function RadiografiaDetailClient({
                                               </p>
                                               <div className="space-y-1">
                                                 {cont.sources.map(
-                                                  (src, j) => (
-                                                    <p
-                                                      key={j}
-                                                      className="text-[11px] text-primary flex items-center gap-1"
-                                                    >
-                                                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                                      {src}
-                                                    </p>
-                                                  )
+                                                  (src, j) => {
+                                                    const isUrl = src.startsWith("http");
+                                                    return isUrl ? (
+                                                      <a
+                                                        key={j}
+                                                        href={src}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[11px] text-primary flex items-center gap-1 hover:underline"
+                                                      >
+                                                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                                        {src.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
+                                                      </a>
+                                                    ) : (
+                                                      <p
+                                                        key={j}
+                                                        className="text-[11px] text-primary flex items-center gap-1"
+                                                      >
+                                                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                                        {src}
+                                                      </p>
+                                                    );
+                                                  }
                                                 )}
                                               </div>
                                             </div>
@@ -737,13 +751,19 @@ export default function RadiografiaDetailClient({
               <CardContent>
                 <div className="space-y-1.5">
                   {profile.sources.slice(0, 10).map((src, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      <p className="text-[11px] text-muted-foreground truncate">
+                    <a
+                      key={i}
+                      href={src.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 hover:text-primary transition-colors group"
+                    >
+                      <ExternalLink className="h-3 w-3 text-muted-foreground flex-shrink-0 group-hover:text-primary" />
+                      <p className="text-[11px] text-muted-foreground truncate group-hover:text-primary group-hover:underline">
                         {src.title}
                         {src.date ? ` (${src.date})` : ""}
                       </p>
-                    </div>
+                    </a>
                   ))}
                   {profile.sources.length > 10 && (
                     <p className="text-[10px] text-muted-foreground font-mono">

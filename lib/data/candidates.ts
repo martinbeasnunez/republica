@@ -56,6 +56,8 @@ export interface Candidate {
     website?: string;
   };
   quizPositions: Record<string, number>; // -2 to +2 scale for quiz matching
+  /** URL to official government plan PDF or page (JNE Voto Informado for PE, CNE for CO) */
+  planUrl?: string;
 }
 
 // =============================================================================
@@ -158,6 +160,7 @@ export const candidates: Candidate[] = [
       "salud-universal": -1,
       "corrupcion": 2,
     },
+    planUrl: "https://plataformaelectoral.jne.gob.pe/candidatos/plan-gobierno-trabajo/buscar",
   },
   {
     id: "2",
@@ -220,6 +223,7 @@ export const candidates: Candidate[] = [
       "salud-universal": 0,
       "corrupcion": 1,
     },
+    planUrl: "https://declara.jne.gob.pe/assets/plangobierno/fileplangobierno/16490.pdf",
   },
   {
     id: "3",
@@ -281,6 +285,7 @@ export const candidates: Candidate[] = [
       "salud-universal": 1,
       "corrupcion": 2,
     },
+    planUrl: "https://mpesije.jne.gob.pe/docs/76291ee3-eba2-4c88-adef-2530f2d70bb8.pdf",
   },
   {
     id: "4",
@@ -337,6 +342,7 @@ export const candidates: Candidate[] = [
       "salud-universal": 0,
       "corrupcion": 1,
     },
+    planUrl: "https://mpesije.jne.gob.pe/docs/1334ac30-c28e-42a5-8fc5-79a4638ccd2a.pdf",
   },
   {
     id: "5",
@@ -398,6 +404,7 @@ export const candidates: Candidate[] = [
       "salud-universal": 2,
       "corrupcion": 1,
     },
+    planUrl: "https://mpesije.jne.gob.pe/docs/3dd0e649-061c-4f31-8c3f-7a0836b58bde.pdf",
   },
   {
     id: "6",
@@ -460,6 +467,7 @@ export const candidates: Candidate[] = [
       "salud-universal": 0,
       "corrupcion": 0,
     },
+    planUrl: "https://plataformaelectoral.jne.gob.pe/candidatos/plan-gobierno-trabajo/buscar",
   },
   {
     id: "7",
@@ -521,6 +529,7 @@ export const candidates: Candidate[] = [
       "salud-universal": -1,
       "corrupcion": 2,
     },
+    planUrl: "https://mpesije.jne.gob.pe/docs/b2f303a2-1e0d-4933-9d5f-04682a3710b0.pdf",
   },
   {
     id: "8",
@@ -583,6 +592,7 @@ export const candidates: Candidate[] = [
       "salud-universal": 1,
       "corrupcion": 1,
     },
+    planUrl: "https://plataformaelectoral.jne.gob.pe/candidatos/plan-gobierno-trabajo/buscar",
   },
 ];
 
@@ -595,6 +605,18 @@ export function getTopCandidates(count: number = 5): Candidate[] {
 // DB ROW → Candidate MAPPER
 // =============================================================================
 
+/**
+ * Proxy external candidate photos through Next's image optimizer so the
+ * visitor's browser hits our edge (not upload.wikimedia.org directly).
+ * Avoids Wikimedia's per-IP 429 rate limit on /thumb/*. Local photos
+ * (`/candidatos/*.jpg`) are returned untouched.
+ */
+function proxiedPhotoUrl(raw: string | null | undefined): string {
+  if (!raw) return "";
+  if (!/^https?:\/\//i.test(raw)) return raw; // already local
+  return `/_next/image?url=${encodeURIComponent(raw)}&w=384&q=75`;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapDbToCandidate(row: any, pollHistory: PollDataPoint[] = []): Candidate {
   return {
@@ -605,7 +627,7 @@ function mapDbToCandidate(row: any, pollHistory: PollDataPoint[] = []): Candidat
     party: row.party,
     partySlug: row.party_slug,
     partyColor: row.party_color,
-    photo: row.photo,
+    photo: proxiedPhotoUrl(row.photo),
     age: row.age,
     profession: row.profession,
     region: row.region,
@@ -619,6 +641,7 @@ function mapDbToCandidate(row: any, pollHistory: PollDataPoint[] = []): Candidat
     legalNote: row.legal_note || undefined,
     socialMedia: (row.social_media || {}) as Candidate["socialMedia"],
     quizPositions: (row.quiz_positions || {}) as Record<string, number>,
+    planUrl: row.plan_url || undefined,
   };
 }
 

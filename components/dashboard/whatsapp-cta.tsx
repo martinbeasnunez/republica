@@ -186,14 +186,14 @@ export function WhatsAppCTA({ context = "default" }: { context?: string }) {
                     setError(null);
                     setPhone(e.target.value.replace(/[^\d\s]/g, ""));
                   }}
-                  placeholder="999 999 999"
+                  placeholder={country.code === "co" ? "310 272 1841" : "999 999 999"}
                   className={cn(
                     "w-full rounded-lg border bg-background pl-10 pr-3 py-2 text-xs text-foreground",
                     "placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-emerald",
                     "font-mono tabular-nums",
                     error ? "border-rose/50" : "border-border"
                   )}
-                  maxLength={12}
+                  maxLength={country.code === "co" ? 13 : 12}
                   disabled={isSubmitting}
                   onKeyDown={(e) => e.key === "Enter" && handleSubscribe()}
                 />

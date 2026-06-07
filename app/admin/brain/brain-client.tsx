@@ -56,6 +56,337 @@ function formatDate(dateStr: string): string {
   });
 }
 
+// ── Clean internal block type names from AI reasoning text ──
+
+function cleanBlockTypeNames(text: string): string {
+  return text
+    .replace(/[''']?poll_shift[''']?/g, "encuestas")
+    .replace(/[''']?breaking_news[''']?/g, "noticias urgentes")
+    .replace(/[''']?fact_check_alert[''']?/g, "verificación de hechos")
+    .replace(/[''']?editorial_highlight[''']?/g, "análisis editorial")
+    .replace(/[''']?engagement_cta[''']?/g, "participación")
+    .replace(/[''']?candidate_spotlight[''']?/g, "candidato destacado");
+}
+
+// ── Contextual block type descriptions ──
+
+const blockTypeContext: Record<string, string> = {
+  poll_shift: "Destaca un movimiento importante en las encuestas",
+  breaking_news: "Noticia de alto impacto para los votantes",
+  fact_check_alert: "Verificación relevante para la elección",
+  editorial_highlight: "Análisis editorial sobre un tema del momento",
+  engagement_cta: "Invita al usuario a participar en la plataforma",
+  candidate_spotlight: "Perfil destacado de un candidato",
+};
+
+// Short labels for block types (used in grouped summaries)
+const blockTypeShortLabel: Record<string, string> = {
+  poll_shift: "Encuestas",
+  breaking_news: "Noticias",
+  fact_check_alert: "Verificación",
+  editorial_highlight: "Editorial",
+  engagement_cta: "Quiz",
+  candidate_spotlight: "Candidato",
+};
+
+// ── Grouped insights per run (replaces individual action rendering) ──
+
+interface RunInsight {
+  emoji: string;
+  title: string;
+  detail: string;
+  job: string;
+}
+
+function groupRunIntoInsights(
+  actions: Array<{
+    id: string;
+    job: string;
+    action_type: string;
+    description: string;
+    entity_id: string | null;
+    before_value: Record<string, unknown> | null;
+    after_value: Record<string, unknown> | null;
+    confidence: number | null;
+  }>
+): RunInsight[] {
+  // Group actions by job
+  const byJob = new Map<string, typeof actions>();
+  for (const a of actions) {
+    const existing = byJob.get(a.job) || [];
+    existing.push(a);
+    byJob.set(a.job, existing);
+  }
+
+  const insights: RunInsight[] = [];
+
+  // Define job order for consistent display
+  const jobOrder = [
+    "site-auditor", "homepage-composer", "health-monitor",
+    "briefing-generator", "news-curator", "profile-researcher",
+    "data-integrity", "poll-verifier",
+  ];
+
+  for (const job of jobOrder) {
+    const jobActions = byJob.get(job);
+    if (!jobActions || jobActions.length === 0) continue;
+
+    switch (job) {
+      case "site-auditor": {
+        const audit = jobActions.find((a) => a.after_value?.overall_score != null);
+        if (audit) {
+          const score = Number(audit.after_value!.overall_score);
+          const scores = {
+            content: Number(audit.after_value!.content_score || 0),
+            freshness: Number(audit.after_value!.freshness_score || 0),
+            quality: Number(audit.after_value!.quality_score || 0),
+            seo: Number(audit.after_value!.seo_score || 0),
+          };
+          const labels: Record<string, string> = { content: "contenido", freshness: "frescura", quality: "calidad", seo: "SEO" };
+          const entries = Object.entries(scores);
+          entries.sort((a, b) => b[1] - a[1]);
+          const best = entries[0];
+          const worst = entries[entries.length - 1];
+          const emoji = score >= 80 ? "💚" : score >= 60 ? "💛" : "🔴";
+          const status = score >= 80 ? "La web está bien" : score >= 60 ? "La web puede mejorar" : "La web necesita trabajo";
+          insights.push({
+            emoji,
+            title: `${status} (${score} de 100)`,
+            detail: `Lo mejor: ${labels[best[0]]} (${best[1]}). Lo más flojo: ${labels[worst[0]]} (${worst[1]})`,
+            job,
+          });
+        } else {
+          const m = jobActions[0].description.match(/Site audit: (\d+)\/100/);
+          insights.push({
+            emoji: "👁️",
+            title: m ? `La web sacó ${m[1]} de 100` : "Revisó la web",
+            detail: "Chequeó contenido, frescura, calidad y SEO",
+            job,
+          });
+        }
+        break;
+      }
+
+      case "homepage-composer": {
+        const creates = jobActions.filter((a) => a.action_type === "create");
+        const compose = jobActions.find((a) => a.action_type === "compose");
+        const blockNames = creates.map((a) => {
+          const type = String(a.after_value?.block_type || "");
+          return blockTypeShortLabel[type] || a.description.replace(/^Bloque \w+:\s*/, "").slice(0, 20);
+        });
+        const reasoning = compose?.after_value?.reasoning
+          ? cleanBlockTypeNames(String(compose.after_value.reasoning).slice(0, 150))
+          : null;
+        insights.push({
+          emoji: "🧩",
+          title: creates.length > 0
+            ? `Armó ${creates.length} secciones nuevas para la home`
+            : "Reorganizó la página principal",
+          detail: blockNames.length > 0
+            ? blockNames.join(" · ") + (reasoning ? ` — ${reasoning}` : "")
+            : reasoning || "Cambió el orden y contenido de la portada",
+          job,
+        });
+        break;
+      }
+
+      case "health-monitor": {
+        const alerts = jobActions.filter((a) => a.description.includes("[HEALTH"));
+        const critical = alerts.filter((a) => a.description.includes("CRITICAL"));
+        if (alerts.length === 0) {
+          insights.push({
+            emoji: "✅",
+            title: "Todo funciona bien",
+            detail: "No encontró problemas en ningún sistema",
+            job,
+          });
+        } else {
+          const msg = alerts[0].description.replace(/\[HEALTH (CRITICAL|WARNING)\]\s*/, "");
+          insights.push({
+            emoji: critical.length > 0 ? "🔴" : "⚠️",
+            title: critical.length > 0
+              ? `Hay ${alerts.length} ${alerts.length === 1 ? "problema serio" : "problemas serios"}`
+              : `Encontró ${alerts.length} ${alerts.length === 1 ? "cosa para revisar" : "cosas para revisar"}`,
+            detail: msg,
+            job,
+          });
+        }
+        break;
+      }
+
+      case "briefing-generator": {
+        insights.push({
+          emoji: "📰",
+          title: "Escribió el resumen del día",
+          detail: "Leyó las noticias más importantes y redactó un resumen con lo que pasó",
+          job,
+        });
+        break;
+      }
+
+      case "news-curator": {
+        const breaking = jobActions.filter((a) => a.action_type === "set_breaking");
+        const deactivated = jobActions.filter((a) => a.action_type === "deactivate");
+        const parts: string[] = [];
+        if (breaking.length > 0) {
+          const titles = breaking.map((a) =>
+            a.description.replace(/^Set breaking.*?:\s*/, "").slice(0, 50)
+          );
+          parts.push(titles.join(", "));
+        }
+        if (deactivated.length > 0) {
+          parts.push(`Descartó ${deactivated.length} noticias poco importantes`);
+        }
+        insights.push({
+          emoji: "📡",
+          title: breaking.length > 0
+            ? `Encontró ${breaking.length} ${breaking.length === 1 ? "noticia importante" : "noticias importantes"}`
+            : `Leyó ${jobActions.length} noticias nuevas`,
+          detail: parts.join(". ") || "Revisó las noticias del día y eligió las más relevantes",
+          job,
+        });
+        break;
+      }
+
+      case "profile-researcher": {
+        const created = jobActions.filter((a) => a.action_type === "create");
+        const updated = jobActions.filter((a) => a.action_type === "update");
+        const names = [...created, ...updated].map((a) => {
+          const m = a.description.match(/(?:Created|Updated) profile for (.+?)(?:\s*\(|$)/);
+          return m ? m[1] : null;
+        }).filter(Boolean);
+        const total = created.length + updated.length;
+        insights.push({
+          emoji: "🔍",
+          title: `Buscó info de ${total} ${total === 1 ? "candidato" : "candidatos"}`,
+          detail: names.length > 0
+            ? names.join(", ")
+            : "Leyó noticias recientes y armó perfiles con datos verificables",
+          job,
+        });
+        break;
+      }
+
+      case "data-integrity": {
+        const updates = jobActions.filter((a) => a.action_type === "update");
+        const flags = jobActions.filter((a) => a.action_type === "flag");
+        const spikes = jobActions.filter((a) => a.description.includes("[POLL SPIKE]"));
+        const parts: string[] = [];
+        if (updates.length > 0) parts.push(`Corrigió ${updates.length} errores`);
+        if (flags.length > 0) parts.push(`encontró ${flags.length} datos dudosos`);
+        if (spikes.length > 0) {
+          const spikeNames = spikes.map((a) => {
+            const m = a.description.match(/\[POLL SPIKE\] (.+?):/);
+            return m ? m[1] : null;
+          }).filter(Boolean);
+          if (spikeNames.length > 0) parts.push(`subidas raras de ${spikeNames.join(", ")}`);
+        }
+        insights.push({
+          emoji: "🛡️",
+          title: flags.length > 0
+            ? "Encontró datos que no cuadran"
+            : "Los datos están bien",
+          detail: parts.join(", ") || "Revisó que la info de cada candidato sea correcta",
+          job,
+        });
+        break;
+      }
+
+      case "poll-verifier": {
+        const flags = jobActions.filter((a) => a.action_type === "flag");
+        insights.push({
+          emoji: "📊",
+          title: flags.length === 0
+            ? "Las encuestas están bien"
+            : `${flags.length} ${flags.length === 1 ? "encuesta" : "encuestas"} con datos raros`,
+          detail: flags.length === 0
+            ? "Verificó que los números de las encuestadoras sean coherentes"
+            : flags.map((f) => f.description.slice(0, 60)).join(". "),
+          job,
+        });
+        break;
+      }
+
+      default: {
+        insights.push({
+          emoji: "🔧",
+          title: `${jobActions.length} acciones de ${job}`,
+          detail: jobActions[0].description.slice(0, 100),
+          job,
+        });
+      }
+    }
+  }
+
+  return insights;
+}
+
+// ── Job insights for sidebar (replaces "X acciones") ──
+
+function getJobInsight(
+  job: string,
+  actions: Array<{ job: string; action_type: string; description: string; after_value: Record<string, unknown> | null }>
+): string {
+  const jobActions = actions.filter((a) => a.job === job);
+  if (jobActions.length === 0) return "No hizo nada esta semana";
+
+  switch (job) {
+    case "site-auditor": {
+      const audit = jobActions.find((a) => a.after_value?.overall_score != null);
+      if (audit) {
+        const score = Number(audit.after_value!.overall_score);
+        if (score >= 80) return `La web está bien (${score}/100)`;
+        if (score >= 60) return `La web puede mejorar (${score}/100)`;
+        return `La web necesita atención (${score}/100)`;
+      }
+      return "Revisó que la web funcione bien";
+    }
+    case "homepage-composer": {
+      const created = jobActions.filter((a) => a.action_type === "create").length;
+      if (created > 0) return `Armó ${created} secciones nuevas`;
+      return "Reorganizó la página principal";
+    }
+    case "health-monitor": {
+      const alerts = jobActions.filter((a) => a.action_type === "flag").length;
+      if (alerts === 0) return "Todo anda bien";
+      return `Encontró ${alerts} ${alerts === 1 ? "problema" : "problemas"}`;
+    }
+    case "briefing-generator": {
+      const count = jobActions.length;
+      return `Escribió ${count} ${count === 1 ? "resumen" : "resúmenes"} de noticias`;
+    }
+    case "profile-researcher": {
+      const created = jobActions.filter((a) => a.action_type === "create").length;
+      const updated = jobActions.filter((a) => a.action_type === "update").length;
+      const total = created + updated;
+      return `Buscó info de ${total} ${total === 1 ? "candidato" : "candidatos"}`;
+    }
+    case "data-integrity": {
+      const updates = jobActions.filter((a) => a.action_type === "update").length;
+      const flags = jobActions.filter((a) => a.action_type === "flag").length;
+      if (updates > 0 && flags > 0) return `Corrigió ${updates}, quedan ${flags} por revisar`;
+      if (updates > 0) return `Corrigió ${updates} errores en los datos`;
+      if (flags > 0) return `Encontró ${flags} datos dudosos`;
+      return "Revisó que los datos estén bien";
+    }
+    case "news-curator": {
+      const breaking = jobActions.filter((a) => a.action_type === "set_breaking").length;
+      const deactivated = jobActions.filter((a) => a.action_type === "deactivate").length;
+      if (breaking > 0 && deactivated > 0) return `${breaking} importantes, descartó ${deactivated}`;
+      if (breaking > 0) return `Marcó ${breaking} como importantes`;
+      if (deactivated > 0) return `Descartó ${deactivated} poco relevantes`;
+      return "Leyó las noticias del día";
+    }
+    case "poll-verifier": {
+      const flags = jobActions.filter((a) => a.action_type === "flag").length;
+      if (flags === 0) return "Las encuestas están bien";
+      return `${flags} encuestas con datos raros`;
+    }
+    default:
+      return `Hizo ${jobActions.length} ${jobActions.length === 1 ? "cosa" : "cosas"}`;
+  }
+}
+
 // ── Human-readable descriptions for actions ──
 
 function humanizeAction(action: {
@@ -163,7 +494,7 @@ function humanizeAction(action: {
     if (action_type === "set_breaking") {
       return {
         emoji: "🔴",
-        title: "Marcó noticia como Breaking",
+        title: "Destacó noticia importante",
         detail: description.replace(/^Set breaking.*?:\s*/, "").slice(0, 120),
       };
     }
@@ -171,8 +502,8 @@ function humanizeAction(action: {
       const scoreMatch = description.match(/\((\d+)\/10\)/);
       return {
         emoji: "🗑️",
-        title: "Eliminó noticia irrelevante",
-        detail: `Puntuación ${scoreMatch ? scoreMatch[1] : "baja"}/10 — ${description.replace(/^Deactivated.*?:\s*/, "").slice(0, 100)}`,
+        title: "Descartó noticia poco relevante",
+        detail: `Relevancia ${scoreMatch ? scoreMatch[1] : "baja"}/10 — ${description.replace(/^Deactivated.*?:\s*/, "").slice(0, 100)}`,
       };
     }
   }
@@ -181,8 +512,8 @@ function humanizeAction(action: {
   if (job === "briefing-generator") {
     return {
       emoji: "📰",
-      title: "Generó resumen del día",
-      detail: `Briefing editorial generado exitosamente`,
+      title: "Escribió el resumen del día",
+      detail: "Analizó las noticias más importantes y redactó el análisis editorial",
     };
   }
 
@@ -193,7 +524,7 @@ function humanizeAction(action: {
       const isCritical = description.includes("CRITICAL");
       return {
         emoji: isCritical ? "🔴" : "⚠️",
-        title: isCritical ? "Alerta crítica del sistema" : "Advertencia del sistema",
+        title: isCritical ? "Algo está fallando" : "Algo necesita atención",
         detail: msg,
       };
     }
@@ -205,35 +536,99 @@ function humanizeAction(action: {
       const blocksCount = after_value?.blocks_count
         ? String(after_value.blocks_count)
         : "";
+      let reasoning = after_value?.reasoning
+        ? String(after_value.reasoning).slice(0, 200)
+        : description;
+      reasoning = cleanBlockTypeNames(reasoning);
       return {
         emoji: "🧩",
-        title: `Compuso homepage: ${blocksCount} bloques`,
-        detail: after_value?.reasoning
-          ? String(after_value.reasoning).slice(0, 200)
-          : description,
+        title: `Rediseñó la portada con ${blocksCount} secciones`,
+        detail: reasoning,
       };
     }
     if (action_type === "create") {
+      const blockTitle = description.replace(/^Bloque \w+:\s*/, "").slice(0, 60);
+      const blockType = String(after_value?.block_type || "");
       return {
         emoji: "🧩",
-        title: `Bloque: ${description.replace(/^Bloque \w+:\s*/, "").slice(0, 60)}`,
-        detail: description,
+        title: `Nuevo en portada: ${blockTitle}`,
+        detail: blockTypeContext[blockType] || blockTitle,
       };
     }
     if (action_type === "deactivate") {
+      const deactMatch = description.match(/(\d+)/);
       return {
         emoji: "♻️",
-        title: "Reemplazó bloques anteriores",
-        detail: description,
+        title: "Quitó contenido anterior de la portada",
+        detail: deactMatch ? `Se reemplazaron ${deactMatch[1]} bloques por contenido nuevo` : description,
       };
     }
   }
 
   // ── Poll Verifier ──
   if (job === "poll-verifier") {
+    if (action_type === "flag") {
+      return {
+        emoji: "📊",
+        title: "Detectó dato sospechoso en encuestas",
+        detail: description,
+      };
+    }
     return {
       emoji: "📊",
-      title: "Verificó encuestas",
+      title: "Revisó encuestas",
+      detail: description,
+    };
+  }
+
+  // ── Profile Researcher ──
+  if (job === "profile-researcher") {
+    if (action_type === "create") {
+      // Extract candidate name and confidence from description
+      const profileMatch = description.match(/Created profile for (.+?) \(confidence: ([\d.]+)/);
+      if (profileMatch) {
+        const conf = parseFloat(profileMatch[2]);
+        const confLabel = conf >= 0.7 ? "alta" : conf >= 0.4 ? "media" : "baja";
+        return {
+          emoji: "🔍",
+          title: `Investigó perfil de ${profileMatch[1]}`,
+          detail: `Compiló información verificable a partir de noticias (confianza ${confLabel})`,
+        };
+      }
+      return {
+        emoji: "🔍",
+        title: "Investigó perfil de candidato",
+        detail: description,
+      };
+    }
+    if (action_type === "update") {
+      const updateMatch = description.match(/Updated profile for (.+)/);
+      return {
+        emoji: "🔍",
+        title: `Actualizó perfil de ${updateMatch ? updateMatch[1] : "candidato"}`,
+        detail: "Encontró nueva información en noticias recientes",
+      };
+    }
+  }
+
+  // ── Site Auditor ──
+  if (job === "site-auditor") {
+    // Parse: "Site audit: 77/100 (good) — Content 62, Freshness 79, Quality 66, SEO 100. 1 critical, 1 warnings. Trend: stable (+0)"
+    const auditMatch = description.match(
+      /Site audit: (\d+)\/100 \((\w+)\) — Content (\d+), Freshness (\d+), Quality (\d+), SEO (\d+)/
+    );
+    if (auditMatch) {
+      const statusMap: Record<string, string> = { excellent: "excelente", good: "bueno", fair: "regular", poor: "malo" };
+      const status = statusMap[auditMatch[2]] || auditMatch[2];
+      return {
+        emoji: "👁️",
+        title: "Auditoría completa del sitio",
+        detail: `Salud general: ${auditMatch[1]}/100 (${status}). Contenido ${auditMatch[3]}, Frescura ${auditMatch[4]}, Calidad ${auditMatch[5]}, SEO ${auditMatch[6]}`,
+      };
+    }
+    return {
+      emoji: "👁️",
+      title: "Auditoría completa del sitio",
       detail: description,
     };
   }
@@ -241,7 +636,7 @@ function humanizeAction(action: {
   // Fallback
   return {
     emoji: "🔧",
-    title: action_type === "update" ? "Actualización automática" : action_type === "flag" ? "Marcado para revisión" : description.slice(0, 50),
+    title: action_type === "update" ? "Corrección automática" : action_type === "flag" ? "Necesita revisión" : description.slice(0, 50),
     detail: description.slice(0, 150),
   };
 }
@@ -250,9 +645,23 @@ const jobLabels: Record<string, string> = {
   "data-integrity": "Datos",
   "poll-verifier": "Encuestas",
   "news-curator": "Noticias",
-  "briefing-generator": "Briefing",
-  "health-monitor": "Salud",
-  "homepage-composer": "Homepage",
+  "briefing-generator": "Resumen",
+  "health-monitor": "Vigilancia",
+  "homepage-composer": "Portada",
+  "profile-researcher": "Candidatos",
+  "site-auditor": "Web",
+};
+
+// Longer descriptions for sidebar
+const jobDescriptions: Record<string, string> = {
+  "site-auditor": "Revisa que la web funcione bien",
+  "homepage-composer": "Arma la página principal",
+  "health-monitor": "Vigila que todo siga funcionando",
+  "briefing-generator": "Escribe el resumen diario",
+  "profile-researcher": "Investiga info de candidatos",
+  "data-integrity": "Revisa que los datos estén correctos",
+  "news-curator": "Lee y filtra las noticias",
+  "poll-verifier": "Verifica que las encuestas sean reales",
 };
 
 const jobColors: Record<string, string> = {
@@ -262,6 +671,8 @@ const jobColors: Record<string, string> = {
   "briefing-generator": "text-emerald bg-emerald/10 border-emerald/20",
   "health-monitor": "text-rose bg-rose/10 border-rose/20",
   "homepage-composer": "text-pink-400 bg-pink-400/10 border-pink-400/20",
+  "profile-researcher": "text-orange-400 bg-orange-400/10 border-orange-400/20",
+  "site-auditor": "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
 };
 
 const jobIcons: Record<string, typeof Brain> = {
@@ -271,6 +682,8 @@ const jobIcons: Record<string, typeof Brain> = {
   "briefing-generator": FileText,
   "health-monitor": Activity,
   "homepage-composer": LayoutGrid,
+  "profile-researcher": Shield,
+  "site-auditor": Eye,
 };
 
 const actionTypeConfig: Record<
@@ -278,32 +691,32 @@ const actionTypeConfig: Record<
   { label: string; className: string; icon: typeof Brain }
 > = {
   update: {
-    label: "Cambio aplicado",
+    label: "Corregido",
     className: "text-emerald bg-emerald/10 border-emerald/20",
     icon: Pencil,
   },
   flag: {
-    label: "Para revisar",
+    label: "Necesita revisión",
     className: "text-amber bg-amber/10 border-amber/20",
     icon: Flag,
   },
   set_breaking: {
-    label: "Breaking",
+    label: "Urgente",
     className: "text-rose bg-rose/10 border-rose/20",
     icon: Zap,
   },
   deactivate: {
-    label: "Eliminado",
+    label: "Removido",
     className: "text-red-400 bg-red-400/10 border-red-400/20",
     icon: Trash2,
   },
   create: {
-    label: "Creado",
+    label: "Nuevo",
     className: "text-indigo-400 bg-indigo-400/10 border-indigo-400/20",
     icon: FileText,
   },
   compose: {
-    label: "Compuesto",
+    label: "Diseñado",
     className: "text-pink-400 bg-pink-400/10 border-pink-400/20",
     icon: LayoutGrid,
   },
@@ -316,6 +729,46 @@ const verdictColors: Record<string, string> = {
   PARCIALMENTE_VERDADERO: "text-amber",
   NO_VERIFICABLE: "text-muted-foreground",
 };
+
+// =============================================================================
+// BRAIN CHANGELOG — Non-technical update log
+// =============================================================================
+
+const BRAIN_CHANGELOG: Array<{
+  date: string;
+  version: string;
+  title: string;
+  description: string;
+}> = [
+  {
+    date: "7 Mar 2026",
+    version: "v1.3",
+    title: "El Brain ahora audita todo el sitio",
+    description:
+      "Cada dia, el Brain revisa que todas las paginas funcionen, que los candidatos tengan datos completos (bio, foto, perfil, encuestas, noticias), que las fuentes de noticias sean diversas, y que el SEO este al 100%. Te muestra un score de 0-100 en 4 categorias y te dice exactamente que arreglar. Ademas, compara con el dia anterior para ver si las cosas mejoran o empeoran.",
+  },
+  {
+    date: "7 Mar 2026",
+    version: "v1.2",
+    title: "El Brain ahora tiene memoria",
+    description:
+      "Antes, cada vez que el Brain se ejecutaba, empezaba de cero sin recordar lo que hizo ayer. Ahora recuerda sus acciones de los últimos 14 días. Si ya sugirió un cambio y no se aplicó, no vuelve a insistir. Las alertas de encuestas ya no se repiten día tras día. Y si un candidato no tiene noticias, no pierde tiempo creando un perfil vacío.",
+  },
+  {
+    date: "6 Mar 2026",
+    version: "v1.1",
+    title: "SEO y accesibilidad al 100%",
+    description:
+      "Se corrigió que todas las URLs apuntaran a www.condorlatam.com (antes algunas iban sin www, lo que confundía a Google). Se mejoró el contraste de colores para personas con dificultad visual y se agregó soporte de JSON-LD para Colombia.",
+  },
+  {
+    date: "28 Feb 2026",
+    version: "v1.0",
+    title: "Lanzamiento del Brain",
+    description:
+      "Primera versión del cerebro autónomo de CONDOR. 7 trabajos diarios: verificar datos de candidatos, auditar encuestas, curar noticias, generar el resumen del día, investigar perfiles, monitorear la salud del sistema y componer la homepage.",
+  },
+];
 
 // =============================================================================
 // COMPONENT
@@ -351,49 +804,77 @@ export function BrainClient({ data }: { data: BrainData }) {
         </p>
       </motion.div>
 
+      {/* ── Changelog ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.02 }}
+      >
+        <BrainChangelog />
+      </motion.div>
+
       {/* ── KPIs ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <KPICard
-          title="Ejecuciones"
+          title="Veces que corrió"
           value={data.stats.totalRuns}
-          subtitle={`${data.stats.actionsToday} acciones hoy`}
+          subtitle={`${data.stats.actionsToday} cosas hizo hoy`}
           icon={Activity}
           color="indigo"
           delay={0.05}
         />
         <KPICard
-          title="Correcciones"
+          title="Datos corregidos"
           value={data.stats.totalUpdates}
-          subtitle="datos corregidos"
+          subtitle="errores que arregló solo"
           icon={CheckCircle2}
           color="emerald"
           delay={0.1}
         />
         <KPICard
-          title="Alertas"
+          title="Encuestas nuevas"
+          value={data.stats.pollsInserted}
+          subtitle={`${data.stats.pollsRejected} descartadas`}
+          icon={CheckCircle2}
+          color="emerald"
+          delay={0.13}
+        />
+        <KPICard
+          title="Necesita tu ayuda"
           value={data.stats.totalFlags}
-          subtitle="para revisar"
+          subtitle="cosas que no pudo resolver"
           icon={AlertTriangle}
           color="amber"
           delay={0.15}
         />
         <KPICard
-          title="Breaking"
+          title="Noticias urgentes"
           value={data.stats.totalBreaking}
-          subtitle="noticias urgentes"
+          subtitle="marcadas como importantes"
           icon={Zap}
           color="rose"
           delay={0.2}
         />
         <KPICard
-          title="Briefings"
+          title="Resúmenes"
           value={data.stats.totalBriefings}
-          subtitle="resúmenes generados"
+          subtitle="análisis editoriales"
           icon={FileText}
           color="sky"
           delay={0.25}
         />
       </div>
+
+      {/* ── Site Audit ── */}
+      {data.siteAudit && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.26 }}
+        >
+          <SiteAuditSection audit={data.siteAudit} />
+        </motion.div>
+      )}
 
       {/* ── System Health ── */}
       <motion.div
@@ -405,7 +886,7 @@ export function BrainClient({ data }: { data: BrainData }) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Activity className="h-3.5 w-3.5" />
-              Estado del Sistema
+              Están funcionando los sistemas?
               {data.healthChecks.length > 0 && (
                 <Badge
                   variant="outline"
@@ -641,63 +1122,64 @@ export function BrainClient({ data }: { data: BrainData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Activity className="h-3.5 w-3.5" />
-                Actividad por Área
+                En qué trabajó
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {Object.entries(data.actionsByJob).length > 0 ? (
-                Object.entries(data.actionsByJob).map(([job, count]) => {
+                Object.entries(data.actionsByJob).map(([job]) => {
                   const Icon = jobIcons[job] || Brain;
+                  const insight = getJobInsight(job, data.actions);
                   return (
-                    <div key={job} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-xs font-medium text-foreground">
-                            {jobLabels[job] || job}
-                          </span>
-                        </div>
-                        <span className="text-xs font-mono tabular-nums text-muted-foreground">
-                          {count} {count === 1 ? "acción" : "acciones"}
+                    <div key={job} className="flex items-start gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/30 transition-colors">
+                      <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium text-foreground">
+                          {jobDescriptions[job] || jobLabels[job] || job}
                         </span>
-                      </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(100, (count / Math.max(...Object.values(data.actionsByJob))) * 100)}%`,
-                          }}
-                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          {insight}
+                        </p>
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <p className="text-xs text-muted-foreground">Sin actividad</p>
+                <p className="text-xs text-muted-foreground">El Brain no ha trabajado esta semana</p>
               )}
 
               {/* Recent runs */}
               <div className="pt-2 border-t border-border">
                 <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
-                  Últimas Ejecuciones
+                  Historial reciente
                 </p>
                 <div className="space-y-1.5">
-                  {data.recentRuns.slice(0, 5).map((run) => (
-                    <div
-                      key={run.runId}
-                      className="flex items-center justify-between text-[11px]"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-muted-foreground">
-                          {timeAgo(run.createdAt)}
+                  {data.recentRuns.slice(0, 5).map((run) => {
+                    const runJobs = [...new Set(
+                      data.actions
+                        .filter((a) => a.run_id === run.runId)
+                        .map((a) => jobLabels[a.job] || a.job)
+                    )];
+                    const jobSummary = runJobs.length > 3
+                      ? runJobs.slice(0, 3).join(", ") + "..."
+                      : runJobs.join(", ");
+                    return (
+                      <div
+                        key={run.runId}
+                        className="flex items-center justify-between text-[11px] gap-2"
+                      >
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            {timeAgo(run.createdAt)}
+                          </span>
+                        </div>
+                        <span className="text-foreground text-right truncate">
+                          {jobSummary || `${run.actionsCount} acciones`}
                         </span>
                       </div>
-                      <span className="font-mono tabular-nums text-foreground">
-                        {run.actionsCount} {run.actionsCount === 1 ? "acción" : "acciones"}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {data.recentRuns.length === 0 && (
                     <p className="text-[11px] text-muted-foreground">
                       Sin ejecuciones
@@ -725,12 +1207,12 @@ export function BrainClient({ data }: { data: BrainData }) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Eye className="h-3.5 w-3.5" />
-              ¿Qué hizo Brain?
+              Todo lo que hizo el Brain
               <Badge
                 variant="outline"
                 className="text-[10px] font-mono ml-auto"
               >
-                {data.totalActions} acciones totales
+                {data.totalActions} acciones en total
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -750,58 +1232,44 @@ export function BrainClient({ data }: { data: BrainData }) {
                           {formatDate(run.createdAt)}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
-                          — {run.actionsCount}{" "}
-                          {run.actionsCount === 1 ? "acción" : "acciones"}
+                          — {(() => {
+                            const jobs = [...new Set(run.actions.map((a: { job: string }) => jobLabels[a.job] || a.job))];
+                            return jobs.length > 3 ? jobs.slice(0, 3).join(", ") + "..." : jobs.join(", ");
+                          })()}
                         </span>
                       </div>
 
-                      {/* Actions list */}
+                      {/* Grouped insights */}
                       <div className="ml-3 border-l-2 border-border pl-4 space-y-1.5">
-                        {run.actions.map((action) => {
-                          const h = humanizeAction(action);
-                          const config =
-                            actionTypeConfig[action.action_type] ||
-                            actionTypeConfig.create;
-
-                          return (
-                            <div
-                              key={action.id}
-                              className="flex items-start gap-2 rounded-lg px-3 py-2 hover:bg-muted/30 transition-colors"
-                            >
-                              <span className="text-sm mt-0.5 shrink-0">
-                                {h.emoji}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs font-medium text-foreground">
-                                    {h.title}
-                                  </span>
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "text-[9px] font-mono px-1.5 py-0",
-                                      jobColors[action.job] || ""
-                                    )}
-                                  >
-                                    {jobLabels[action.job] || action.job}
-                                  </Badge>
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "text-[9px] font-mono px-1.5 py-0",
-                                      config.className
-                                    )}
-                                  >
-                                    {config.label}
-                                  </Badge>
-                                </div>
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
-                                  {h.detail}
-                                </p>
+                        {groupRunIntoInsights(run.actions).map((insight, i) => (
+                          <div
+                            key={`${run.runId}-${insight.job}-${i}`}
+                            className="flex items-start gap-2 rounded-lg px-3 py-2 hover:bg-muted/30 transition-colors"
+                          >
+                            <span className="text-sm mt-0.5 shrink-0">
+                              {insight.emoji}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-medium text-foreground">
+                                  {insight.title}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[9px] font-mono px-1.5 py-0",
+                                    jobColors[insight.job] || ""
+                                  )}
+                                >
+                                  {jobLabels[insight.job] || insight.job}
+                                </Badge>
                               </div>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                {insight.detail}
+                              </p>
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -830,10 +1298,10 @@ export function BrainClient({ data }: { data: BrainData }) {
               <div className="text-center py-8">
                 <Brain className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  Brain aún no ha hecho nada.
+                  El Brain aún no ha hecho nada.
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Se ejecuta automáticamente cada día a las 5:00 AM.
+                  Corre automáticamente todos los días a la 1 PM.
                 </p>
               </div>
             )}
@@ -852,7 +1320,7 @@ export function BrainClient({ data }: { data: BrainData }) {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <FileText className="h-3.5 w-3.5" />
-                Resúmenes Anteriores
+                Resúmenes de días anteriores
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -886,6 +1354,356 @@ export function BrainClient({ data }: { data: BrainData }) {
 }
 
 // =============================================================================
+// SITE AUDIT SECTION
+// =============================================================================
+
+function ScoreCircle({
+  score,
+  label,
+  size = "sm",
+}: {
+  score: number;
+  label: string;
+  size?: "sm" | "lg";
+}) {
+  const color =
+    score >= 80
+      ? "text-emerald border-emerald/30"
+      : score >= 50
+        ? "text-amber border-amber/30"
+        : "text-rose border-rose/30";
+  const bgColor =
+    score >= 80 ? "bg-emerald/10" : score >= 50 ? "bg-amber/10" : "bg-rose/10";
+
+  if (size === "lg") {
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <div
+          className={cn(
+            "flex h-16 w-16 items-center justify-center rounded-full border-2",
+            color,
+            bgColor
+          )}
+        >
+          <span className="text-xl font-bold font-mono tabular-nums">{score}</span>
+        </div>
+        <span className="text-[10px] font-medium text-muted-foreground">{label}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-full border",
+          color,
+          bgColor
+        )}
+      >
+        <span className="text-sm font-bold font-mono tabular-nums">{score}</span>
+      </div>
+      <span className="text-[9px] font-medium text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
+function SiteAuditSection({
+  audit,
+}: {
+  audit: NonNullable<BrainData["siteAudit"]>;
+}) {
+  const [showFindings, setShowFindings] = useState(false);
+  const [showWeakest, setShowWeakest] = useState(false);
+
+  const report = audit.report as {
+    content?: { weakest_candidates?: Array<{ name: string; missing: string[] }>; zero_coverage?: string[] };
+    actionable_findings?: Array<{ severity: string; category: string; message: string; action: string }>;
+    trends?: { biggest_changes?: Array<{ category: string; delta: number }> };
+  } | null;
+
+  const findings = report?.actionable_findings || [];
+  const weakest = report?.content?.weakest_candidates || [];
+  const criticalCount = findings.filter((f) => f.severity === "critical").length;
+  const warningCount = findings.filter((f) => f.severity === "warning").length;
+
+  const statusLabel: Record<string, string> = {
+    excellent: "Excelente",
+    good: "Bueno",
+    fair: "Regular",
+    poor: "Pobre",
+  };
+  const statusColor: Record<string, string> = {
+    excellent: "text-emerald border-emerald/30 bg-emerald/10",
+    good: "text-emerald border-emerald/30 bg-emerald/10",
+    fair: "text-amber border-amber/30 bg-amber/10",
+    poor: "text-rose border-rose/30 bg-rose/10",
+  };
+
+  const trendIcon =
+    audit.trend_direction === "improving"
+      ? "↑"
+      : audit.trend_direction === "degrading"
+        ? "↓"
+        : "→";
+  const trendColor =
+    audit.trend_direction === "improving"
+      ? "text-emerald"
+      : audit.trend_direction === "degrading"
+        ? "text-rose"
+        : "text-muted-foreground";
+
+  const missingLabels: Record<string, string> = {
+    bio: "Bio",
+    photo: "Foto",
+    profile: "Perfil",
+    polls: "Encuestas",
+    news: "Noticias",
+  };
+
+  return (
+    <Card className="border-cyan-400/20">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+          <Eye className="h-3.5 w-3.5 text-cyan-400" />
+          Salud del sitio
+          <Badge
+            variant="outline"
+            className={cn("text-[10px] font-mono ml-auto", statusColor[audit.overall_status] || "")}
+          >
+            {statusLabel[audit.overall_status] || audit.overall_status}
+          </Badge>
+          {audit.trend_direction && (
+            <span className={cn("text-xs font-mono font-bold", trendColor)}>
+              {trendIcon}
+              {audit.trend_delta !== 0 && (
+                <span className="ml-0.5">
+                  {audit.trend_delta > 0 ? "+" : ""}
+                  {audit.trend_delta}
+                </span>
+              )}
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Score circles */}
+          <div className="flex items-center justify-around">
+            <ScoreCircle score={audit.overall_score} label="General" size="lg" />
+            <div className="flex gap-4">
+              <ScoreCircle score={audit.content_score} label="Contenido" />
+              <ScoreCircle score={audit.freshness_score} label="Frescura" />
+              <ScoreCircle score={audit.quality_score} label="Calidad" />
+              <ScoreCircle score={audit.seo_score} label="SEO" />
+            </div>
+          </div>
+
+          {/* Meta */}
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+            <span>{audit.audit_date}</span>
+            <span>
+              {criticalCount > 0 && (
+                <span className="text-rose mr-2">{criticalCount} problema{criticalCount !== 1 && "s"} grave{criticalCount !== 1 && "s"}</span>
+              )}
+              {warningCount > 0 && (
+                <span className="text-amber">{warningCount} cosa{warningCount !== 1 && "s"} por mejorar</span>
+              )}
+              {criticalCount === 0 && warningCount === 0 && (
+                <span className="text-emerald">Todo bien</span>
+              )}
+            </span>
+          </div>
+
+          {/* Actionable findings */}
+          {findings.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowFindings(!showFindings)}
+                className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                {showFindings ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
+                {showFindings
+                  ? "Ocultar detalles"
+                  : `Ver qué encontró (${findings.length})`}
+              </button>
+
+              {showFindings && (
+                <div className="mt-2 space-y-1.5">
+                  {findings.map((f, i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex items-start gap-2 text-xs rounded-lg px-2.5 py-1.5 border",
+                        f.severity === "critical"
+                          ? "bg-rose/5 border-rose/20 text-rose"
+                          : f.severity === "warning"
+                            ? "bg-amber/5 border-amber/20 text-amber"
+                            : "bg-emerald/5 border-emerald/20 text-emerald"
+                      )}
+                    >
+                      <span className="shrink-0 mt-0.5">
+                        {f.severity === "critical" ? (
+                          <XCircle className="h-3 w-3" />
+                        ) : f.severity === "warning" ? (
+                          <AlertTriangle className="h-3 w-3" />
+                        ) : (
+                          <CheckCircle2 className="h-3 w-3" />
+                        )}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{f.message}</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">{f.action}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Weakest candidates */}
+          {weakest.length > 0 && (
+            <div>
+              <button
+                onClick={() => setShowWeakest(!showWeakest)}
+                className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                {showWeakest ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
+                {showWeakest
+                  ? "Ocultar candidatos"
+                  : `${weakest.length} candidatos con datos incompletos`}
+              </button>
+
+              {showWeakest && (
+                <div className="mt-2 space-y-1">
+                  {weakest.map((c, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-xs rounded-lg border border-border px-2.5 py-1.5"
+                    >
+                      <span className="font-medium text-foreground truncate flex-1">
+                        {c.name}
+                      </span>
+                      <div className="flex gap-1 shrink-0">
+                        {c.missing.map((m) => (
+                          <Badge
+                            key={m}
+                            variant="outline"
+                            className="text-[9px] font-mono text-rose border-rose/30 px-1 py-0"
+                          >
+                            {missingLabels[m] || m}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// =============================================================================
+// BRAIN CHANGELOG COMPONENT
+// =============================================================================
+
+function BrainChangelog() {
+  const [expanded, setExpanded] = useState(false);
+  const latest = BRAIN_CHANGELOG[0];
+  const older = BRAIN_CHANGELOG.slice(1);
+
+  return (
+    <Card className="border-violet-500/20 bg-violet-500/5">
+      <CardContent className="pt-4 pb-3">
+        {/* Latest update — always visible */}
+        <div className="flex items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/10">
+            <Sparkles className="h-4 w-4 text-violet-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-foreground">
+                {latest.title}
+              </span>
+              <Badge
+                variant="outline"
+                className="text-[9px] font-mono text-violet-400 border-violet-400/30"
+              >
+                {latest.version}
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">
+                {latest.date}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+              {latest.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Older updates — collapsible */}
+        {older.length > 0 && (
+          <div className="mt-2 ml-11">
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="flex items-center gap-1 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              {expanded ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              )}
+              {expanded ? "Ocultar" : `${older.length} actualizaciones anteriores`}
+            </button>
+
+            {expanded && (
+              <div className="mt-2 space-y-3">
+                {older.map((entry) => (
+                  <div key={entry.version} className="flex items-start gap-2">
+                    <Badge
+                      variant="outline"
+                      className="text-[9px] font-mono text-muted-foreground shrink-0 mt-0.5"
+                    >
+                      {entry.version}
+                    </Badge>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-medium text-foreground">
+                          {entry.title}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {entry.date}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                        {entry.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// =============================================================================
 // HOMEPAGE BLOCKS SECTION
 // =============================================================================
 
@@ -900,11 +1718,11 @@ const blockTypeEmoji: Record<string, string> = {
 
 const blockTypeLabel: Record<string, string> = {
   poll_shift: "Encuesta",
-  breaking_news: "Breaking",
-  fact_check_alert: "Fact-check",
+  breaking_news: "Urgente",
+  fact_check_alert: "Verificación",
   trending_candidate: "Tendencia",
-  editorial_highlight: "Editorial",
-  engagement_cta: "CTA",
+  editorial_highlight: "Análisis",
+  engagement_cta: "Participa",
 };
 
 function HomepageBlocksSection({
@@ -924,7 +1742,7 @@ function HomepageBlocksSection({
     (a) => a.job === "homepage-composer" && a.action_type === "compose"
   );
   const reasoning = composeAction?.after_value?.reasoning
-    ? String(composeAction.after_value.reasoning)
+    ? cleanBlockTypeNames(String(composeAction.after_value.reasoning))
     : null;
 
   return (
@@ -937,7 +1755,7 @@ function HomepageBlocksSection({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <LayoutGrid className="h-3.5 w-3.5" />
-            Bloques del Homepage
+            Portada del sitio
             <Badge
               variant="outline"
               className="text-[10px] font-mono ml-auto"
@@ -953,7 +1771,7 @@ function HomepageBlocksSection({
               <div className="flex items-center gap-1.5 mb-1.5">
                 <Sparkles className="h-3 w-3 text-pink-400" />
                 <span className="text-[9px] font-mono uppercase tracking-wider text-pink-400">
-                  Reasoning del AI
+                  Por qué eligió estos bloques
                 </span>
               </div>
               <p className="text-xs text-foreground leading-relaxed">
@@ -966,7 +1784,7 @@ function HomepageBlocksSection({
           {activeBlocks.length > 0 ? (
             <div className="space-y-1.5">
               <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                Bloques activos
+                Lo que se muestra hoy en la portada
               </p>
               {activeBlocks
                 .sort((a, b) => a.position - b.position)
@@ -996,7 +1814,7 @@ function HomepageBlocksSection({
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Sin bloques activos en el homepage.
+              Aún no hay contenido en la portada.
             </p>
           )}
 
@@ -1014,7 +1832,7 @@ function HomepageBlocksSection({
                 )}
                 {showHistory
                   ? "Ocultar historial"
-                  : `Ver ${inactiveBlocks.length} bloques anteriores`}
+                  : `Ver ${inactiveBlocks.length} bloques que ya no se muestran`}
               </button>
 
               {showHistory && (

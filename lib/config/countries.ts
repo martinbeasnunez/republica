@@ -262,6 +262,9 @@ const COLOMBIA_CONFIG: CountryConfig = {
 
   electionDate: "2026-05-31",
   electionDateSecondRound: "2026-06-21",
+  // Finalistas de la primera vuelta (31 may) que disputan el balotaje del 21 jun.
+  // Activa la home head-to-head (RunoffHomeClient) vía isInRunoffPhase().
+  runoffCandidateSlugs: ["ivan-cepeda", "abelardo-de-la-espriella"],
   electionType: "Presidencial",
   electionSystem: "Primera vuelta (si nadie supera 50%, hay segunda vuelta en 3 semanas)",
   electorateSize: "~39 millones de electores habilitados",

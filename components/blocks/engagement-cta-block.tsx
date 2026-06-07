@@ -69,7 +69,7 @@ export function EngagementCTABlock({ block, onClick }: Props) {
         variant.glowClass
       )}
     >
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         {/* Large icon in colored circle + title */}
         <div className="flex items-center gap-3 mb-3">
           <div
@@ -81,10 +81,10 @@ export function EngagementCTABlock({ block, onClick }: Props) {
             <Icon className={cn("h-5 w-5", variant.iconColor)} />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground block">
+            <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-muted-foreground block">
               Explora
             </span>
-            <p className="text-sm font-bold text-foreground line-clamp-1">
+            <p className="text-sm sm:text-base font-bold text-foreground line-clamp-1">
               {block.title}
             </p>
           </div>
@@ -92,7 +92,7 @@ export function EngagementCTABlock({ block, onClick }: Props) {
 
         {/* Description */}
         {c.description && (
-          <p className="text-[11px] text-muted-foreground line-clamp-2 mb-3">
+          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
             {c.description}
           </p>
         )}

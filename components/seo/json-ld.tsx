@@ -6,7 +6,7 @@
 
 import { getCountryConfig, type CountryCode } from "@/lib/config/countries";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://condorlatam.com";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://www.condorlatam.com";
 
 export function OrganizationJsonLd() {
   const schema = {
@@ -299,6 +299,54 @@ export function ClaimReviewJsonLd({
 interface ItemListJsonLdProps {
   items: { name: string; url: string; position?: number }[];
   name: string;
+}
+
+/**
+ * NewsArticle schema — for news article pages.
+ * See: https://developers.google.com/search/docs/data-types/article
+ */
+interface NewsArticleJsonLdProps {
+  headline: string;
+  datePublished: string;
+  description: string;
+  author?: string;
+  image?: string;
+}
+
+export function NewsArticleJsonLd({
+  headline,
+  datePublished,
+  description,
+  author,
+  image,
+}: NewsArticleJsonLdProps) {
+  const schema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline,
+    datePublished,
+    description,
+    author: {
+      "@type": "Organization",
+      name: author || "CONDOR AI",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "CONDOR",
+      url: BASE_URL,
+    },
+  };
+
+  if (image) {
+    schema.image = image;
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
 }
 
 export function ItemListJsonLd({ items, name }: ItemListJsonLdProps) {

@@ -5,13 +5,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
   ChevronRight,
-  Download,
+  FileText,
   Search,
   User,
   Loader2,
   Brain,
   X,
   BarChart3,
+  ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +68,14 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  const officialUrl = country.code === "pe"
+    ? "https://plataformaelectoral.jne.gob.pe/candidatos/plan-gobierno-trabajo/buscar"
+    : "https://www.cne.gov.co/";
+  const officialOrg = country.code === "pe" ? "JNE" : "CNE";
+  const officialFullName = country.code === "pe"
+    ? "Jurado Nacional de Elecciones (JNE)"
+    : "Consejo Nacional Electoral (CNE)";
+
   const filtered = candidates.filter((c) => {
     if (search) {
       return c.name.toLowerCase().includes(search.toLowerCase());
@@ -106,20 +116,31 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
     }
   };
 
+  /** Whether a candidate has a direct PDF link (vs. generic search page) */
+  const hasDirectPdf = (c: Candidate) =>
+    c.planUrl && (c.planUrl.endsWith(".pdf") || c.planUrl.includes("/docs/"));
+
   return (
     <div className="space-y-6">
-      {/* AI disclaimer */}
-      <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-        <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-medium text-foreground">
-            Análisis con Inteligencia Artificial avanzada
+      {/* Official source banner */}
+      <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-5">
+        <ShieldCheck className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-base font-medium text-foreground">
+            Planes de gobierno oficiales
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Haz clic en &ldquo;Analizar con IA&rdquo; en cualquier candidato para obtener
-            un análisis profundo de su plan de gobierno. Siempre consulta el
-            documento original para información completa.
+          <p className="text-sm text-muted-foreground mt-1.5">
+            Documentos registrados ante el {officialFullName}. Descarga el plan oficial de cada candidato o usa el resumen IA para una vista rápida.
           </p>
+          <a
+            href={officialUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-medium mt-2.5 hover:text-emerald-900 transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Ver todos en {officialOrg}
+          </a>
         </div>
       </div>
 
@@ -137,12 +158,12 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Brain className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-sm">
+                    <CardTitle className="text-base">
                       Análisis IA: {aiAnalysis.candidateName}
                     </CardTitle>
                     {aiAnalysis.overallScore > 0 && (
-                      <Badge variant="secondary" className="text-[10px] gap-1 font-mono">
-                        <BarChart3 className="h-3 w-3" />
+                      <Badge variant="secondary" className="text-xs gap-1 font-mono">
+                        <BarChart3 className="h-3.5 w-3.5" />
                         Score: {aiAnalysis.overallScore}/100
                       </Badge>
                     )}
@@ -150,20 +171,20 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7"
+                    className="h-8 w-8"
                     onClick={() => setAiAnalysis(null)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 {/* Summary */}
                 <div>
-                  <p className="text-xs font-medium text-foreground mb-1">
+                  <p className="text-sm font-medium text-foreground mb-1.5">
                     Resumen Ejecutivo
                   </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     {aiAnalysis.summary}
                   </p>
                 </div>
@@ -171,26 +192,26 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                 {/* AI Proposals */}
                 {aiAnalysis.proposals && aiAnalysis.proposals.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-foreground mb-2">
+                    <p className="text-sm font-medium text-foreground mb-2.5">
                       Propuestas Clave
                     </p>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {aiAnalysis.proposals.slice(0, 6).map((p, i) => (
                         <div
                           key={i}
-                          className="rounded-lg bg-muted/50 p-3 border border-border/50"
+                          className="rounded-lg bg-muted/50 p-4 border border-border/50"
                         >
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1.5">
                             <Badge
                               variant="secondary"
-                              className="text-[9px]"
+                              className="text-[10px]"
                             >
                               {p.category}
                             </Badge>
                             <div className="flex gap-1 ml-auto">
                               <span
                                 className={cn(
-                                  "text-[9px] px-1.5 py-0.5 rounded",
+                                  "text-[10px] px-1.5 py-0.5 rounded",
                                   p.feasibility === "alta"
                                     ? "bg-emerald/10 text-emerald"
                                     : p.feasibility === "media"
@@ -202,10 +223,10 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                               </span>
                             </div>
                           </div>
-                          <p className="text-xs font-medium text-foreground">
+                          <p className="text-sm font-medium text-foreground">
                             {p.title}
                           </p>
-                          <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2">
+                          <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                             {p.description}
                           </p>
                         </div>
@@ -218,14 +239,14 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {aiAnalysis.strengths && aiAnalysis.strengths.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-emerald mb-2">
+                      <p className="text-sm font-medium text-emerald mb-2">
                         Fortalezas
                       </p>
-                      <ul className="space-y-1">
+                      <ul className="space-y-1.5">
                         {aiAnalysis.strengths.map((s, i) => (
                           <li
                             key={i}
-                            className="text-[11px] text-muted-foreground flex items-start gap-1.5"
+                            className="text-xs text-muted-foreground flex items-start gap-2"
                           >
                             <span className="text-emerald mt-0.5">+</span>
                             {s}
@@ -236,14 +257,14 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                   )}
                   {aiAnalysis.weaknesses && aiAnalysis.weaknesses.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-rose mb-2">
+                      <p className="text-sm font-medium text-rose mb-2">
                         Debilidades
                       </p>
-                      <ul className="space-y-1">
+                      <ul className="space-y-1.5">
                         {aiAnalysis.weaknesses.map((w, i) => (
                           <li
                             key={i}
-                            className="text-[11px] text-muted-foreground flex items-start gap-1.5"
+                            className="text-xs text-muted-foreground flex items-start gap-2"
                           >
                             <span className="text-rose mt-0.5">-</span>
                             {w}
@@ -252,6 +273,16 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                       </ul>
                     </div>
                   )}
+                </div>
+
+                {/* AI disclaimer */}
+                <div className="flex items-center gap-2 pt-4 border-t border-border/50">
+                  <Sparkles className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground/60">
+                    Resumen generado por IA basado en el plan de gobierno oficial registrado ante el{" "}
+                    <span className="font-medium text-muted-foreground">{officialFullName}</span>.
+                    Consulta el documento original para información completa.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -266,7 +297,7 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="rounded-lg border border-rose/20 bg-rose/5 p-3"
+            className="rounded-lg border border-rose/20 bg-rose/5 p-4"
           >
             <p className="text-sm text-rose">{aiError}</p>
           </motion.div>
@@ -308,7 +339,7 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
       </div>
 
       {/* Plans grid */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         {filtered.map((candidate, index) => {
           const proposals =
             selectedCategory === "todos"
@@ -318,6 +349,9 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                 );
 
           if (proposals.length === 0) return null;
+
+          const directPdf = hasDirectPdf(candidate);
+          const planLink = candidate.planUrl || officialUrl;
 
           return (
             <motion.div
@@ -335,7 +369,7 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className="flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 overflow-hidden"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg flex-shrink-0 overflow-hidden"
                         style={{
                           backgroundColor: candidate.partyColor + "15",
                         }}
@@ -354,10 +388,10 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                         )}
                       </div>
                       <div>
-                        <CardTitle className="text-sm">
+                        <CardTitle className="text-base">
                           {candidate.name}
                         </CardTitle>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {candidate.party}
                         </p>
                       </div>
@@ -367,7 +401,7 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="gap-1 text-xs border-primary/30 text-primary hover:bg-primary/10"
+                        className="gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10"
                         onClick={() =>
                           analyzeCandidate(candidate.name, candidate.id)
                         }
@@ -375,24 +409,31 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                       >
                         {analyzingId === candidate.id ? (
                           <>
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             Analizando...
                           </>
                         ) : (
                           <>
-                            <Brain className="h-3 w-3" />
-                            Analizar con IA
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Resumen IA
                           </>
                         )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-1 text-xs text-muted-foreground"
+                      {/* Plan oficial — proper link */}
+                      <a
+                        href={planLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        <Download className="h-3 w-3" />
-                        PDF
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          {directPdf ? `Plan oficial (PDF)` : `Buscar en ${officialOrg}`}
+                        </Button>
+                      </a>
                       <Link href={`/${country.code}/candidatos/${candidate.slug}`}>
                         <Button
                           variant="ghost"
@@ -400,18 +441,27 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                           className="gap-1 text-xs"
                         >
                           Ver perfil
-                          <ChevronRight className="h-3 w-3" />
+                          <ChevronRight className="h-3.5 w-3.5" />
                         </Button>
                       </Link>
                     </div>
                   </div>
+                  {/* Source indicator */}
+                  {directPdf && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="text-[10px] text-emerald-700 font-medium">
+                        Fuente: {officialFullName}
+                      </span>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {proposals.map((proposal, i) => (
                       <div
                         key={i}
-                        className="rounded-lg bg-muted/50 p-3 border border-border/50"
+                        className="rounded-lg bg-muted/50 p-4 border border-border/50"
                       >
                         <Badge
                           variant="secondary"
@@ -419,10 +469,10 @@ export function PlanesClient({ candidates }: PlanesClientProps) {
                         >
                           {CATEGORIES_LABELS[proposal.category].es}
                         </Badge>
-                        <p className="text-xs font-semibold text-foreground">
+                        <p className="text-sm font-semibold text-foreground">
                           {proposal.title}
                         </p>
-                        <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                           {proposal.summary}
                         </p>
                       </div>

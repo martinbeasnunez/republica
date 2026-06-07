@@ -350,6 +350,66 @@ async function getAdminData(country: CountryCode) {
     };
   }
 
+  /* ── Daily breakdown (last 7 days) — per-day channel + top referrers ── */
+  const dailyBreakdown: {
+    date: string;
+    total: number;
+    search: number;
+    social: number;
+    direct: number;
+    referral: number;
+    sessions: number;
+    topReferrers: { name: string; count: number }[];
+  }[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(localNow.getTime() - i * 24 * 60 * 60 * 1000);
+    const dayKey = d.toISOString().split("T")[0];
+
+    const dayViews = allViews.filter((v) => {
+      const localDate = new Date(
+        new Date(v.created_at).getTime() + TZ_OFFSET,
+      );
+      return localDate.toISOString().split("T")[0] === dayKey;
+    });
+
+    let search = 0, social = 0, direct = 0, referral = 0;
+    const refCounts: Record<string, number> = {};
+
+    for (const v of dayViews) {
+      if (!v.referrer) {
+        direct++;
+      } else if (SEARCH_ENGINES.some((se) => v.referrer!.includes(se))) {
+        search++;
+        refCounts[v.referrer!] = (refCounts[v.referrer!] || 0) + 1;
+      } else if (SOCIAL_NETS.some((sn) => v.referrer!.includes(sn))) {
+        social++;
+        refCounts[v.referrer!] = (refCounts[v.referrer!] || 0) + 1;
+      } else {
+        referral++;
+        refCounts[v.referrer!] = (refCounts[v.referrer!] || 0) + 1;
+      }
+    }
+
+    const sessions = new Set(dayViews.map((v) => v.session_id).filter(Boolean)).size;
+
+    const topReferrers = Object.entries(refCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+
+    dailyBreakdown.push({
+      date: dayKey,
+      total: dayViews.length,
+      search,
+      social,
+      direct,
+      referral,
+      sessions,
+      topReferrers,
+    });
+  }
+
   /* ── Compute acquisition for 3 periods ── */
   const fifteenDaysAgo = new Date(
     now.getTime() - 15 * 24 * 60 * 60 * 1000,
@@ -439,6 +499,7 @@ async function getAdminData(country: CountryCode) {
     desktopCount,
     tabletCount,
     dailyViews,
+    dailyBreakdown,
     topPages,
     acquisition,
     totalNews: newsCountResult.count || 0,
@@ -478,6 +539,7 @@ export default async function AdminOverviewPage({
       desktopCount: 0,
       tabletCount: 0,
       dailyViews: [],
+      dailyBreakdown: [],
       topPages: [],
       acquisition: {
         "7d": {

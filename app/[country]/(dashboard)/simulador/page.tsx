@@ -64,10 +64,10 @@ export default async function SimuladorPage({
     <>
       <BreadcrumbJsonLd
         items={[
-          { name: "CONDOR", url: `https://condorlatam.com/${country}` },
+          { name: "CONDOR", url: `https://www.condorlatam.com/${country}` },
           {
             name: country === "co" ? "Análisis de Escenarios" : "Simulador Electoral",
-            url: `https://condorlatam.com/${country}/simulador`,
+            url: `https://www.condorlatam.com/${country}/simulador`,
           },
         ]}
       />

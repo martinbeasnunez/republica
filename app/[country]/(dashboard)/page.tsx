@@ -158,6 +158,29 @@ async function fetchRecentBriefings(country: string, limit = 3): Promise<PublicB
   }
 }
 
+/** Fetch the N most recent CONDOR AI pulses for the home Pulse feed. */
+export interface PublicPulse {
+  id: string;
+  generated_at: string;
+  summary: string;
+  metrics: Record<string, unknown> | null;
+  phase: string | null;
+}
+async function fetchPulses(country: string, limit = 12): Promise<PublicPulse[]> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from("pulse_updates")
+      .select("id, generated_at, summary, metrics, phase")
+      .eq("country_code", country)
+      .order("generated_at", { ascending: false })
+      .limit(limit);
+    return (data as PublicPulse[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function fetchHomepageBlocks(country: string): Promise<HomepageBlock[]> {
   try {
     const supabase = getSupabase();
@@ -189,7 +212,8 @@ function isElectionWindow(countryCode: CountryCode): boolean {
   for (const d of targets) {
     const electionDate = new Date(d + "T12:00:00");
     const daysDiff = Math.floor((localDateObj.getTime() - electionDate.getTime()) / 86400000);
-    if (daysDiff >= 0 && daysDiff <= 7) return true;
+    // Window: 7 days BEFORE the election (víspera coverage) through 7 days AFTER (results)
+    if (daysDiff >= -7 && daysDiff <= 7) return true;
   }
   return false;
 }
@@ -236,13 +260,14 @@ export default async function HomePage({
   // Live mode: show full coverage hub as homepage during election week
   // (first round or runoff day + 7d).
   if (shouldUseLiveHome(countryCode)) {
-    const [candidates, topCandidates, articles, factChecks, briefing, homepageBlocks] = await Promise.all([
+    const [candidates, topCandidates, articles, factChecks, briefing, homepageBlocks, pulses] = await Promise.all([
       fetchCandidates(country),
       fetchTopCandidates(8, country),
       fetchArticles(country),
       fetchFactChecks(200, country),
       fetchLatestBriefing(country),
       fetchHomepageBlocks(country),
+      fetchPulses(country, 12),
     ]);
     const activeEvent = getActiveEvent(countryCode);
     const nextEvent = getNextEvent(countryCode);
@@ -259,6 +284,7 @@ export default async function HomePage({
         activeEvent={activeEvent}
         nextEvent={nextEvent}
         upcomingEvents={upcomingEvents}
+        pulses={pulses}
       />
     );
   }

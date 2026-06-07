@@ -17,7 +17,7 @@ export function getCountrySeo(country: string, path: string = "") {
   const config = getCountryConfig(country);
   const name = config?.name ?? "Perú";
   const year = config?.electionDate.slice(0, 4) ?? "2026";
-  const domain = config?.domain ?? "condorlatam.com";
+  const domain = config?.domain ?? "www.condorlatam.com";
   const locale = config?.locale ?? "es_PE";
 
   const fullPath = path ? `/${country}${path}` : `/${country}`;

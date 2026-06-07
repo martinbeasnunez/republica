@@ -3,6 +3,7 @@ import type { CountryCode } from "@/lib/config/countries";
 import { getOpenAI } from "@/lib/ai/openai";
 import { BRAIN_PROMPTS } from "@/lib/brain/prompts";
 import { logAction } from "@/lib/brain/audit";
+import { getEntityMemory, formatMemoryForPrompt } from "@/lib/brain/memory";
 
 // =============================================================================
 // TYPES
@@ -138,7 +139,11 @@ export async function runDataIntegrity(
     // ─── 4. Check each candidate with AI ────────────────────
     for (const { candidate, articles } of candidatesWithNews) {
       try {
-        const issues = await checkCandidateIntegrity(candidate, articles, countryCode);
+        // Load memory: what did the Brain already do for this candidate?
+        const memory = await getEntityMemory(supabase, candidate.id, "data-integrity", 14);
+        const memoryContext = formatMemoryForPrompt(memory);
+
+        const issues = await checkCandidateIntegrity(candidate, articles, countryCode, memoryContext);
         result.checked++;
 
         if (issues.length === 0) {
@@ -219,7 +224,8 @@ async function checkCandidateIntegrity(
   candidate: CandidateRow,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   articles: any[],
-  countryCode: CountryCode
+  countryCode: CountryCode,
+  memoryContext: string = ""
 ): Promise<DataIntegrityIssue[]> {
   const openai = getOpenAI();
 
@@ -247,7 +253,7 @@ async function checkCandidateIntegrity(
         },
         {
           role: "user",
-          content: `${candidateData}\n\nNOTICIAS RECIENTES QUE MENCIONAN A ESTE CANDIDATO:\n${newsData}`,
+          content: `${candidateData}\n\nNOTICIAS RECIENTES QUE MENCIONAN A ESTE CANDIDATO:\n${newsData}\n\nHISTORIAL DE ACCIONES PREVIAS DEL BRAIN SOBRE ESTE CANDIDATO:\n${memoryContext}`,
         },
       ],
       response_format: { type: "json_object" },

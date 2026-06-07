@@ -22,33 +22,17 @@ export function BreakingNewsBlock({ block, onClick }: Props) {
         isHighImpact && "glow-rose"
       )}
     >
-      <div className="p-4">
-        {/* Header row */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="h-2 w-2 rounded-full bg-rose pulse-dot" />
-          <Newspaper className="h-5 w-5 text-rose" />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            {isHighImpact ? "Alerta de impacto" : "Noticia relevante"}
+      <div className="p-4 sm:p-5">
+        {/* Header — human context */}
+        <div className="flex items-center gap-2 mb-2">
+          {isHighImpact && <span className="h-2 w-2 rounded-full bg-rose pulse-dot" />}
+          <Newspaper className="h-4 w-4 text-primary" />
+          <span className={cn(
+            "text-[11px] sm:text-xs font-semibold",
+            isHighImpact ? "text-rose-700" : "text-foreground/70"
+          )}>
+            {isHighImpact ? "Lo que debes saber hoy" : "Noticia relevante"}
           </span>
-
-          {/* Impact score — always visible, color-graded */}
-          <div className="ml-auto flex items-center gap-0.5">
-            <span
-              className={cn(
-                "text-lg font-mono font-black tabular-nums leading-none",
-                isHighImpact
-                  ? "terminal-text-rose"
-                  : c.impact_score >= 5
-                    ? "terminal-text-amber"
-                    : "text-muted-foreground"
-              )}
-            >
-              {c.impact_score}
-            </span>
-            <span className="text-[9px] font-mono text-muted-foreground/60">
-              /10
-            </span>
-          </div>
         </div>
 
         {/* Title */}
@@ -58,14 +42,14 @@ export function BreakingNewsBlock({ block, onClick }: Props) {
 
         {/* Summary */}
         {c.article_summary && (
-          <p className="text-[11px] text-muted-foreground line-clamp-2 mb-3">
+          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
             {c.article_summary}
           </p>
         )}
 
         {/* Footer: source + category badge */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-primary font-medium">
+          <span className="text-[11px] text-primary font-medium">
             {c.source}
           </span>
           {c.category && (

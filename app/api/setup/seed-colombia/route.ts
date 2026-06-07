@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       party: "Defensores de la Patria",
       party_slug: "defensores-de-la-patria",
       party_color: "#1B3A5C",
-      photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/ADLE_OFICIAL.webp/400px-ADLE_OFICIAL.webp",
+      photo: "https://upload.wikimedia.org/wikipedia/commons/b/b1/Doctor_abelardo.jpg",
       age: 53,
       profession: "Abogado penalista",
       region: "Córdoba",

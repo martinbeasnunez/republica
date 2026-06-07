@@ -25,6 +25,7 @@ import {
   Loader2,
   Bot,
   User,
+  X,
 } from "lucide-react";
 import type { Candidate } from "@/lib/data/candidates";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -184,7 +185,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   if (mode === "ai") {
     return (
-      <CommandDialog open={open} onOpenChange={onOpenChange}>
+      <CommandDialog open={open} onOpenChange={onOpenChange} showCloseButton={false}>
         <div className="flex flex-col h-[450px]">
           {/* AI Header */}
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
@@ -192,18 +193,27 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             <span className="text-sm font-semibold text-foreground">
               CONDOR AI
             </span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="hidden sm:inline text-[10px] text-muted-foreground">
               — Asistente electoral
             </span>
-            <button
-              onClick={() => {
-                setMode("search");
-                setChatMessages([]);
-              }}
-              className="ml-auto text-xs text-muted-foreground hover:text-foreground"
-            >
-              Volver a búsqueda
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMode("search");
+                  setChatMessages([]);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Búsqueda
+              </button>
+              <button
+                onClick={() => onOpenChange(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Chat messages */}
