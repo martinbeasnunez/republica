@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Candidate } from "@/lib/data/candidates";
+import { applyRunoffStanding, type Candidate } from "@/lib/data/candidates";
 import { useChartTheme } from "@/lib/echarts-theme";
 import { TrendingUp, TrendingDown, Minus, Info, AlertTriangle } from "lucide-react";
 import { WhatsAppCTA } from "@/components/dashboard/whatsapp-cta";
@@ -44,13 +44,23 @@ interface EncuestasClientProps {
 export default function EncuestasClient({ candidates, runoffSlugs }: EncuestasClientProps) {
   const ct = useChartTheme();
   const country = useCountry();
-  const topCandidates = candidates;
 
+  // Finalists with balotaje-only poll stats (post first round), not blended averages.
   const finalists = runoffSlugs
-    ? (runoffSlugs.map((slug) => candidates.find((c) => c.slug === slug)).filter(Boolean) as Candidate[])
+    ? (runoffSlugs
+        .map((slug) => candidates.find((c) => c.slug === slug))
+        .filter(Boolean)
+        .map((c) => applyRunoffStanding(c as Candidate, country.electionDate)) as Candidate[])
     : [];
-  const inRunoff = runoffSlugs && finalists.length === 2;
+  const inRunoff = !!(runoffSlugs && finalists.length === 2);
   const [finA, finB] = finalists;
+
+  // During the runoff the whole page is scoped to the two finalists with
+  // balotaje-only polls — no first-round field, no first-round time series.
+  // Sort by average so leader/second/gap (empate técnico) compute correctly.
+  const topCandidates = inRunoff
+    ? [...finalists].sort((a, b) => b.pollAverage - a.pollAverage)
+    : candidates;
   const matchupDelta = inRunoff ? Math.abs(finA.pollAverage - finB.pollAverage) : 0;
   const matchupLeader = inRunoff
     ? (finA.pollAverage >= finB.pollAverage ? finA : finB)
@@ -529,18 +539,8 @@ export default function EncuestasClient({ candidates, runoffSlugs }: EncuestasCl
         </motion.div>
       )}
 
-      {inRunoff && (
-        <div className="pt-2">
-          <h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground">
-            Histórico — 1ra vuelta
-          </h2>
-          <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-            Promedios y series de tiempo para los principales candidatos durante la primera vuelta.
-          </p>
-        </div>
-      )}
-
-      {/* "Si las elecciones fueran hoy" */}
+      {/* "Si las elecciones fueran hoy" — first-round framing (quién pasa al balotaje); hidden during runoff */}
+      {!inRunoff && (
       <Card className="bg-card border-border overflow-hidden">
         <div className="bg-gradient-to-r from-primary/10 via-transparent to-transparent p-4 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">
@@ -581,6 +581,7 @@ export default function EncuestasClient({ candidates, runoffSlugs }: EncuestasCl
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

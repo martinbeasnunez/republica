@@ -50,11 +50,43 @@ function formatTime(iso: string, locale: string, tz: string): string {
   });
 }
 
+// ── Country palette + sources ───────────────────────────────────────────────
+// CONDOR AI Pulse is shared between PE (runoff) and CO (first round). The
+// gradient + accent colors + media-source list adapt so the component never
+// looks Colombian when rendered on the Peruvian site, and vice versa.
+const COUNTRY_THEME = {
+  pe: {
+    // Rojo peruano sobre stone-950. Acentos blanco-bandera.
+    gradient: "bg-gradient-to-br from-stone-950 via-red-950 to-stone-900",
+    border: "border-red-500/30",
+    accent: "#E84040",       // bright accent (rojo)
+    accentSoft: "#A52525",   // softer accent
+    contrast: "#FFFFFF",     // text on dark
+    glowA: "rgba(232,64,64,0.18)",
+    glowB: "rgba(255,255,255,0.06)",
+    sourcesLabel: "Cada 5 minutos CONDOR AI lee El Comercio, Gestión, RPP, Infobae Perú y Google News, y resume lo que está pasando en este momento del balotaje.",
+    emptyLabel: "CONDOR AI está preparando el primer pulso del balotaje. Próximo reporte en cuanto haya señales fuera del ruido.",
+  },
+  co: {
+    // 🇨🇴 Azul bandera (#003893) profundo + acentos amarillo (#FCD116) y rojo (#CE1126)
+    gradient: "bg-gradient-to-br from-[#001a4d] via-[#003893] to-[#001a4d]",
+    border: "border-[#FCD116]/30",
+    accent: "#FCD116",
+    accentSoft: "#FCD116",
+    contrast: "#FFFFFF",
+    glowA: "rgba(252,209,22,0.15)",
+    glowB: "rgba(206,17,38,0.15)",
+    sourcesLabel: "Cada 5 minutos CONDOR AI lee El Tiempo, Semana, Infobae, La Silla Vacía, Caracol y Google News, y resume lo que está pasando en este momento.",
+    emptyLabel: "CONDOR AI está preparando el pulso en vivo. Primer reporte cuando inicie la jornada electoral.",
+  },
+} as const;
+
 // ── Main component ──────────────────────────────────────────────────────────
 export function CondorAIPulse({ initialPulses }: Props) {
   const country = useCountry();
   const locale = country.locale.replace("_", "-");
   const tz = country.timezone;
+  const theme = COUNTRY_THEME[country.code] ?? COUNTRY_THEME.co;
 
   const [pulses, setPulses] = useState<Pulse[]>(initialPulses);
   const [nextRefreshAt, setNextRefreshAt] = useState<number>(() => Date.now() + 30_000);
@@ -144,16 +176,14 @@ export function CondorAIPulse({ initialPulses }: Props) {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl border border-[#FCD116]/30 bg-gradient-to-br from-[#001a4d] via-[#003893] to-[#001a4d] px-5 sm:px-7 py-6"
+        className={`relative overflow-hidden rounded-2xl border ${theme.border} ${theme.gradient} px-5 sm:px-7 py-6`}
       >
         <div className="flex items-center gap-2 mb-2">
-          <Brain className="h-5 w-5 text-[#FCD116]" />
+          <Brain className="h-5 w-5" style={{ color: theme.accent }} />
           <span className="text-[11px] font-black text-white uppercase tracking-[0.18em]">CONDOR AI</span>
           <span className="text-[10px] text-white/60 font-mono">/{country.code}</span>
         </div>
-        <p className="text-sm text-white/70 leading-relaxed">
-          CONDOR AI está preparando el pulso en vivo. Primer reporte cuando inicie la jornada electoral.
-        </p>
+        <p className="text-sm text-white/70 leading-relaxed">{theme.emptyLabel}</p>
       </motion.div>
     );
   }
@@ -162,14 +192,13 @@ export function CondorAIPulse({ initialPulses }: Props) {
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      // 🇨🇴 Azul bandera (#003893) profundo + acentos amarillo (#FCD116) y rojo (#CE1126)
-      className="relative overflow-hidden rounded-2xl border border-[#FCD116]/30 bg-gradient-to-br from-[#001a4d] via-[#003893] to-[#001a4d]"
+      className={`relative overflow-hidden rounded-2xl border ${theme.border} ${theme.gradient}`}
     >
-      {/* animated AI glow — amarillo + rojo bandera */}
+      {/* animated AI glow — country palette */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-[#FCD116]/15 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-[#CE1126]/15 blur-3xl animate-pulse" style={{ animationDelay: "1.2s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-40 w-40 rounded-full bg-[#FCD116]/10 blur-3xl" />
+        <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: theme.glowA }} />
+        <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1.2s", backgroundColor: theme.glowB }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-40 w-40 rounded-full blur-3xl" style={{ backgroundColor: theme.glowA }} />
       </div>
 
       <div className="relative px-5 sm:px-7 py-5 sm:py-6 space-y-5">
@@ -177,7 +206,7 @@ export function CondorAIPulse({ initialPulses }: Props) {
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2.5">
             <div className="relative">
-              <Brain className="h-5 w-5 text-[#FCD116]" />
+              <Brain className="h-5 w-5" style={{ color: theme.accent }} />
               <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-dot" />
             </div>
             <div>
@@ -207,7 +236,8 @@ export function CondorAIPulse({ initialPulses }: Props) {
           </div>
           <Link
             href={`/${country.code}/metodologia`}
-            className="inline-flex items-center gap-1 text-[10px] text-white/70 hover:text-[#FCD116] font-mono"
+            className="inline-flex items-center gap-1 text-[10px] text-white/70 font-mono hover:opacity-90 transition-opacity"
+            style={{ color: undefined }}
           >
             ¿Cómo funciona? <ChevronRight className="h-3 w-3" />
           </Link>
@@ -215,14 +245,14 @@ export function CondorAIPulse({ initialPulses }: Props) {
 
         {/* Explainer — "esto qué es" en 1 línea para que cualquiera entienda */}
         <div className="rounded-lg bg-white/[0.06] border border-white/10 px-3 py-2 text-[11px] text-white/85 leading-relaxed">
-          Cada 5 minutos CONDOR AI lee El Tiempo, Semana, Infobae, La Silla Vacía, Caracol y Google News, y resume lo que está pasando en este momento.
+          {theme.sourcesLabel}
         </div>
 
         {/* AHORA — latest pulse with typing */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-[#FCD116] font-mono flex items-center gap-2">
-              <Sparkles className="h-3 w-3 text-[#FCD116]" /> Ahora · {formatTime(latest.generated_at, locale, tz)}
+            <p className="text-[10px] uppercase tracking-[0.2em] font-mono flex items-center gap-2" style={{ color: theme.accent }}>
+              <Sparkles className="h-3 w-3" style={{ color: theme.accent }} /> Ahora · {formatTime(latest.generated_at, locale, tz)}
             </p>
             <span className="text-[10px] text-white/50 font-mono">{relativeTime(latest.generated_at)}</span>
           </div>
@@ -235,14 +265,14 @@ export function CondorAIPulse({ initialPulses }: Props) {
           >
             {latestText.slice(0, typedLen)}
             {typing && (
-              <span className="inline-block w-[3px] h-[1.1em] ml-0.5 bg-[#FCD116] align-text-bottom animate-pulse" />
+              <span className="inline-block w-[3px] h-[1.1em] ml-0.5 align-text-bottom animate-pulse" style={{ backgroundColor: theme.accent }} />
             )}
           </motion.div>
         </div>
 
         {/* HISTORIAL */}
         {history.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-[#FCD116]/15">
+          <div className="space-y-2 pt-2 border-t border-white/10">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-mono flex items-center gap-2">
               <Activity className="h-3 w-3" /> Pulsos anteriores
             </p>
@@ -265,7 +295,7 @@ export function CondorAIPulse({ initialPulses }: Props) {
                         className="w-full text-left rounded-lg px-2.5 py-2 hover:bg-white/[0.06] transition-colors group"
                       >
                         <div className="flex items-start gap-2.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#FCD116]/70 mt-2 shrink-0" />
+                          <span className="h-1.5 w-1.5 rounded-full mt-2 shrink-0" style={{ backgroundColor: theme.accent, opacity: 0.7 }} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 text-[10px] font-mono text-white/50">
                               <span>{formatTime(p.generated_at, locale, tz)}</span>
@@ -293,7 +323,8 @@ export function CondorAIPulse({ initialPulses }: Props) {
               <button
                 type="button"
                 onClick={() => setShowAll((v) => !v)}
-                className="text-[10px] font-mono text-[#FCD116]/80 hover:text-[#FCD116] ml-2.5"
+                className="text-[10px] font-mono ml-2.5 hover:opacity-100 transition-opacity"
+                style={{ color: theme.accent, opacity: 0.8 }}
               >
                 {showAll
                   ? "Mostrar menos"

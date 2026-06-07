@@ -47,6 +47,17 @@ export default async function EncuestasPage({
       ? "Invamer, Guarumo, CELAG, GAD3, Datexco y CNC"
       : "Ipsos, Datum, CPI, IEP, Vox Populi y GfK";
 
+  // Runoff finalists (for the SEO copy) — only when mid-balotaje.
+  const finalistNames = runoffSlugs
+    ? (runoffSlugs
+        .map((s) => candidates.find((c) => c.slug === s)?.name)
+        .filter(Boolean) as string[])
+    : [];
+  const isRunoff = finalistNames.length === 2;
+  const runoffDateFmt = config?.electionDateSecondRound
+    ? new Date(config.electionDateSecondRound + "T12:00:00").toLocaleDateString("es", { day: "numeric", month: "long", year: "numeric" })
+    : "";
+
   const faqQuestions = [
     {
       question: `¿Quién va ganando las encuestas en ${name} ${year}?`,
@@ -134,20 +145,33 @@ export default async function EncuestasPage({
             antigüedad se excluyen automáticamente para garantizar la vigencia
             de los datos.
           </p>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-            La carrera presidencial colombiana de 2026 se perfila como una de
-            las más disputadas en años recientes, con candidatos como Iván
-            Cepeda (Pacto Histórico), Abelardo de la Espriella (Colombia Justa
-            Libres), Paloma Valencia (Centro Democrático), Sergio Fajardo
-            (Dignidad y Compromiso), Claudia López (Imparables), Roy Barreras
-            (La Fuerza de la Paz), Vicky Dávila (Movimiento Valientes) y Daniel
-            Quintero (AICO) liderando las preferencias. CONDOR muestra quién va ganando en las encuestas
-            presidenciales de Colombia, identifica empates técnicos
-            considerando el margen de error estándar de ±2.5 puntos
-            porcentuales, y detecta tendencias al alza o a la baja. Si ningún
-            candidato supera el 50% de los votos válidos en primera vuelta,
-            los dos más votados pasarán a un balotaje.
-          </p>
+          {isRunoff ? (
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              La segunda vuelta presidencial de Colombia 2026 se define
+              {runoffDateFmt ? ` el ${runoffDateFmt}` : ""} entre {finalistNames[0]} y{" "}
+              {finalistNames[1]}, los dos candidatos más votados en la primera
+              vuelta. CONDOR sigue el promedio de encuestas del balotaje entre
+              ambos finalistas, identifica empates técnicos considerando el
+              margen de error estándar de ±2.5 puntos porcentuales, y detecta
+              tendencias al alza o a la baja de cada candidato rumbo al cierre
+              de la campaña.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+              La carrera presidencial colombiana de 2026 se perfila como una de
+              las más disputadas en años recientes, con candidatos como Iván
+              Cepeda (Pacto Histórico), Abelardo de la Espriella (Colombia Justa
+              Libres), Paloma Valencia (Centro Democrático), Sergio Fajardo
+              (Dignidad y Compromiso), Claudia López (Imparables), Roy Barreras
+              (La Fuerza de la Paz), Vicky Dávila (Movimiento Valientes) y Daniel
+              Quintero (AICO) liderando las preferencias. CONDOR muestra quién va ganando en las encuestas
+              presidenciales de Colombia, identifica empates técnicos
+              considerando el margen de error estándar de ±2.5 puntos
+              porcentuales, y detecta tendencias al alza o a la baja. Si ningún
+              candidato supera el 50% de los votos válidos en primera vuelta,
+              los dos más votados pasarán a un balotaje.
+            </p>
+          )}
           <p className="text-sm text-muted-foreground leading-relaxed mb-3">
             Todas las cifras se actualizan automáticamente mediante inteligencia
             artificial. CONDOR AI verifica cada nueva encuesta publicada,
