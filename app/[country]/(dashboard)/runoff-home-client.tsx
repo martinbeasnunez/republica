@@ -490,10 +490,17 @@ function relativeDayLabel(dateStr: string): string {
  * Shows today's AI-generated briefing (editorial_summary + 2-3 top headlines)
  * with a compact timeline of the previous two days underneath.
  */
-function DayPulse({ briefings, finalists, blackout = false }: { briefings: PublicBriefing[]; finalists: [Candidate, Candidate]; blackout?: boolean }) {
+function DayPulse({ briefings, finalists, blackout = false, eliminatedSurnames = [] }: { briefings: PublicBriefing[]; finalists: [Candidate, Candidate]; blackout?: boolean; eliminatedSurnames?: string[] }) {
   if (!briefings || briefings.length === 0) return null;
-  const [today, ...prior] = briefings;
+  const [today, ...allPrior] = briefings;
   const todayStories = (today.top_stories ?? []).slice(0, 3);
+
+  // Drop prior-day briefings that still reference first-round (eliminated) candidates —
+  // they were written before the runoff and are off-focus for the balotaje.
+  const prior = allPrior.filter((b) => {
+    const ed = (b.editorial_summary ?? "").toLowerCase();
+    return !eliminatedSurnames.some((s) => s && ed.includes(s));
+  });
 
   // Extract poll deltas for the two finalists from today's poll_movements.
   // Suppressed entirely during the polling blackout (publishing poll data is illegal).
@@ -878,6 +885,17 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, bri
     [finalists]
   );
 
+  // Surnames of eliminated (non-finalist) candidates — used to drop stale,
+  // first-round-flavored content from the runoff home.
+  const eliminatedSurnames = useMemo(
+    () =>
+      candidatesForPhotos
+        .filter((c) => !finalistSlugSet.has(c.slug))
+        .map((c) => (c.name || c.shortName || "").trim().split(/\s+/).pop()?.toLowerCase() || "")
+        .filter(Boolean),
+    [candidatesForPhotos, finalistSlugSet]
+  );
+
   // Filter news to those mentioning at least one finalist. If the candidates_mentioned
   // array is empty across the board, fall back to all articles.
   const filtered = useMemo(() => {
@@ -911,7 +929,7 @@ export function RunoffHomeClient({ finalists, articles, candidatesForPhotos, bri
       <RunoffHero finalists={adjustedFinalists} blackout={inPollBlackout} />
 
       {briefings.length > 0 && (
-        <DayPulse briefings={briefings} finalists={adjustedFinalists} blackout={inPollBlackout} />
+        <DayPulse briefings={briefings} finalists={adjustedFinalists} blackout={inPollBlackout} eliminatedSurnames={eliminatedSurnames} />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
