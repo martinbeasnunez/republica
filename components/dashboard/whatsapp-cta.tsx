@@ -22,7 +22,8 @@ const DISMISSED_KEY = "condor_wa_dismissed";
  * - Disappears permanently after subscribe or dismiss
  */
 
-const CONTEXTS: Record<string, { hook: string; detail: string }> = {
+type CtxCopy = { hook: string; detail: string };
+const CTX_GENERIC: Record<string, CtxCopy> = {
   encuestas: {
     hook: "¿Quieres saber cuando cambien las encuestas?",
     detail: "Te avisamos por WhatsApp cada vez que hay datos nuevos.",
@@ -64,6 +65,67 @@ const CONTEXTS: Record<string, { hook: string; detail: string }> = {
     detail: "Encuestas, noticias verificadas y fake news — gratis.",
   },
 };
+
+// Per-country runoff overrides — used when today is mid-balotaje.
+const CTX_PE_RUNOFF: Record<string, CtxCopy> = {
+  encuestas: {
+    hook: "Encuestas del balotaje en tu WhatsApp",
+    detail: "Te avisamos cada matchup Fujimori vs Sánchez apenas se publique.",
+  },
+  noticias: {
+    hook: "Noticias del balotaje en tu WhatsApp",
+    detail: "Alertas verificadas de la segunda vuelta directo a tu celular.",
+  },
+  verificador: {
+    hook: "Fake news del balotaje — las desmentimos",
+    detail: "Recibe alertas cuando CONDOR AI detecte desinformación del balotaje.",
+  },
+  planes: {
+    hook: "Propuestas de Fujimori y Sánchez en tu WhatsApp",
+    detail: "Te avisamos cualquier ajuste o anuncio nuevo de los dos finalistas.",
+  },
+  "en-vivo": {
+    hook: "Cobertura del balotaje en vivo en tu WhatsApp",
+    detail: "Conteo ONPE, declaraciones e incidentes del 7 de junio en tiempo real.",
+  },
+  candidatos: {
+    hook: "Sigue de cerca a los dos finalistas",
+    detail: "Te avisamos cualquier movimiento de Fujimori o Sánchez.",
+  },
+  quiz: {
+    hook: "¿Con cuál de los dos coincides más?",
+    detail: "Recibe análisis personalizado del balotaje según tus posturas.",
+  },
+  dashboard: {
+    hook: "Día E del balotaje — mantente al día",
+    detail: "Resumen del balotaje directo a tu WhatsApp.",
+  },
+  default: {
+    hook: "Alertas del balotaje Perú 2026",
+    detail: "Conteo ONPE, fact-checks y novedades de la segunda vuelta — gratis.",
+  },
+};
+
+const CTX_CO_RUNOFF: Record<string, CtxCopy> = {
+  encuestas: {
+    hook: "Encuestas del balotaje en tu WhatsApp",
+    detail: "Te avisamos cada matchup de la segunda vuelta apenas se publique.",
+  },
+  "en-vivo": {
+    hook: "Cobertura del balotaje en vivo en tu WhatsApp",
+    detail: "Preconteo Registraduría, declaraciones e incidentes en tiempo real.",
+  },
+  default: {
+    hook: "Alertas del balotaje Colombia 2026",
+    detail: "Preconteo Registraduría, fact-checks y novedades — gratis.",
+  },
+};
+
+function ctxCopyFor(code: string, isRunoff: boolean, context: string): CtxCopy {
+  if (isRunoff && code === "pe") return CTX_PE_RUNOFF[context] ?? CTX_PE_RUNOFF.default;
+  if (isRunoff && code === "co") return CTX_CO_RUNOFF[context] ?? CTX_CO_RUNOFF.default;
+  return CTX_GENERIC[context] ?? CTX_GENERIC.default;
+}
 
 export function WhatsAppCTA({ context = "default" }: { context?: string }) {
   const country = useCountry();
@@ -119,7 +181,16 @@ export function WhatsAppCTA({ context = "default" }: { context?: string }) {
   // SSR / already handled
   if (!mounted || isSubscribed || isDismissed) return null;
 
-  const { hook, detail } = CONTEXTS[context] || CONTEXTS.default;
+  // Country/phase aware copy. The hook + detail line shift to balotaje
+  // framing when we're inside the runoff window for the user's country.
+  const isRunoff = (() => {
+    if (!country.electionDateSecondRound) return false;
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: country.timezone });
+    const runoffMs = new Date(country.electionDateSecondRound + "T12:00:00").getTime();
+    const todayMs = new Date(today + "T12:00:00").getTime();
+    return today > country.electionDate && todayMs <= runoffMs + 7 * 86_400_000;
+  })();
+  const { hook, detail } = ctxCopyFor(country.code, isRunoff, context);
 
   return (
     <AnimatePresence>
