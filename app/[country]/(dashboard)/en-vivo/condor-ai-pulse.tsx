@@ -335,7 +335,7 @@ export function CondorAIPulse({ initialPulses }: Props) {
         )}
 
         {/* Footer — technical credit */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#FCD116]/15 text-[9px] text-white/40 font-mono">
+        <div className="flex items-center justify-between pt-2 border-t border-white/10 text-[9px] text-white/40 font-mono">
           <span>Modelo: GPT-4o · validación verificable contra titulares</span>
         </div>
       </div>
