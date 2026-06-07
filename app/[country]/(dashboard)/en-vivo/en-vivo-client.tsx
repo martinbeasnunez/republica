@@ -25,6 +25,7 @@ import { PollStandingsSidebar } from "./poll-standings-sidebar";
 import { MediaSourcesPanel } from "./media-sources-panel";
 import { CondorAIHero } from "./condor-ai-hero";
 import { CondorAIPulse } from "./condor-ai-pulse";
+import { RunoffCierreHero } from "./runoff-cierre-hero";
 import { ShareModal } from "./share-modal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Vote, MapPin, RefreshCw, Clock } from "lucide-react";
@@ -138,6 +139,33 @@ export function EnVivoClient({
       .filter(Boolean) as Candidate[];
   }, [allCandidates, finalistSlugs, isRunoffWindow]);
   const showFinalistsStrip = isRunoffWindow && finalists.length === 2;
+
+  // ── ONPE shape probe ─────────────────────────────────────────────────────
+  // On runoff day ONPE may still be serving the closed first-round dataset
+  // (36 candidates, 100% actas). Showing that as "Conteo Oficial · Balotaje"
+  // is misleading. Probe the API on mount and decide whether to render the
+  // real counter or our cierre-countdown hero.
+  const [onpeReady, setOnpeReady] = useState(false);
+  useEffect(() => {
+    if (!isRunoffWindow || country.code !== "pe") return;
+    let cancelled = false;
+    const probe = async () => {
+      try {
+        const res = await fetch("/api/onpe-results");
+        const json = await res.json().catch(() => null);
+        if (!json || cancelled) return;
+        const count = Array.isArray(json.candidates) ? json.candidates.length : 0;
+        // Runoff-shape = at most 2 candidates. Anything more is first-round leftover.
+        setOnpeReady(count > 0 && count <= 2);
+      } catch {
+        if (!cancelled) setOnpeReady(false);
+      }
+    };
+    probe();
+    const id = setInterval(probe, 3 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [isRunoffWindow, country.code]);
+  const useCierreHero = isRunoffWindow && country.code === "pe" && !onpeReady && finalists.length === 2;
 
   // ── Filter "hot" articles for the day-E live feed ──────────────────────
   // En día E o post-elección, el feed de "Noticias en Tiempo Real" sólo debe
@@ -304,12 +332,12 @@ export function EnVivoClient({
     </div>
   ) : null;
 
-  // Shared right-column "Datos de la Elección" card
+  // Shared right-column "Datos de la Elección" card — adapts to runoff mode
   const ElectionDataCard = (
     <Card className="bg-card border-border">
       <CardContent className="p-5 space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Datos de la Elección
+          {isRunoffWindow ? "Datos del Balotaje" : "Datos de la Elección"}
         </h3>
         <div className="space-y-2.5">
           <div className="flex items-center gap-3">
@@ -322,33 +350,29 @@ export function EnVivoClient({
           <div className="flex items-center gap-3">
             <Vote className="h-4 w-4 text-primary flex-shrink-0" />
             <div>
-              <p className="text-xs font-medium text-foreground">{country.electionType}</p>
-              <p className="text-[10px] text-muted-foreground">{country.electionSystem}</p>
+              <p className="text-xs font-medium text-foreground">
+                {isRunoffWindow ? "Segunda vuelta presidencial" : country.electionType}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {isRunoffWindow
+                  ? "Gana el candidato con más votos válidos"
+                  : country.electionSystem}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
             <div>
-              <p className="text-xs font-medium text-foreground">{country.departments.length} departamentos</p>
-              {country.legislatureInfo && (
-                <p className="text-[10px] text-muted-foreground">{country.legislatureInfo}</p>
-              )}
-            </div>
-          </div>
-          {country.electionDateSecondRound && (
-            <div className="pt-2 border-t border-border">
+              <p className="text-xs font-medium text-foreground">
+                {country.departments.length} departamentos
+              </p>
               <p className="text-[10px] text-muted-foreground">
-                Segunda vuelta:{" "}
-                <span className="font-medium text-foreground">
-                  {new Date(country.electionDateSecondRound + "T12:00:00").toLocaleDateString(country.locale.replace("_", "-"), {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </span>
+                {isRunoffWindow
+                  ? "Mesas abiertas de 8:00 a.m. a 5:00 p.m. (hora Lima)"
+                  : country.legislatureInfo ?? ""}
               </p>
             </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -366,11 +390,20 @@ export function EnVivoClient({
         <LiveHeader activeEvent={activeEvent} nextEvent={nextEvent} />
         {FinalistsStrip}
         {/*
-          Fase-aware reorder:
-          - Preconteo activo (% > 0) → CONTEO arriba protagonista, Pulse abajo
-          - Sin datos (% === 0) → Pulse arriba (es la única vitrina en vivo)
+          Runoff day routing:
+          - If we're in runoff window but ONPE still serves first-round leftover
+            (>2 candidates), we MUST NOT render its counter — it would show
+            stale 1ra vuelta percentages as "balotaje" and mislead the user.
+            Render the RunoffCierreHero with a live countdown to 5:00 p.m.
+            instead, until ONPE flips to runoff-shape data.
+          - Otherwise apply the usual phase-aware reorder for the live counter.
         */}
-        {preconteoActive ? (
+        {useCierreHero ? (
+          <>
+            <RunoffCierreHero finalists={[finalists[0], finalists[1]]} />
+            {AIBlock}
+          </>
+        ) : preconteoActive ? (
           <>
             <OfficialResultsComponent />
             {AIBlock}
