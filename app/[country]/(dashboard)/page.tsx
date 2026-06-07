@@ -20,9 +20,19 @@ export async function generateMetadata({
   const seo = getCountrySeo(country);
 
   if (isInRunoffPhase(countryCode)) {
+    // Build the matchup string from the actual finalists, not hardcoded names.
+    const runoffSlugs = getCountryConfig(countryCode)?.runoffCandidateSlugs;
+    let matchup = "head-to-head";
+    if (runoffSlugs) {
+      const cands = await fetchCandidates(country);
+      const bySlug = new Map(cands.map((c) => [c.slug, c]));
+      const a = bySlug.get(runoffSlugs[0]);
+      const b = bySlug.get(runoffSlugs[1]);
+      if (a && b) matchup = `${a.name} vs ${b.name}`;
+    }
     return {
       title: `Segunda Vuelta — Elecciones ${seo.name} ${seo.year}`,
-      description: `Balotaje ${seo.name} ${seo.year}: Keiko Fujimori vs Roberto Sánchez. Encuestas, propuestas comparadas, cobertura y verificación con IA — CONDOR.`,
+      description: `Balotaje ${seo.name} ${seo.year}: ${matchup}. Encuestas, propuestas comparadas, cobertura y verificación con IA — CONDOR.`,
       keywords: getCountryKeywords(country, "home"),
       alternates: seo.alternates,
       openGraph: {

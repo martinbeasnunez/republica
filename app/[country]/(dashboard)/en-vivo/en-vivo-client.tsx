@@ -391,52 +391,25 @@ export function EnVivoClient({
   // pulses ni AI briefings que no apliquen.
   // ════════════════════════════════════════════════════════════════════════
   if (showOfficialResults) {
-    // ════════════════════════════════════════════════════════════════════════
-    // RUNOFF DAY LAYOUT — pulse + news are protagonists; cierre lives in sidebar.
-    // Triggered when ONPE still serves first-round leftover data (useCierreHero).
-    // The whole goal: make the user see what's happening RIGHT NOW (AI commentary
-    // + live news), with the countdown to mesas cierre as a sidebar context widget.
-    // ════════════════════════════════════════════════════════════════════════
-    if (useCierreHero) {
-      return (
-        <div className="space-y-6">
-          <ShareModal />
-          <LiveHeader activeEvent={activeEvent} nextEvent={nextEvent} />
-          {FinalistsStrip}
-
-          {/* AI commentary is the live-mode protagonist */}
-          {AIBlock}
-
-          {RefreshIndicator}
-
-          {/* Two-column: news (left protagonist) + sidebar with compact countdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {articles.length > 0 && (
-                <LiveNewsFeed articles={hotArticles} candidatePhotos={candidatePhotos} />
-              )}
-            </div>
-            <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-              <RunoffCierreHero finalists={[finalists[0], finalists[1]]} compact />
-              <MediaSourcesPanel />
-              {ElectionDataCard}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="space-y-6">
         <ShareModal />
         <LiveHeader activeEvent={activeEvent} nextEvent={nextEvent} />
         {FinalistsStrip}
         {/*
-          Standard post-cierre reorder:
-          - Preconteo activo (% > 0) → conteo arriba protagonista, Pulse abajo
-          - Sin datos (% === 0) → Pulse arriba (es la única vitrina en vivo)
+          Runoff day routing:
+          - If we're in runoff window but ONPE still serves first-round leftover
+            (>2 candidates), don't show its counter (would mislead) — render the
+            full RunoffCierreHero with the live countdown + progress bar to 5pm
+            as the protagonist instead, with the AI pulse right below it.
+          - Otherwise apply the usual phase-aware reorder for the live counter.
         */}
-        {preconteoActive ? (
+        {useCierreHero ? (
+          <>
+            <RunoffCierreHero finalists={[finalists[0], finalists[1]]} />
+            {AIBlock}
+          </>
+        ) : preconteoActive ? (
           <>
             <OfficialResultsComponent />
             {AIBlock}

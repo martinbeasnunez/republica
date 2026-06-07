@@ -59,11 +59,17 @@ interface Previous {
 }
 
 // ── Phase detection ─────────────────────────────────────────────────────────
+// Once the first round has passed, anchor the phase to the runoff date so the
+// pulse stream switches to "election-day" cadence on the second-round day.
 function detectPhase(country: CountryCode): "pre" | "election-day" | "post" {
   const cfg = COUNTRIES[country];
   const todayLocal = new Date().toLocaleDateString("en-CA", { timeZone: cfg.timezone });
-  if (todayLocal === cfg.electionDate) return "election-day";
-  if (todayLocal > cfg.electionDate) return "post";
+  let activeDate = cfg.electionDate;
+  if (cfg.electionDateSecondRound && todayLocal > cfg.electionDate) {
+    activeDate = cfg.electionDateSecondRound;
+  }
+  if (todayLocal === activeDate) return "election-day";
+  if (todayLocal > activeDate) return "post";
   return "pre";
 }
 
@@ -141,18 +147,26 @@ async function fetchTodayHeadlines(sb: any, country: CountryCode) {
 
 /** Live RSS fetch — bypass the DB scraper entirely. We pull straight from
  *  the source so the pulse has minute-fresh material even between scraper runs. */
-async function fetchLiveRSS(): Promise<Array<{ title: string; source: string; pubDate: number; description?: string }>> {
+async function fetchLiveRSS(country: CountryCode): Promise<Array<{ title: string; source: string; pubDate: number; description?: string }>> {
   const UA =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-  const sources = [
-    { name: "El Tiempo", url: "https://www.eltiempo.com/rss/politica.xml" },
-    { name: "Semana", url: "https://www.semana.com/arc/outboundfeeds/rss/category/politica/?outputType=xml" },
-    { name: "Infobae", url: "https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/?outputType=xml" },
-    { name: "La Silla Vacía", url: "https://www.lasillavacia.com/feed/" },
-    // Google News aggregates everything — last resort for breaking
-    { name: "Google News", url: "https://news.google.com/rss/search?q=elecciones+colombia+hoy&hl=es&gl=CO&ceid=CO:es" },
-  ];
+  const sources = country === "pe"
+    ? [
+        { name: "El Comercio", url: "https://elcomercio.pe/arcio/rss/" },
+        { name: "Gestión", url: "https://gestion.pe/arcio/rss/" },
+        { name: "RPP", url: "https://rpp.pe/feed" },
+        // Google News aggregates everything — last resort for breaking
+        { name: "Google News", url: "https://news.google.com/rss/search?q=balotaje+per%C3%BA+segunda+vuelta+hoy&hl=es&gl=PE&ceid=PE:es" },
+      ]
+    : [
+        { name: "El Tiempo", url: "https://www.eltiempo.com/rss/politica.xml" },
+        { name: "Semana", url: "https://www.semana.com/arc/outboundfeeds/rss/category/politica/?outputType=xml" },
+        { name: "Infobae", url: "https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/?outputType=xml" },
+        { name: "La Silla Vacía", url: "https://www.lasillavacia.com/feed/" },
+        // Google News aggregates everything — last resort for breaking
+        { name: "Google News", url: "https://news.google.com/rss/search?q=elecciones+colombia+hoy&hl=es&gl=CO&ceid=CO:es" },
+      ];
 
   const fetchOne = async (src: { name: string; url: string }) => {
     try {
@@ -433,7 +447,7 @@ export async function GET(request: Request) {
     fetchRecentArticles(sb, country, sinceISO),
     fetchTodayHeadlines(sb, country),
     fetchRecentFactChecks(sb, country, factCheckSinceISO),
-    country === "co" ? fetchLiveRSS() : Promise.resolve([]),
+    fetchLiveRSS(country),
   ]);
 
   const snap: Snapshot = {
