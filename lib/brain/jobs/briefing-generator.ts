@@ -474,8 +474,37 @@ async function getPollMovements(
       .split("T")[0];
 
     const movements: PollMovement[] = [];
+    const avg = (arr: Array<{ value: number }>) =>
+      arr.reduce((s, p) => s + p.value, 0) / arr.length;
 
     for (const c of candidates) {
+      if (runoffActive && config?.electionDate) {
+        // Runoff: derive movement from runoff-only polls (post first round), never
+        // from the blended stored average (which still mixes in round-1 polls).
+        const { data: runoffPolls } = await supabase
+          .from("poll_data_points")
+          .select("value, date")
+          .eq("candidate_id", c.id)
+          .gt("date", config.electionDate)
+          .order("date", { ascending: false });
+
+        if (!runoffPolls || runoffPolls.length === 0) continue;
+
+        const latestDate = runoffPolls[0].date;
+        const current = avg(runoffPolls.filter((p) => p.date === latestDate));
+        const older = runoffPolls.filter((p) => p.date < latestDate);
+        const previous = older.length ? avg(older.filter((p) => p.date === older[0].date)) : current;
+        const diff = current - previous;
+
+        movements.push({
+          candidate: c.short_name,
+          previous: Math.round(previous * 10) / 10,
+          current: Math.round(current * 10) / 10,
+          direction: diff > 0.3 ? "up" : diff < -0.3 ? "down" : "stable",
+        });
+        continue;
+      }
+
       if (!c.poll_average) continue;
 
       // Get poll value from ~3 days ago
