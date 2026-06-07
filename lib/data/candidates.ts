@@ -61,6 +61,61 @@ export interface Candidate {
 }
 
 // =============================================================================
+// RUNOFF HELPERS
+// =============================================================================
+
+/**
+ * Re-derive a candidate's poll stats from RUNOFF-ONLY polls (those taken after
+ * the first round). Mixing first-round (multi-candidate) polls with runoff
+ * (head-to-head) polls produces misleading averages. Dedupes by date+pollster
+ * and applies the house recency weighting. Returns the candidate unchanged if
+ * there are no post-first-round polls yet.
+ */
+export function applyRunoffStanding(c: Candidate, firstRoundDate: string): Candidate {
+  const polls = c.pollHistory.filter((p) => p.date > firstRoundDate);
+  if (polls.length === 0) return c;
+
+  const byKey = new Map<string, { date: string; pollster: string; values: number[] }>();
+  for (const p of polls) {
+    const key = `${p.date}|${p.pollster.trim().toLowerCase()}`;
+    const existing = byKey.get(key);
+    if (existing) existing.values.push(p.value);
+    else byKey.set(key, { date: p.date, pollster: p.pollster.trim(), values: [p.value] });
+  }
+  const history: PollDataPoint[] = Array.from(byKey.values())
+    .map((e) => ({ date: e.date, pollster: e.pollster, value: e.values.reduce((a, b) => a + b, 0) / e.values.length }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const now = Date.now();
+  const weightFor = (d: string) => {
+    const days = Math.floor((now - new Date(d + "T12:00:00").getTime()) / 86_400_000);
+    if (days <= 7) return 0.5;
+    if (days <= 14) return 0.3;
+    if (days <= 30) return 0.2;
+    return 0.05;
+  };
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (const p of history) {
+    const w = weightFor(p.date);
+    weightedSum += p.value * w;
+    totalWeight += w;
+  }
+  const pollAverage =
+    totalWeight > 0
+      ? Math.round((weightedSum / totalWeight) * 10) / 10
+      : Math.round((history.reduce((s, p) => s + p.value, 0) / history.length) * 10) / 10;
+
+  let pollTrend: Candidate["pollTrend"] = "stable";
+  if (history.length >= 2) {
+    const delta = history[history.length - 1].value - history[0].value;
+    if (delta > 0.5) pollTrend = "up";
+    else if (delta < -0.5) pollTrend = "down";
+  }
+  return { ...c, pollAverage, pollTrend, pollHistory: history };
+}
+
+// =============================================================================
 // STATIC CONSTANTS (no DB needed)
 // =============================================================================
 

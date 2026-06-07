@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCountry } from "@/lib/config/country-context";
-import type { Candidate } from "@/lib/data/candidates";
+import { applyRunoffStanding, type Candidate } from "@/lib/data/candidates";
 import type { NewsArticle } from "@/lib/data/news";
 import type { FactCheck } from "@/lib/data/fact-checks";
 import type { HomepageBlock } from "@/lib/types/homepage-blocks";
@@ -139,6 +139,13 @@ export function EnVivoClient({
       .filter(Boolean) as Candidate[];
   }, [allCandidates, finalistSlugs, isRunoffWindow]);
   const showFinalistsStrip = isRunoffWindow && finalists.length === 2;
+
+  // During the runoff, the "Encuestas" panel must show ONLY the two finalists with
+  // balotaje-only averages — never the full first-round field with blended numbers.
+  const pollStandingsCandidates = useMemo(
+    () => (showFinalistsStrip ? finalists.map((c) => applyRunoffStanding(c, country.electionDate)) : allCandidates),
+    [showFinalistsStrip, finalists, allCandidates, country.electionDate]
+  );
 
   // ── ONPE shape probe ─────────────────────────────────────────────────────
   // On runoff day ONPE may still be serving the closed first-round dataset
@@ -480,7 +487,7 @@ export function EnVivoClient({
           </div>
           <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
             <LiveBroadcast />
-            {!inPollBlackout && <PollStandingsSidebar candidates={allCandidates} />}
+            {!inPollBlackout && <PollStandingsSidebar candidates={pollStandingsCandidates} />}
             <MediaSourcesPanel />
             {ElectionDataCard}
           </div>
@@ -524,7 +531,7 @@ export function EnVivoClient({
           <AIPulse articles={articles} factChecks={factChecks} candidates={allCandidates} />
         </div>
         <div className="space-y-6 lg:sticky lg:top-20 lg:self-start">
-          {!inPollBlackout && <PollStandingsSidebar candidates={allCandidates} />}
+          {!inPollBlackout && <PollStandingsSidebar candidates={pollStandingsCandidates} />}
           <LiveBroadcast />
           <MediaSourcesPanel />
           {ElectionDataCard}
