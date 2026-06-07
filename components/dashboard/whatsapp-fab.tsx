@@ -14,9 +14,43 @@ import { useCountry } from "@/lib/config/country-context";
 
 const STORAGE_KEY = "condor_wa_subscribed";
 
+// Country + phase aware FAB copy. PE during runoff week says "balotaje", PE
+// other times says "Perú 2026", CO during runoff says "balotaje", CO other
+// times keeps the generic "electorales" label.
+function fabCopy(code: string, isRunoff: boolean): {
+  title: string;
+  pitch: string;
+  successPitch: string;
+} {
+  if (isRunoff) {
+    return {
+      title: "Alertas del balotaje",
+      pitch: code === "pe"
+        ? "Conteo ONPE, fact-checks y alertas del balotaje Fujimori vs Sánchez en tu WhatsApp. Gratis."
+        : "Preconteo Registraduría, fact-checks y alertas del balotaje en tu WhatsApp. Gratis.",
+      successPitch: "Te avisaremos por WhatsApp cada novedad del balotaje.",
+    };
+  }
+  return {
+    title: "Alertas electorales",
+    pitch: code === "pe"
+      ? "Encuestas, fake news y alertas de las elecciones Perú 2026 directo a tu WhatsApp. Gratis."
+      : "Encuestas, fake news y alertas electorales directo a tu WhatsApp. Gratis.",
+    successPitch: "Te avisaremos por WhatsApp cuando haya novedades electorales.",
+  };
+}
+
 export function WhatsAppFAB() {
   const country = useCountry();
   const [expanded, setExpanded] = useState(false);
+  const isRunoff = (() => {
+    if (!country.electionDateSecondRound) return false;
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: country.timezone });
+    const runoffMs = new Date(country.electionDateSecondRound + "T12:00:00").getTime();
+    const todayMs = new Date(today + "T12:00:00").getTime();
+    return today > country.electionDate && todayMs <= runoffMs + 7 * 86_400_000;
+  })();
+  const copy = fabCopy(country.code, isRunoff);
   const [phone, setPhone] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -87,7 +121,7 @@ export function WhatsAppFAB() {
                   Listo!
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Te avisaremos por WhatsApp cuando haya novedades electorales.
+                  {copy.successPitch}
                 </p>
               </div>
             ) : (
@@ -96,7 +130,7 @@ export function WhatsAppFAB() {
                   <div className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4 text-emerald" />
                     <p className="text-sm font-semibold text-foreground">
-                      Alertas electorales
+                      {copy.title}
                     </p>
                   </div>
                   <button
@@ -110,7 +144,7 @@ export function WhatsAppFAB() {
                 </div>
 
                 <p className="text-[11px] text-muted-foreground">
-                  Encuestas, fake news y alertas directo a tu WhatsApp. Gratis.
+                  {copy.pitch}
                 </p>
 
                 {/* Phone input — single field, minimal */}

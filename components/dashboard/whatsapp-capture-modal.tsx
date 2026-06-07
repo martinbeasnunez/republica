@@ -21,6 +21,82 @@ const STORAGE_KEY_DISMISSED = "condor_wa_modal_dismissed";
 const STORAGE_KEY_VIEWS = "condor_wa_view_count";
 const SEED_COUNT = 847;
 
+// ── Per-country / per-phase copy ────────────────────────────────────────────
+// The modal must read like it belongs in the user's country. PE during runoff
+// week talks about the balotaje (Fujimori vs Sánchez); CO during first-round
+// week talks about the general electoral coverage.
+type ModalCopy = {
+  title: string;
+  subtitle: string;
+  pills: { text: string; sub: string }[];
+  successTitle: string;
+  successBody: string;
+};
+function copyForCountry(code: string, isRunoff: boolean): ModalCopy {
+  if (code === "pe" && isRunoff) {
+    return {
+      title: "Agente del balotaje en tu WhatsApp",
+      subtitle:
+        "Te avisamos en tiempo real lo importante del balotaje Fujimori vs Sánchez: conteo ONPE, declaraciones, fact-checks. Gratis.",
+      pills: [
+        { text: "Conteo ONPE en vivo", sub: "El balotaje minuto a minuto" },
+        { text: "Fake news detectadas", sub: "Verificadas por CONDOR AI" },
+        { text: "Alertas del día E", sub: "Cierre, boletines, ganador" },
+        { text: "Sin spam", sub: "Solo lo que mueve la aguja" },
+      ],
+      successTitle: "Listo — agente activado",
+      successBody:
+        "Vamos a avisarte por WhatsApp cada novedad fuerte del balotaje del 7 de junio.",
+    };
+  }
+  if (code === "pe") {
+    return {
+      title: "Agente electoral Perú 2026 en tu WhatsApp",
+      subtitle:
+        "Un asistente con IA que sigue las elecciones presidenciales de Perú por ti y te avisa solo lo importante. Gratis.",
+      pills: [
+        { text: "Encuestas al instante", sub: "Ipsos, Datum, CPI, IEP" },
+        { text: "Fake news detectadas", sub: "CONDOR AI verifica por ti" },
+        { text: "Alertas personalizadas", sub: "Solo lo que te importa" },
+        { text: "Resumen semanal", sub: "Todo en 2 minutos" },
+      ],
+      successTitle: "¡Bienvenido al club!",
+      successBody:
+        "Ahora tienes un agente de IA siguiendo las elecciones por ti. Te mantendremos informado.",
+    };
+  }
+  if (code === "co" && isRunoff) {
+    return {
+      title: "Agente del balotaje en tu WhatsApp",
+      subtitle:
+        "Te avisamos en tiempo real lo importante de la segunda vuelta presidencial. Preconteo Registraduría, declaraciones, fact-checks. Gratis.",
+      pills: [
+        { text: "Preconteo en vivo", sub: "Registraduría minuto a minuto" },
+        { text: "Fake news detectadas", sub: "Verificadas por CONDOR AI" },
+        { text: "Alertas del día E", sub: "Cierre, boletines, ganador" },
+        { text: "Sin spam", sub: "Solo lo que mueve la aguja" },
+      ],
+      successTitle: "Listo — agente activado",
+      successBody:
+        "Vamos a avisarte por WhatsApp cada novedad fuerte del balotaje.",
+    };
+  }
+  return {
+    title: "Agente electoral Colombia 2026 en tu WhatsApp",
+    subtitle:
+      "Un asistente con IA que sigue las elecciones presidenciales de Colombia por ti y te avisa solo lo importante. Gratis.",
+    pills: [
+      { text: "Encuestas al instante", sub: "Invamer, CNC, Guarumo, AtlasIntel" },
+      { text: "Fake news detectadas", sub: "CONDOR AI verifica por ti" },
+      { text: "Alertas personalizadas", sub: "Solo lo que te importa" },
+      { text: "Resumen semanal", sub: "Todo en 2 minutos" },
+    ],
+    successTitle: "¡Bienvenido al club!",
+    successBody:
+      "Ahora tienes un agente de IA siguiendo las elecciones por ti. Te mantendremos informado.",
+  };
+}
+
 // Trigger rules:
 // - Show after 3rd page view in session (user is engaged)
 // - Don't show if already subscribed
@@ -38,6 +114,21 @@ export function WhatsAppCaptureModal() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subscriberCount, setSubscriberCount] = useState(SEED_COUNT);
+
+  // Detect runoff window in the user's local time. If today is between (first
+  // round, runoff + 7d] for a country with both dates set, the modal copy
+  // shifts to balotaje messaging.
+  const isRunoff = (() => {
+    if (!country.electionDateSecondRound) return false;
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: country.timezone });
+    const first = country.electionDate;
+    const runoff = country.electionDateSecondRound;
+    const dayMs = 86_400_000;
+    const todayMs = new Date(today + "T12:00:00").getTime();
+    const runoffMs = new Date(runoff + "T12:00:00").getTime();
+    return today > first && todayMs <= runoffMs + 7 * dayMs;
+  })();
+  const copy = copyForCountry(country.code, isRunoff);
 
   useEffect(() => {
     // Don't run on server
@@ -172,11 +263,10 @@ export function WhatsAppCaptureModal() {
                       <Check className="h-8 w-8 text-emerald" />
                     </motion.div>
                     <h3 className="text-lg font-bold text-foreground">
-                      Bienvenido al club!
+                      {copy.successTitle}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-2">
-                      Ahora tienes un agente de IA trabajando para ti.
-                      Te vamos a mantener informado.
+                      {copy.successBody}
                     </p>
                     <div className="flex items-center justify-center gap-1.5 mt-3 text-xs text-muted-foreground">
                       <Users className="h-3 w-3" />
@@ -194,54 +284,36 @@ export function WhatsAppCaptureModal() {
                       <div className="flex items-center gap-2 mb-2">
                         <Zap className="h-5 w-5 text-emerald" />
                         <h3 className="text-base sm:text-lg font-bold text-foreground">
-                          Tu agente electoral con IA
+                          {copy.title}
                         </h3>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Un asistente que monitorea todo por ti y te avisa solo lo importante.
-                        <span className="text-foreground font-medium"> Gratis.</span>
+                        {copy.subtitle}
                       </p>
                     </div>
 
                     {/* Value pills */}
                     <div className="grid grid-cols-2 gap-2 mb-5">
-                      {[
-                        {
-                          icon: TrendingUp,
-                          text: "Encuestas al instante",
-                          sub: "Antes que los medios",
-                        },
-                        {
-                          icon: Shield,
-                          text: "Fake news detectadas",
-                          sub: "IA verifica por ti",
-                        },
-                        {
-                          icon: Bell,
-                          text: "Alertas personalizadas",
-                          sub: "Solo lo que te importa",
-                        },
-                        {
-                          icon: Zap,
-                          text: "Resumen semanal",
-                          sub: "Todo en 2 minutos",
-                        },
-                      ].map(({ icon: Icon, text, sub }) => (
-                        <div
-                          key={text}
-                          className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5"
-                        >
-                          <Icon className="h-4 w-4 text-emerald flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-[11px] font-medium text-foreground leading-tight">
-                              {text}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground leading-tight">
-                              {sub}
-                            </p>
+                      {copy.pills.map(({ text, sub }, i) => {
+                        // Same icon order as before so layout stays familiar.
+                        const Icon = [TrendingUp, Shield, Bell, Zap][i] ?? Zap;
+                        return (
+                          <div
+                            key={text}
+                            className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5"
+                          >
+                            <Icon className="h-4 w-4 text-emerald flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-[11px] font-medium text-foreground leading-tight">
+                                {text}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground leading-tight">
+                                {sub}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Phone input */}
