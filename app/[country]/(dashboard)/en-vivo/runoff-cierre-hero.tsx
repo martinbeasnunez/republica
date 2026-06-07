@@ -12,6 +12,12 @@ interface RunoffCierreHeroProps {
    * skip rendering this hero — the live counter will take over.
    */
   hidden?: boolean;
+  /**
+   * Compact mode: smaller padding, no subtitle paragraph, no embedded finalists
+   * strip. Designed to fit in a sidebar slot. Use the full hero only as the
+   * main protagonist; everywhere else prefer compact.
+   */
+  compact?: boolean;
 }
 
 type Phase =
@@ -123,7 +129,7 @@ const PHASE_COPY: Record<
   },
 };
 
-export function RunoffCierreHero({ finalists, hidden }: RunoffCierreHeroProps) {
+export function RunoffCierreHero({ finalists, hidden, compact = false }: RunoffCierreHeroProps) {
   const { phase, hh, mm, ss, secsRemaining } = useLimaCierre();
 
   if (hidden) return null;
@@ -131,6 +137,63 @@ export function RunoffCierreHero({ finalists, hidden }: RunoffCierreHeroProps) {
   const copy = PHASE_COPY[phase];
   const showCountdown = phase === "pre-open" || phase === "voting" || phase === "cierre";
   const [a, b] = finalists;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COMPACT MODE — sidebar widget
+  // Just the eyebrow pill + the countdown digits + a thin progress bar.
+  // No subtitle, no embedded finalists (they're already visible above).
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (compact) {
+    let progressPct = 0;
+    if (phase === "voting") progressPct = 100 - (secsRemaining / (9 * 3600)) * 100;
+    else if (phase === "cierre" || phase === "boletines" || phase === "next-day") progressPct = 100;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-xl border border-stone-800 bg-gradient-to-br from-stone-950 to-red-950 px-4 py-4"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/90 px-2 py-0.5">
+            <span className="h-1 w-1 rounded-full bg-white pulse-dot" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white">
+              {copy.eyebrow}
+            </span>
+          </span>
+          <span className="text-[9px] font-mono text-red-200/60">Hora Lima</span>
+        </div>
+        <p className="text-xs font-black uppercase tracking-wider text-red-100/80 mb-2">
+          {showCountdown ? "Faltan para el cierre" : copy.title}
+        </p>
+        {showCountdown && secsRemaining > 0 ? (
+          <div className="flex items-baseline gap-1 font-mono tabular-nums text-white mb-3">
+            <span className="text-3xl font-black leading-none">{pad(hh)}</span>
+            <span className="text-base text-red-200/50">:</span>
+            <span className="text-3xl font-black leading-none">{pad(mm)}</span>
+            <span className="text-base text-red-200/50">:</span>
+            <span className="text-3xl font-black leading-none">{pad(ss)}</span>
+            <span className="text-[9px] uppercase tracking-widest text-red-200/40 ml-2">HH:MM:SS</span>
+          </div>
+        ) : (
+          <p className="text-[11px] text-red-100/70 leading-snug mb-3">{copy.subtitle}</p>
+        )}
+        {phase === "voting" && (
+          <div className="h-1 rounded-full bg-white/5 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+            />
+          </div>
+        )}
+        <p className="mt-3 text-[10px] text-red-100/50 leading-snug border-t border-white/5 pt-2">
+          {copy.cta}
+        </p>
+      </motion.div>
+    );
+  }
 
   // Progress through the voting day (0 → 100 as the day approaches 5pm)
   let progressPct = 0;
