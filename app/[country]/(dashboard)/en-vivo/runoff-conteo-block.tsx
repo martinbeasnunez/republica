@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { BarChart3, RefreshCw, ExternalLink, Hourglass } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -166,27 +166,28 @@ export function RunoffConteoBlock() {
         </div>
       )}
 
-      {/* Candidates rows */}
+      {/* Candidates rows — plain divs, no per-row Framer animations.
+          Earlier we had a stagger animation here; it froze on slow mobile
+          renders (some rows stayed at opacity:0 indefinitely on real devices),
+          and the block parent already animates in. The bar width has its own
+          CSS transition so we don't lose the "filling up" feel. */}
       <div className="bg-white">
         {sorted.map((c, i) => {
           const isLeader = i === 0 && c.percentage != null && c.percentage > (runner?.percentage ?? 0);
           const pct = c.percentage ?? 0;
           const barWidth = hasNumbers ? Math.max(2, pct) : 0;
           return (
-            <motion.div
+            <div
               key={c.slug ?? c.name}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.08 }}
               className={cn("relative px-5 py-4 border-b border-stone-100 last:border-b-0", isLeader && "bg-stone-50/50")}
             >
-              {/* Background bar */}
+              {/* Background bar (CSS transition only) */}
               <div
-                className="absolute inset-y-0 left-0 opacity-[0.10]"
+                className="absolute inset-y-0 left-0 opacity-[0.10] transition-[width] duration-700 ease-out"
                 style={{ width: `${barWidth}%`, backgroundColor: c.partyColor ?? "#888" }}
               />
-              <div className="relative flex items-center gap-4">
-                <div className="flex flex-col items-center gap-0.5 w-10">
+              <div className="relative flex items-center gap-3 sm:gap-4">
+                <div className="flex flex-col items-center gap-0.5 w-8 sm:w-10 shrink-0">
                   <div className="h-3 w-3 rounded-full" style={{ backgroundColor: c.partyColor ?? "#888" }} />
                   <span className="text-[9px] font-mono text-stone-400">#{i + 1}</span>
                 </div>
@@ -212,7 +213,7 @@ export function RunoffConteoBlock() {
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -243,22 +244,20 @@ export function RunoffConteoBlock() {
                 )}
               </p>
             )}
-            <AnimatePresence>
-              <div className="flex items-center gap-3 text-[10px] text-stone-500 font-mono">
-                <span>Captura: {formatTime(data.capturedAt)} (Lima)</span>
-                {data.isOfficial && (
-                  <a
-                    href="https://resultadosegundavuelta.onpe.gob.pe/main/resumen"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 hover:text-stone-700 underline"
-                  >
-                    <ExternalLink className="h-2.5 w-2.5" />
-                    Ver ONPE
-                  </a>
-                )}
-              </div>
-            </AnimatePresence>
+            <div className="flex items-center gap-3 text-[10px] text-stone-500 font-mono">
+              <span>Captura: {formatTime(data.capturedAt)} (Lima)</span>
+              {data.isOfficial && (
+                <a
+                  href="https://resultadosegundavuelta.onpe.gob.pe/main/resumen"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 hover:text-stone-700 underline"
+                >
+                  <ExternalLink className="h-2.5 w-2.5" />
+                  Ver ONPE
+                </a>
+              )}
+            </div>
           </div>
         )}
       </div>
