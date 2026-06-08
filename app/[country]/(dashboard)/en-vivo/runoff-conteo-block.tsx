@@ -248,7 +248,7 @@ export function RunoffConteoBlock() {
                 <span>Captura: {formatTime(data.capturedAt)} (Lima)</span>
                 {data.isOfficial && (
                   <a
-                    href="https://resultadoelectoral.onpe.gob.pe/main/presidenciales"
+                    href="https://resultadosegundavuelta.onpe.gob.pe/main/resumen"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 hover:text-stone-700 underline"
