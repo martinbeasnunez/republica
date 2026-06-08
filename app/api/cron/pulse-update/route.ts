@@ -119,6 +119,44 @@ async function fetchPreconteo(): Promise<Snapshot["preconteo"]> {
   }
 }
 
+/**
+ * PE conteo — hits our own /api/onpe-results which already auto-detects the
+ * runoff subdomain and returns runoff-shape data when ONPE is transmitting.
+ * Returns undefined when data is first-round leftover (>2 candidates) so the
+ * prompt never invents runoff numbers off old data.
+ */
+async function fetchOnpeRunoff(origin: string): Promise<Snapshot["preconteo"]> {
+  try {
+    const res = await fetch(`${origin}/api/onpe-results`, { cache: "no-store" });
+    if (!res.ok) return undefined;
+    const json = await res.json().catch(() => null);
+    if (!json || !Array.isArray(json.candidates)) return undefined;
+    // Only treat as runoff data when ≤2 candidates AND isRunoff flag is true.
+    if (json.candidates.length > 2 || !json.isRunoff) return undefined;
+
+    const cands: Array<{ name: string; votes: number; percentage: number }> = json.candidates
+      .map((c: { name: string; votes: number; percentage: number }) => {
+        const parts = String(c.name || "").split(/\s+/);
+        const display = parts[0] && parts[parts.length - 1]
+          ? `${parts[0]} ${parts[parts.length - 1]}`
+          : c.name;
+        return { name: display, votes: Number(c.votes) || 0, percentage: Number(c.percentage) || 0 };
+      })
+      .sort((a: { votes: number }, b: { votes: number }) => b.votes - a.votes);
+
+    const pct = Number(json.progress?.percentage) || 0;
+    return {
+      percentage: pct,
+      counted: Number(json.progress?.counted) || 0,
+      total: Number(json.progress?.total) || 0,
+      leader: cands[0] ? { name: cands[0].name, percentage: cands[0].percentage } : undefined,
+      runnerUp: cands[1] ? { name: cands[1].name, percentage: cands[1].percentage } : undefined,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchRecentArticles(sb: any, country: CountryCode, sinceISO: string) {
   const { data } = await sb
@@ -436,17 +474,48 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
     snap.recentFactChecks.forEach((f) => lines.push(`- ${f.verdict}: ${f.claim.slice(0, 140)} (${f.source})`));
   }
 
-  // ── CONTEXTO REGISTRADURÍA (sólo después de 16:00) ──────────────────────
+  // ── CONTEXTO CONTEO OFICIAL (después de cierre de mesas) ────────────────
+  // For PE this is ONPE (runoff Fujimori vs Sánchez). For CO this is the
+  // Registraduría preconteo. We compute deltas vs the previous pulse so the
+  // model can lead with movement instead of repeating "ONPE empezó a contar".
   if (snap.preconteo && !isPollsOpen) {
     const p = snap.preconteo;
+    const sourceLabel = isPE ? "ONPE (conteo oficial balotaje)" : "Preconteo Registraduría";
     lines.push("");
-    lines.push("=== Preconteo Registraduría (contexto numérico) ===");
-    lines.push(`Mesas escrutadas: ${p.percentage}% (${p.counted} de ${p.total} mesas)`);
+    lines.push(`=== ${sourceLabel} — DATOS NUMÉRICOS DEL MOMENTO ===`);
+    lines.push(`Actas escrutadas: ${p.percentage}% (${p.counted} de ${p.total} mesas)`);
     if (p.leader) lines.push(`Lidera ${p.leader.name} con ${p.leader.percentage}%`);
     if (p.runnerUp) lines.push(`Segundo ${p.runnerUp.name} con ${p.runnerUp.percentage}%`);
+    if (p.leader && p.runnerUp) {
+      const delta = (p.leader.percentage - p.runnerUp.percentage);
+      lines.push(`Diferencia actual entre los dos: ${delta.toFixed(1)} pp`);
+    }
     if (prev?.metrics) {
       const m = prev.metrics as Record<string, number | string | undefined>;
-      lines.push(`Hace ~5 min iba en ${m.percentage}%${m.leaderName ? `, ${m.leaderName} lideraba con ${m.leaderPercentage}%` : ""}`);
+      const prevPct = typeof m.percentage === "number" ? m.percentage : null;
+      const prevLeaderPct = typeof m.leaderPercentage === "number" ? m.leaderPercentage : null;
+      const prevRunnerPct = typeof m.runnerUpPercentage === "number" ? m.runnerUpPercentage : null;
+      if (prevPct != null) {
+        lines.push(`Hace ~5 min iba ${prevPct}% de actas${m.leaderName ? ` con ${m.leaderName} en ${prevLeaderPct}%` : ""}.`);
+      }
+      // Pre-compute the deltas the model is most likely to need so it doesn't
+      // have to do mental math.
+      if (p.leader && prevLeaderPct != null) {
+        const d = p.leader.percentage - prevLeaderPct;
+        if (Math.abs(d) >= 0.1) {
+          lines.push(`Δ líder en últimos 5 min: ${d > 0 ? "+" : ""}${d.toFixed(2)} pp.`);
+        }
+      }
+      if (p.runnerUp && prevRunnerPct != null) {
+        const d = p.runnerUp.percentage - prevRunnerPct;
+        if (Math.abs(d) >= 0.1) {
+          lines.push(`Δ segundo en últimos 5 min: ${d > 0 ? "+" : ""}${d.toFixed(2)} pp.`);
+        }
+      }
+    }
+    if (isPE) {
+      lines.push("");
+      lines.push("⚡ INSTRUCCIÓN ABSOLUTA PARA EL PULSO: la SUPERESTRELLA de este pulso son ESTOS números del conteo oficial. Empezá por el número o el delta concreto. PROHIBIDO empezar diciendo 'ONPE ha comenzado a publicar' o 'el conteo avanza' o 'los ciudadanos esperan' — esas frases ya las dijiste antes y son ruido. Empezá por: '52.7% Fujimori vs 47.3% Sánchez con X% actas' o 'Sánchez recortó Y pp en la última hora' o 'Fujimori amplía a Z%, su mayor margen de la noche'. Si los titulares mencionan un evento adicional concreto (declaración, incidente, reacción), úsalo de cierre. Pero EL NÚMERO MANDA.");
     }
   }
 
@@ -465,6 +534,14 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
     lines.push("REGLA EXTRA: NO mencionés a las mismas personas, lugares o hechos que ya cubriste en los pulsos anteriores. Si los titulares más frescos son sobre lo mismo, buscá otro ángulo: otra región, otra autoridad, otra cifra del día, otro candidato del listado, otro tema. Variá.");
     lines.push("");
     lines.push("ANTI-BOILERPLATE: no termines cada pulso con la misma muletilla. Si los pulsos anteriores ya dijeron '~41,4 millones de electores' o 'las 122.020 mesas hasta las 4 p.m.' o 'colombianos ejerzan su derecho al voto', NO LO REPITAS. Esa cifra es contexto que el lector ya tiene. Enfocate sólo en el ángulo nuevo de este pulso, sin cierre genérico. Mejor terminar abrupto y específico que con frase de relleno.");
+    lines.push("");
+    lines.push("🚫 PLANTILLAS PROHIBIDAS (si tu primer borrador empieza así, BORRALO y empezá de nuevo):");
+    lines.push('- "La ONPE ha comenzado a publicar..." / "Empezó el conteo en X..."');
+    lines.push('- "Keiko Fujimori y Roberto Sánchez compiten en una ajustada/reñida segunda vuelta..."');
+    lines.push('- "Mientras el escrutinio avanza, los ciudadanos esperan conocer quién será..."');
+    lines.push('- "Los peruanos / colombianos esperan el desenlace..."');
+    lines.push('- "La contienda electoral se intensifica..."');
+    lines.push("Esas son MULETILLAS de live-blog perezoso. El lector ya sabe que hay balotaje, que los candidatos compiten y que el escrutinio avanza. NO LO REPITAS. Andá directo al dato nuevo: el % concreto, el delta, la región específica que ya cerró, la declaración exacta de un candidato.");
   }
 
   // ── DIRECTIVA FINAL ──────────────────────────────────────────────────────
@@ -474,7 +551,13 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
   } else if (isPollsOpen) {
     lines.push("ESCRIBE el pulso AHORA (≤ 55 palabras, un párrafo). Es DÍA E con mesas ABIERTAS. Elegí UN ángulo concreto y específico — alguien, en algún lugar, hizo algo. Nada de '0% escrutado'. Nada de 'sin novedades'. Si no hay incidentes, hablá de quién votó, dónde, qué dijo, o de un dato del día.");
   } else if (snap.phase === "election-day") {
-    lines.push("ESCRIBE el pulso AHORA (≤ 55 palabras): cambios en el preconteo + declaraciones, en un párrafo, sin signos de exclamación.");
+    if (snap.preconteo && isPE) {
+      lines.push(
+        "ESCRIBE el pulso AHORA (≤ 55 palabras, un párrafo). POST-CIERRE EN BALOTAJE PE — empezá literal con el número actual y/o el delta vs hace 5 min (ej: 'Con 35% de actas, Fujimori sostiene 52.7%' o 'Sánchez recortó 0.4 pp; ahora 47.3%'). Después podés agregar el ángulo del momento: una región que cerró, una declaración nueva, una reacción. UN ángulo nuevo, no la misma plantilla del anterior. Sin signos de exclamación.",
+      );
+    } else {
+      lines.push("ESCRIBE el pulso AHORA (≤ 55 palabras): cambios en el preconteo + declaraciones, en un párrafo, sin signos de exclamación.");
+    }
   } else {
     lines.push("ESCRIBE el pulso AHORA (≤ 55 palabras): resultados, reacciones, próximos pasos.");
   }
@@ -529,8 +612,20 @@ export async function GET(request: Request) {
   // (8h) is always included as broader context.
   const sinceISO = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const factCheckSinceISO = new Date(Date.now() - 90 * 60 * 1000).toISOString();
+  // Pull live conteo data per country. For CO that's Registraduría preconteo;
+  // for PE we hit our own /api/onpe-results (which auto-detects the runoff
+  // subdomain). Skip during "pre" since polls aren't open yet.
+  const origin = new URL(request.url).origin;
+  const conteoFetcher: Promise<Snapshot["preconteo"]> =
+    phase === "election-day" || phase === "post"
+      ? country === "co"
+        ? fetchPreconteo()
+        : country === "pe"
+          ? fetchOnpeRunoff(origin)
+          : Promise.resolve(undefined)
+      : Promise.resolve(undefined);
   const [preconteo, recentArticles, dayHeadlines, recentFactChecks, liveRSS] = await Promise.all([
-    country === "co" && (phase === "election-day" || phase === "post") ? fetchPreconteo() : Promise.resolve(undefined),
+    conteoFetcher,
     fetchRecentArticles(sb, country, sinceISO),
     fetchTodayHeadlines(sb, country),
     fetchRecentFactChecks(sb, country, factCheckSinceISO),
