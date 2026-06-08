@@ -32,6 +32,9 @@ interface CountryShareTheme {
   shareText: (url: string) => string; // WhatsApp message body
 }
 
+// Brand voice: "profesional con calidez". Tuteo neutral, sin slang generacional
+// ("pata"/"parcero") ni voseo. Combina con el tono editorial del resto del
+// producto (radiografía, planes, comparador).
 const COUNTRY_SHARE: Record<CountryCode, CountryShareTheme> = {
   pe: {
     // 🇵🇪 Rojo peruano (#8B1A1A) sobre stone-950
@@ -41,11 +44,11 @@ const COUNTRY_SHARE: Record<CountryCode, CountryShareTheme> = {
     glowB: "rgba(255,255,255,0.08)",
     accentHex: "#E84040",
     pillBorder: "border-red-400/40",
-    eyebrow: "Avisa a un pata",
-    headline: "¿Te está sirviendo el conteo en vivo?",
-    body: "CONDOR AI resume cada 5 minutos el balotaje Fujimori vs Sánchez con conteo ONPE en tiempo real. Compártelo con quien también esté siguiendo la segunda vuelta hoy.",
+    eyebrow: "Comparte el conteo en vivo",
+    headline: "¿Te está sirviendo esta cobertura?",
+    body: "CONDOR AI resume cada 5 minutos el balotaje Fujimori vs Sánchez con conteo oficial ONPE. Comparte con alguien que también esté siguiendo la segunda vuelta hoy.",
     shareText: (url) =>
-      `Estoy siguiendo el balotaje Perú 2026 en vivo con CONDOR AI 🇵🇪\nConteo oficial ONPE y resumen cada 5 minutos.\n${url}`,
+      `Estoy siguiendo el balotaje Perú 2026 en vivo con CONDOR AI 🇵🇪 — conteo oficial ONPE y resumen cada 5 minutos.\n${url}`,
   },
   co: {
     // 🇨🇴 Azul (#003893) + amarillo (#FCD116) + rojo (#CE1126) bandera
@@ -55,11 +58,11 @@ const COUNTRY_SHARE: Record<CountryCode, CountryShareTheme> = {
     glowB: "rgba(206,17,38,0.22)",
     accentHex: "#FCD116",
     pillBorder: "border-[#FCD116]/40",
-    eyebrow: "Avisale a un parcero",
-    headline: "¿Te está sirviendo el Pulso en vivo?",
-    body: "CONDOR AI te resume cada 5 minutos lo que está pasando en las elecciones de Colombia. Compartilo con quien también esté pendiente hoy.",
+    eyebrow: "Comparte el pulso en vivo",
+    headline: "¿Te está sirviendo esta cobertura?",
+    body: "CONDOR AI resume cada 5 minutos lo que está pasando en las elecciones de Colombia con preconteo oficial de la Registraduría. Comparte con alguien que también esté siguiendo la jornada hoy.",
     shareText: (url) =>
-      `Estoy siguiendo las elecciones de Colombia en vivo con CONDOR AI 🇨🇴\nCada 5 minutos un resumen de lo que está pasando.\n${url}`,
+      `Estoy siguiendo las elecciones de Colombia en vivo con CONDOR AI 🇨🇴 — preconteo Registraduría y resumen cada 5 minutos.\n${url}`,
   },
 };
 
