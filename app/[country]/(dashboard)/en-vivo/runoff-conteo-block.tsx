@@ -54,11 +54,14 @@ function formatTime(iso: string): string {
   }
 }
 
+// Source-aware badges. We only ever surface ONPE-official data or an
+// "esperando ONPE" placeholder — no exit polls, no quick counts. Other
+// sourceType values map to the placeholder treatment.
 const SOURCE_BADGE: Record<ApiResponse["sourceType"], { label: string; tint: string; ring: string; pillBg: string }> = {
-  official:   { label: "CONTEO OFICIAL", tint: "from-emerald-50 to-white",  ring: "border-emerald-600/30",  pillBg: "bg-emerald-600" },
-  exit_poll:  { label: "BOCA DE URNA · NO OFICIAL", tint: "from-amber-50 to-white", ring: "border-amber-500/30",  pillBg: "bg-amber-500" },
-  quick_count:{ label: "CONTEO RÁPIDO · NO OFICIAL", tint: "from-amber-50 to-white", ring: "border-amber-500/30", pillBg: "bg-amber-500" },
-  waiting:    { label: "ESPERANDO ONPE", tint: "from-stone-100 to-white", ring: "border-stone-300/60", pillBg: "bg-stone-600" },
+  official:   { label: "CONTEO OFICIAL ONPE", tint: "from-emerald-50 to-white",  ring: "border-emerald-600/30",  pillBg: "bg-emerald-600" },
+  waiting:    { label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
+  exit_poll:  { label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
+  quick_count:{ label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
 };
 
 export function RunoffConteoBlock() {
