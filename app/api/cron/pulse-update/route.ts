@@ -283,13 +283,13 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
     lines.push("NO sintetizar una narrativa propia. Tu trabajo es DIGESTAR lo que los medios peruanos están reportando AHORA y ofrecer un pulso de 2 o 3 ÍTEMS ATÓMICOS, cada uno con su fuente. Pensalo como un live-blog tipo El Comercio EN VIVO o La República al minuto — no escribís opinión, no contás una historia, solo decís qué reportó cada medio en los últimos 5–15 min.");
     lines.push("");
     lines.push("═════════════ FORMATO DEL PULSO (OBLIGATORIO) ═════════════");
-    lines.push("Salida en JSON con campo `summary` que contiene 2 o 3 ítems separados por ` · ` (espacio·espacio). Cada ítem es UNA frase de 12–22 palabras que empieza con el dato concreto y termina con la atribución entre paréntesis al final si NO empezó con el medio.");
+    lines.push("El campo `summary` debe ser TEXTO PLANO (no markdown, no fences, no JSON anidado). 2 o 3 ítems separados por ` · ` (espacio·espacio). Cada ítem es UNA frase de 12–22 palabras que empieza con el dato concreto y termina con la atribución entre paréntesis al final si NO empezó con el medio.");
     lines.push("");
-    lines.push("EJEMPLO BUENO (úsalo como modelo de estructura, NO de contenido):");
-    lines.push('"Con 35.2% de actas, Fujimori se sostiene en 52.8% y Sánchez en 47.2% (ONPE). · Sánchez declara desde Huaral que respetará el resultado y no anticipará pronunciamientos (RPP). · Mesa de Comas reabre tras retraso de hora y media por miembro ausente (Gestión)."');
+    lines.push("EJEMPLO BUENO de cómo debe verse el VALOR de `summary` (texto plano, sin comillas externas):");
+    lines.push("Con 35.2% de actas, Fujimori se sostiene en 52.8% y Sánchez en 47.2% (ONPE). · Sánchez declara desde Huaral que respetará el resultado (RPP). · Mesa de Comas reabre tras retraso de hora y media por miembro ausente (Gestión).");
     lines.push("");
-    lines.push("MAL EJEMPLO (rechazar si tu borrador termina así):");
-    lines.push('"La ONPE ha comenzado a publicar los resultados oficiales del conteo de votos en Iquitos, según Gestión. Keiko Fujimori y Roberto Sánchez compiten en una segunda vuelta presidencial ajustada, mientras el escrutinio avanza y los ciudadanos esperan conocer quién será el próximo presidente."');
+    lines.push("MAL EJEMPLO (no hagas esto):");
+    lines.push("La ONPE ha comenzado a publicar los resultados oficiales del conteo de votos en Iquitos, según Gestión. Keiko Fujimori y Roberto Sánchez compiten en una segunda vuelta presidencial ajustada, mientras el escrutinio avanza y los ciudadanos esperan conocer quién será el próximo presidente.");
     lines.push("Razones por las que es malo: (1) un solo ítem en vez de 2–3, (2) la mitad es relleno ya repetido, (3) ningún número concreto, (4) ningún dato accionable.");
     lines.push("");
     lines.push("═════════════ REGLAS DE ATRIBUCIÓN ═════════════");
@@ -660,6 +660,50 @@ export async function GET(request: Request) {
   if (!summary) {
     return NextResponse.json({ error: "empty completion" }, { status: 500 });
   }
+
+  /**
+   * Defensive unwrap. The completion is requested with
+   * response_format: json_object so the API returns `{ "summary": "..." }`.
+   * Sometimes the model also wraps the summary VALUE in markdown fences /
+   * a nested JSON literal because the prompt mentions JSON. We strip those
+   * shells so the stored summary is always plain text.
+   *
+   * Patterns we've seen:
+   *   "```json { \"summary\": \"text\" } ```"
+   *   "{ \"summary\": \"text\" }"
+   *   "```\n{ ... }\n```"
+   */
+  function unwrapNoise(s: string): string {
+    let out = s.trim();
+    // Strip ```json … ``` or ``` … ``` fences (possibly outside the JSON object)
+    out = out.replace(/^```(?:json|JSON)?\s*/, "").replace(/```\s*$/, "").trim();
+    // If the whole thing is a JSON object with a `summary` field, pluck it.
+    if (out.startsWith("{") && out.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(out) as { summary?: unknown };
+        if (typeof parsed.summary === "string") out = parsed.summary;
+      } catch {
+        /* not parseable — leave as-is */
+      }
+    }
+    // Strip leading "summary:" if the model just dumped the key
+    out = out.replace(/^\s*summary\s*[:=]\s*/i, "").trim();
+    // Strip surrounding quotes
+    if ((out.startsWith('"') && out.endsWith('"')) || (out.startsWith("'") && out.endsWith("'"))) {
+      out = out.slice(1, -1).trim();
+    }
+    return out;
+  }
+
+  // First unwrap pass — the outer envelope is JSON because of response_format
+  try {
+    const outer = JSON.parse(summary) as { summary?: unknown };
+    if (typeof outer.summary === "string") summary = outer.summary.trim();
+  } catch {
+    /* fall through */
+  }
+  // Second pass — clean any leftover fences / nested JSON in the value
+  summary = unwrapNoise(summary);
 
   // ── Validación post-generación contra alucinaciones ─────────────────────
   // El modelo, aún con prompt durísimo, sigue inventando. Validamos que cada
