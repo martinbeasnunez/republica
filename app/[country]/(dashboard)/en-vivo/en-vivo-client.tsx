@@ -26,6 +26,7 @@ import { MediaSourcesPanel } from "./media-sources-panel";
 import { CondorAIHero } from "./condor-ai-hero";
 import { CondorAIPulse } from "./condor-ai-pulse";
 import { RunoffCierreHero } from "./runoff-cierre-hero";
+import { RunoffConteoBlock } from "./runoff-conteo-block";
 import { ShareModal } from "./share-modal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Vote, MapPin, RefreshCw, Clock } from "lucide-react";
@@ -173,6 +174,28 @@ export function EnVivoClient({
     return () => { cancelled = true; clearInterval(id); };
   }, [isRunoffWindow, country.code]);
   const useCierreHero = isRunoffWindow && country.code === "pe" && !onpeReady && finalists.length === 2;
+
+  // ── Mesas-closed clock ───────────────────────────────────────────────────
+  // Once we cross 5:00 p.m. Lima on runoff day, the cierre hero stops being
+  // useful — we want the live counter to take over (even if ONPE still hasn't
+  // started transmitting, the counter shows a "Esperando ONPE" + boca-de-urna
+  // hybrid state and is driven from /api/runoff-conteo).
+  const [pollsClosedPE, setPollsClosedPE] = useState(false);
+  useEffect(() => {
+    if (!isRunoffWindow || country.code !== "pe") return;
+    const tick = () => {
+      const limaH = parseInt(
+        new Date().toLocaleString("en-US", { timeZone: "America/Lima", hour: "numeric", hour12: false }),
+        10,
+      );
+      const limaDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/Lima" });
+      setPollsClosedPE(limaDate >= activeElectionDate && limaH >= 17);
+    };
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, [isRunoffWindow, country.code, activeElectionDate]);
+  const showRunoffConteo = isRunoffWindow && country.code === "pe" && finalists.length === 2 && (pollsClosedPE || onpeReady);
 
   // ── Filter "hot" articles for the day-E live feed ──────────────────────
   // En día E o post-elección, el feed de "Noticias en Tiempo Real" sólo debe
@@ -404,7 +427,14 @@ export function EnVivoClient({
             as the protagonist instead, with the AI pulse right below it.
           - Otherwise apply the usual phase-aware reorder for the live counter.
         */}
-        {useCierreHero ? (
+        {showRunoffConteo ? (
+          /* Post-cierre: live counter (or its "esperando ONPE" state) is the protagonist.
+             The block auto-flips between manual boca-de-urna and official ONPE data. */
+          <>
+            <RunoffConteoBlock />
+            {AIBlock}
+          </>
+        ) : useCierreHero ? (
           <>
             <RunoffCierreHero finalists={[finalists[0], finalists[1]]} />
             {AIBlock}
