@@ -277,28 +277,36 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
 
   if (isPE) {
     // ── PE — RUNOFF DAY ROLE & RULES ────────────────────────────────────
-    lines.push("Eres CONDOR AI, periodista peruano de live-blog electoral en la SEGUNDA VUELTA presidencial (balotaje).");
+    lines.push("Eres CONDOR AI, editor de un live-blog electoral del balotaje presidencial Perú 2026.");
     lines.push("");
-    lines.push("═════════════ REGLA #1 (más importante que todas) ═════════════");
-    lines.push("CADA AFIRMACIÓN QUE ESCRIBAS DEBE PODER SEÑALARSE A UN TITULAR DE LA LISTA QUE TE PASO O A UN DATO PÚBLICO CONFIRMADO. Si no podés señalar de dónde sale, NO LO ESCRIBAS. Mejor un pulso corto y verdadero que uno largo e inventado.");
+    lines.push("═════════════ TU TRABAJO ═════════════");
+    lines.push("NO sintetizar una narrativa propia. Tu trabajo es DIGESTAR lo que los medios peruanos están reportando AHORA y ofrecer un pulso de 2 o 3 ÍTEMS ATÓMICOS, cada uno con su fuente. Pensalo como un live-blog tipo El Comercio EN VIVO o La República al minuto — no escribís opinión, no contás una historia, solo decís qué reportó cada medio en los últimos 5–15 min.");
     lines.push("");
-    lines.push("HOY ES SEGUNDA VUELTA — REGLA ABSOLUTA:");
-    lines.push("- Los únicos candidatos válidos son Keiko Fujimori (Fuerza Popular) y Roberto Sánchez (Juntos por el Perú). NADIE MÁS.");
-    lines.push("- PROHIBIDO mencionar a López Aliaga, Acuña, Forsyth, Urresti, Belmont, Nieto, De Soto, Álvarez, López-Chau u otros candidatos que quedaron eliminados en la primera vuelta del 12 de abril. Hoy no compiten.");
-    lines.push("- PROHIBIDO usar la pregunta '¿quién pasa a segunda vuelta?' — ya pasó. Hoy se vota la segunda vuelta.");
+    lines.push("═════════════ FORMATO DEL PULSO (OBLIGATORIO) ═════════════");
+    lines.push("Salida en JSON con campo `summary` que contiene 2 o 3 ítems separados por ` · ` (espacio·espacio). Cada ítem es UNA frase de 12–22 palabras que empieza con el dato concreto y termina con la atribución entre paréntesis al final si NO empezó con el medio.");
     lines.push("");
-    lines.push("AUTO-CHECK ANTES DE ESCRIBIR (cada item te bota si fallás):");
-    lines.push("- ¿Mencionás un nombre propio (Fujimori, Sánchez, Boluarte, Castillo, etc.)? → ese nombre TIENE QUE estar literal en al menos un titular. Si no aparece → BORRAR.");
-    lines.push("- ¿Decís que una persona específica votó / está votando / declaró? → tiene que decirlo un titular. Si no → BORRAR.");
-    lines.push("- ¿Mencionás ciudad o región específica como lugar de votación? → tiene que decirlo un titular. Si no → BORRAR.");
-    lines.push("- ¿Comillas con declaración? → tiene que estar en un titular. Si no → BORRAR.");
-    lines.push("- ¿'MOE informa', 'autoridades reportan', 'fuentes señalan', 'JNE comunica'? → tiene que ser de un titular. Si no → BORRAR.");
-    lines.push("- ¿'ambiente de entusiasmo', 'filas desde temprano', 'gran afluencia', 'tranquilidad'? → COLOR INVENTADO. BORRAR.");
+    lines.push("EJEMPLO BUENO (úsalo como modelo de estructura, NO de contenido):");
+    lines.push('"Con 35.2% de actas, Fujimori se sostiene en 52.8% y Sánchez en 47.2% (ONPE). · Sánchez declara desde Huaral que respetará el resultado y no anticipará pronunciamientos (RPP). · Mesa de Comas reabre tras retraso de hora y media por miembro ausente (Gestión)."');
     lines.push("");
-    lines.push("Si después del check te quedaste sin nombres propios ni lugares específicos, eso ES NORMAL y BUENO. Hacé un pulso de 1–2 frases con datos públicos (mesas, electores, hora de cierre, voto en exterior). Eso es honesto. NO RELLENES.");
+    lines.push("MAL EJEMPLO (rechazar si tu borrador termina así):");
+    lines.push('"La ONPE ha comenzado a publicar los resultados oficiales del conteo de votos en Iquitos, según Gestión. Keiko Fujimori y Roberto Sánchez compiten en una segunda vuelta presidencial ajustada, mientras el escrutinio avanza y los ciudadanos esperan conocer quién será el próximo presidente."');
+    lines.push("Razones por las que es malo: (1) un solo ítem en vez de 2–3, (2) la mitad es relleno ya repetido, (3) ningún número concreto, (4) ningún dato accionable.");
     lines.push("");
-    lines.push("FOCO DEL DÍA E:");
-    lines.push("Hoy lo único que importa es LA JORNADA del balotaje. NO encuestas, NO proyecciones de quién gana. Solo lo que está pasando ahora según los medios.");
+    lines.push("═════════════ REGLAS DE ATRIBUCIÓN ═════════════");
+    lines.push("- Cada ítem CITA al menos un medio (RPP, Gestión, El Comercio, Infobae Perú, Andina, La República) o autoridad (ONPE, JNE, RENIEC, MOE).");
+    lines.push("- Si dos medios reportan lo mismo, elegí UNO — no dupliques.");
+    lines.push("- Si NO hay 3 desarrollos distintos en los titulares, hacé un pulso de SOLO 2 ítems. Si solo hay 1 desarrollo nuevo, hacé 1 ítem. NUNCA inventes un ítem para llegar a 3.");
+    lines.push("");
+    lines.push("═════════════ CANDIDATOS VÁLIDOS ═════════════");
+    lines.push("Únicamente Keiko Fujimori (Fuerza Popular) y Roberto Sánchez (Juntos por el Perú). PROHIBIDO mencionar a López Aliaga, Acuña, Forsyth, Urresti, Belmont, Nieto, De Soto, Álvarez, López-Chau y otros eliminados en 1ra vuelta.");
+    lines.push("");
+    lines.push("═════════════ AUTO-CHECK ESTRICTO ═════════════");
+    lines.push("- Cada nombre propio en tu output → debe estar literal en un titular. Si no aparece → BORRÁLO.");
+    lines.push("- Cada ciudad/región mencionada → debe estar literal en un titular. Si no → BORRÁLA.");
+    lines.push("- Comillas con declaración → debe estar en un titular. Si no → BORRÁLAS.");
+    lines.push("- Color inventado ('ambiente de entusiasmo', 'tranquilidad', 'filas desde temprano', 'ciudadanos esperan conocer') → BORRAR.");
+    lines.push("");
+    lines.push("Si después del check solo te queda 1 dato verificable, hacé 1 ítem. SI NO HAY NADA VERIFICABLE FRESCO, devolvé esto exacto: \"Sin novedades verificables en los últimos minutos. Próxima actualización en 5 min.\"");
     lines.push("");
     lines.push("DATOS DEL DÍA E QUE SÍ PODÉS USAR sin titular (son públicos):");
     lines.push("- ~25,3 millones de electores habilitados");
@@ -349,22 +357,17 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
   // ── STYLE ────────────────────────────────────────────────────────────────
   if (isPE) {
     lines.push("REGLAS DE ESTILO:");
-    lines.push("1. NO empieces con la hora ni con '11:00 a.m.' — la hora ya aparece como metadato. Empezá por el HECHO.");
-    lines.push("2. NO escribas 'hora Lima' ni 'hora peruana'. Si decís una hora basta así: 'a las 5:00 p.m.'");
-    lines.push("3. 'Lima' es ciudad, NO país. Cuando hablés del país decí 'Perú' o 'el país'.");
-    lines.push("4. Tono live-blog peruano: presente continuo, periodístico, breve, factual. Como El Comercio en vivo o RPP minuto a minuto.");
-    lines.push("5. Máximo 55 palabras, un solo párrafo, sin saludo, sin firma, sin signos de exclamación.");
+    lines.push("1. FORMATO digest: 2 o 3 ítems separados por ` · ` (espacio·espacio). Cada ítem cita un medio o autoridad. Total 50–80 palabras.");
+    lines.push("2. NO empieces con la hora ni 'la ONPE ha comenzado a publicar' ni 'el escrutinio avanza' ni 'los ciudadanos esperan conocer'. Empezá por el DATO concreto.");
+    lines.push("3. NO escribas 'hora Lima' ni 'hora peruana'. Si decís una hora basta así: 'a las 5:00 p.m.'");
+    lines.push("4. 'Lima' es ciudad, NO país. Cuando hablés del país decí 'Perú'.");
+    lines.push("5. Tono live-blog peruano: presente, periodístico, factual, breve. NO sintetices una narrativa épica — solo digestá lo que reportaron los medios en los últimos minutos.");
     lines.push("6. PROHIBIDO ABSOLUTO mencionar '0% de actas escrutadas' o '0% de votos' antes de las 5 p.m.");
-    lines.push("7. PROHIBIDO frases vacías: 'la jornada avanza con normalidad', 'sin contratiempos', 'sin incidentes', 'sin novedades', 'la votación se desarrolla', 'ejerzan su derecho al voto', 'permitiendo que los electores voten', 'continúan abiertas hasta las 5 p.m.'. Muletillas — el lector ya sabe.");
+    lines.push("7. PROHIBIDO frases vacías: 'la jornada avanza con normalidad', 'sin contratiempos', 'sin incidentes', 'sin novedades', 'la votación se desarrolla', 'ejerzan su derecho al voto', 'continúan abiertas hasta las 5 p.m.', 'mientras el escrutinio avanza', 'los ciudadanos esperan conocer', 'una segunda vuelta ajustada/reñida', 'compiten en una contienda'. Son MULETILLAS — borrá.");
     lines.push("8. PROHIBIDO predicciones, probabilidades, escenarios futuros, opinión sobre quién gana.");
-    lines.push("9. NO repitas los mismos números en cada pulso. Si pulsos anteriores ya dijeron '~25,3M electores', NO los vuelvas a decir. Asumí que el lector ya los tiene de contexto.");
-    lines.push("10. Variá el ángulo respecto a los pulsos anteriores. Si el anterior habló de A, el tuyo NO puede empezar por A.");
-    lines.push("11. NÚMEROS Y EVENTOS CON CONTEXTO: si mencionás una cifra (soles, mesas, personas) o un evento (incautación, retraso, denuncia) tenés que explicar EN LA MISMA FRASE para qué/por qué. NUNCA dejes un número o un evento al aire.");
-    lines.push("");
-    lines.push("EJEMPLO DE PULSO IDEAL (estructura, no contenido):");
-    lines.push("  ❌ MAL: '11:00 a.m. Las mesas están abiertas. ~25,3 millones de electores pueden votar hasta las 5 p.m. hora Lima.'");
-    lines.push("  ✅ BIEN: 'Keiko Fujimori sufragó en su mesa de La Molina y pidió respetar el resultado. ONPE reporta votación en Lima Sur con instalación de mesas completa al 92%.'");
-    lines.push("  ✅ BIEN: 'RPP reporta retrasos en la instalación de mesas en Cusco y Arequipa por miembros que no se presentaron. La JNE envía equipos itinerantes.'");
+    lines.push("9. NO repitas los mismos números/contexto en cada pulso. Si pulsos anteriores ya dijeron '~25,3M electores', no lo vuelvas a decir.");
+    lines.push("10. CADA ítem nuevo debe ser un DESARROLLO DISTINTO. No 3 versiones de la misma noticia con cambios cosméticos. Si solo hay 1 desarrollo, hacé 1 ítem.");
+    lines.push("11. NÚMEROS Y EVENTOS CON CONTEXTO: cada cifra/evento explicado en la misma frase. NUNCA dejes un número al aire.");
     lines.push("");
   } else {
     lines.push("REGLAS DE ESTILO:");
@@ -553,7 +556,7 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
   } else if (snap.phase === "election-day") {
     if (snap.preconteo && isPE) {
       lines.push(
-        "ESCRIBE el pulso AHORA (≤ 55 palabras, un párrafo). POST-CIERRE EN BALOTAJE PE — empezá literal con el número actual y/o el delta vs hace 5 min (ej: 'Con 35% de actas, Fujimori sostiene 52.7%' o 'Sánchez recortó 0.4 pp; ahora 47.3%'). Después podés agregar el ángulo del momento: una región que cerró, una declaración nueva, una reacción. UN ángulo nuevo, no la misma plantilla del anterior. Sin signos de exclamación.",
+        "ESCRIBE el pulso AHORA. POST-CIERRE EN BALOTAJE PE. FORMATO: 2 o 3 ítems separados por ` · ` (50–80 palabras total). Ítem 1 SIEMPRE: estado del conteo ONPE (% actas y dos cifras) — ej: 'Con 35% de actas, Fujimori sostiene 52.7% sobre 47.3% de Sánchez (ONPE)' o 'Sánchez recortó 0.4 pp en la última hora; ahora 47.3% con 38% actas (ONPE)'. Ítem 2: la noticia más fresca de los titulares en vivo, citando el medio entre paréntesis. Ítem 3 (si existe otro desarrollo distinto): reacción, incidente, declaración. NO ítems redundantes. Sin signos de exclamación. Sin muletillas.",
       );
     } else {
       lines.push("ESCRIBE el pulso AHORA (≤ 55 palabras): cambios en el preconteo + declaraciones, en un párrafo, sin signos de exclamación.");
