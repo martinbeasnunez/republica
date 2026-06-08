@@ -4,15 +4,64 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, MessageCircle } from "lucide-react";
 import { useCountry } from "@/lib/config/country-context";
+import type { CountryCode } from "@/lib/config/countries";
 
 // =============================================================================
 // Share Modal — appears 60s after the user lands on the page.
 // Encourages them to share the live pulse with friends on WhatsApp during the
 // election day. Once dismissed, we don't bug them again in the session.
+//
+// Per-country copy + palette so the modal never feels foreign to the user.
 // =============================================================================
 
 const DISMISS_KEY = "condor:share-modal-dismissed";
 const SHOW_AFTER_MS = 60_000;
+
+interface CountryShareTheme {
+  // Palette
+  gradient: string;
+  borderAccent: string;
+  glowA: string;
+  glowB: string;
+  accentHex: string;
+  pillBorder: string;
+  // Copy
+  eyebrow: string;        // pill at top — short, local slang welcome
+  headline: string;       // big question
+  body: string;           // paragraph below the headline
+  shareText: (url: string) => string; // WhatsApp message body
+}
+
+const COUNTRY_SHARE: Record<CountryCode, CountryShareTheme> = {
+  pe: {
+    // 🇵🇪 Rojo peruano (#8B1A1A) sobre stone-950
+    gradient: "bg-gradient-to-br from-stone-950 via-red-950 to-stone-900",
+    borderAccent: "border-red-400/30",
+    glowA: "rgba(232,64,64,0.22)",
+    glowB: "rgba(255,255,255,0.08)",
+    accentHex: "#E84040",
+    pillBorder: "border-red-400/40",
+    eyebrow: "Avisa a un pata",
+    headline: "¿Te está sirviendo el conteo en vivo?",
+    body: "CONDOR AI resume cada 5 minutos el balotaje Fujimori vs Sánchez con conteo ONPE en tiempo real. Compártelo con quien también esté siguiendo la segunda vuelta hoy.",
+    shareText: (url) =>
+      `Estoy siguiendo el balotaje Perú 2026 en vivo con CONDOR AI 🇵🇪\nConteo oficial ONPE y resumen cada 5 minutos.\n${url}`,
+  },
+  co: {
+    // 🇨🇴 Azul (#003893) + amarillo (#FCD116) + rojo (#CE1126) bandera
+    gradient: "bg-gradient-to-br from-[#001a4d] via-[#003893] to-[#001a4d]",
+    borderAccent: "border-[#FCD116]/30",
+    glowA: "rgba(252,209,22,0.22)",
+    glowB: "rgba(206,17,38,0.22)",
+    accentHex: "#FCD116",
+    pillBorder: "border-[#FCD116]/40",
+    eyebrow: "Avisale a un parcero",
+    headline: "¿Te está sirviendo el Pulso en vivo?",
+    body: "CONDOR AI te resume cada 5 minutos lo que está pasando en las elecciones de Colombia. Compartilo con quien también esté pendiente hoy.",
+    shareText: (url) =>
+      `Estoy siguiendo las elecciones de Colombia en vivo con CONDOR AI 🇨🇴\nCada 5 minutos un resumen de lo que está pasando.\n${url}`,
+  },
+};
 
 export function ShareModal() {
   const country = useCountry();
@@ -20,7 +69,6 @@ export function ShareModal() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // Skip if already dismissed this session
     if (sessionStorage.getItem(DISMISS_KEY) === "1") return;
     const t = setTimeout(() => setOpen(true), SHOW_AFTER_MS);
     return () => clearTimeout(t);
@@ -31,9 +79,9 @@ export function ShareModal() {
     setOpen(false);
   };
 
+  const theme = COUNTRY_SHARE[country.code] ?? COUNTRY_SHARE.co;
   const url = `https://www.condorlatam.com/${country.code}`;
-  const text = `Estoy siguiendo las elecciones de Colombia en vivo con CONDOR AI 🇨🇴\nCada 5 minutos un resumen de lo que está pasando.\n${url}`;
-  const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const wa = `https://wa.me/?text=${encodeURIComponent(theme.shareText(url))}`;
 
   return (
     <AnimatePresence>
@@ -51,12 +99,12 @@ export function ShareModal() {
             exit={{ y: 30, opacity: 0, scale: 0.96 }}
             transition={{ type: "spring", damping: 22, stiffness: 280 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#FCD116]/30 bg-gradient-to-br from-[#001a4d] via-[#003893] to-[#001a4d] shadow-2xl"
+            className={`relative w-full max-w-md overflow-hidden rounded-2xl border ${theme.borderAccent} ${theme.gradient} shadow-2xl`}
           >
-            {/* tricolor glow */}
+            {/* country-themed glow */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -top-16 -left-16 h-48 w-48 rounded-full bg-[#FCD116]/20 blur-3xl" />
-              <div className="absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-[#CE1126]/20 blur-3xl" />
+              <div className="absolute -top-16 -left-16 h-48 w-48 rounded-full blur-3xl" style={{ backgroundColor: theme.glowA }} />
+              <div className="absolute -bottom-16 -right-16 h-48 w-48 rounded-full blur-3xl" style={{ backgroundColor: theme.glowB }} />
             </div>
 
             <button
@@ -69,19 +117,19 @@ export function ShareModal() {
             </button>
 
             <div className="relative px-6 py-7 space-y-4 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-[#FCD116]/30 px-3 py-1">
-                <Share2 className="h-3 w-3 text-[#FCD116]" />
+              <div className={`inline-flex items-center gap-2 rounded-full bg-white/10 border ${theme.pillBorder} px-3 py-1`}>
+                <Share2 className="h-3 w-3" style={{ color: theme.accentHex }} />
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">
-                  Avisale a un parcero
+                  {theme.eyebrow}
                 </span>
               </div>
 
               <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                ¿Te está sirviendo el Pulso en vivo?
+                {theme.headline}
               </h2>
 
               <p className="text-sm text-white/80 leading-relaxed">
-                CONDOR AI te resume cada 5 minutos lo que está pasando en las elecciones de Colombia. Compartilo con quien también esté pendiente hoy.
+                {theme.body}
               </p>
 
               <a
