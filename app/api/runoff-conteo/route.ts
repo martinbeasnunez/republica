@@ -84,6 +84,15 @@ async function tryOnpeRunoff(origin: string): Promise<ApiResponse | null> {
     const json = await res.json().catch(() => null);
     if (!json || !Array.isArray(json.candidates)) return null;
 
+    // ┌──────────────────────────────────────────────────────────────────┐
+    // │ CRITICAL: only treat the upstream as runoff data when the upstream│
+    // │ itself returns AT MOST 2 candidate rows. The first-round dataset │
+    // │ has 36 rows including Keiko + Sánchez — filtering to our two     │
+    // │ finalist slugs would surface stale 1ra vuelta percentages as     │
+    // │ "official runoff count". Guard up-front on the raw length.       │
+    // └──────────────────────────────────────────────────────────────────┘
+    if (json.candidates.length > 2) return null;
+
     const matched = json.candidates
       .map((c: { name: string; code?: string; votes: number; percentage: number }) => {
         const slug = slugForOnpeName(c.name);
@@ -91,11 +100,8 @@ async function tryOnpeRunoff(origin: string): Promise<ApiResponse | null> {
       })
       .filter(Boolean) as Array<{ slug: string; name: string; code?: string; votes: number; percentage: number }>;
 
-    // Must have exactly the two finalists. Otherwise ONPE is still serving
-    // first-round leftover or partial data — defer to the manual fallback.
     const slugSet = new Set(matched.map((c) => c.slug));
     if (slugSet.size < 2 || !RUNOFF_SLUGS.every((s) => slugSet.has(s))) return null;
-    if (matched.length > 4) return null; // sanity: still too many
 
     return {
       source: "ONPE",
