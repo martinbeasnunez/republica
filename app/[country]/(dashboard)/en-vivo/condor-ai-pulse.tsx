@@ -88,10 +88,15 @@ export function CondorAIPulse({ initialPulses }: Props) {
   const tz = country.timezone;
   const theme = COUNTRY_THEME[country.code] ?? COUNTRY_THEME.co;
 
-  const [pulses, setPulses] = useState<Pulse[]>(initialPulses);
+  // Defensive filter — never render pulses with empty/whitespace summaries.
+  // The backend now skips them at insert time, but old empty rows may still
+  // exist in the DB (and a race condition could ever land a blank). We just
+  // don't show them; the previous valid pulse stays as the most recent.
+  const isValidPulse = (p: Pulse): boolean => Boolean(p.summary && p.summary.trim().length > 0);
+  const [pulses, setPulses] = useState<Pulse[]>(initialPulses.filter(isValidPulse));
   const [nextRefreshAt, setNextRefreshAt] = useState<number>(() => Date.now() + 30_000);
   const [tick, setTick] = useState(0);
-  const seenIdsRef = useRef<Set<string>>(new Set(initialPulses.map((p) => p.id)));
+  const seenIdsRef = useRef<Set<string>>(new Set(initialPulses.filter(isValidPulse).map((p) => p.id)));
 
   // ── Poll for new pulses every 30s ─────────────────────────────────────────
   const poll = useCallback(async () => {
@@ -99,7 +104,8 @@ export function CondorAIPulse({ initialPulses }: Props) {
       const res = await fetch(`/api/pulse?country=${country.code}&limit=12`, { cache: "no-store" });
       if (!res.ok) return;
       const json = (await res.json()) as { pulses: Pulse[] };
-      const fresh = json.pulses ?? [];
+      // Strip empty/blank rows here too — same reason as the seed filter.
+      const fresh = (json.pulses ?? []).filter(isValidPulse);
       const newOnes = fresh.filter((p) => !seenIdsRef.current.has(p.id));
       if (newOnes.length > 0) {
         newOnes.forEach((p) => seenIdsRef.current.add(p.id));

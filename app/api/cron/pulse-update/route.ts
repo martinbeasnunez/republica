@@ -894,6 +894,19 @@ export async function GET(request: Request) {
     }
   }
 
+  // Final guard: NEVER insert a pulse with an empty summary. Earlier the
+  // retry path could leave summary="" (when both attempts failed) and we'd
+  // still write an empty row to pulse_updates, surfacing as a ghost entry
+  // in the UI ("04:15 p.m. · hace 7 min" with no text). If we have nothing
+  // to say, skip — the previous valid pulse stays as the most recent.
+  if (!summary || !summary.trim()) {
+    return NextResponse.json({
+      ok: true,
+      skipped: "empty-after-validation",
+      reason: fallbackUsed ? "retry-failed" : "model-returned-blank",
+    });
+  }
+
   const metrics: Record<string, unknown> = {
     percentage: snap.preconteo?.percentage ?? null,
     counted: snap.preconteo?.counted ?? null,
