@@ -327,55 +327,53 @@ export function RunoffConteoBlock() {
             </div>
           </div>
 
-          {/* Insight line: movement vs the last surfaced snapshot. */}
+          {/* Insight line: SIMPLE direction first, details after.
+              Reads at a glance: "se achica" / "se amplía" / "estable" / "vuelco".
+              No technical pp deltas in the lede — just the human-feeling gist. */}
           {insight && (
-            <div className="flex items-center gap-1.5 text-[11px]">
+            <div className="flex items-center gap-2 text-[11px] flex-wrap">
               {insight.direction === "flip" ? (
                 <>
-                  <TrendingUp className="h-3 w-3 text-emerald-600" />
-                  <span className="font-bold text-emerald-700">
-                    Vuelco: {insight.leaderName} pasa al liderato
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
+                    <TrendingUp className="h-3 w-3" />
+                    Cambio de líder
                   </span>
-                  <span className="text-stone-500">
-                    {" "}· en los últimos {insight.sinceMin} min
+                  <span className="text-stone-700">
+                    Ahora lidera <strong>{insight.leaderName}</strong> · en los últimos {insight.sinceMin} min
                   </span>
                 </>
               ) : insight.direction === "widen" ? (
                 <>
-                  <TrendingUp className="h-3 w-3 text-stone-700" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
+                    <TrendingUp className="h-3 w-3" />
+                    Se amplía
+                  </span>
                   <span className="text-stone-700">
-                    <strong>{insight.leaderName}</strong> amplía{" "}
-                    <strong className="font-mono tabular-nums">+{formatVotes(insight.deltaVotes)} votos</strong>
-                    {Math.abs(insight.deltaPp) >= 0.01 && (
-                      <span className="font-mono tabular-nums">{" "}({insight.deltaPp >= 0 ? "+" : ""}{insight.deltaPp.toFixed(2)} pp)</span>
-                    )}
-                    <span className="text-stone-500">
-                      {" "}en los últimos {insight.sinceMin} min
-                      {Math.abs(insight.actasDelta) >= 0.05 && ` · +${insight.actasDelta.toFixed(1)} pts actas`}
-                    </span>
+                    <strong>{insight.leaderName}</strong> sumó{" "}
+                    <strong className="font-mono tabular-nums">+{formatVotes(insight.deltaVotes)} votos</strong>{" "}
+                    en los últimos {insight.sinceMin} min
                   </span>
                 </>
               ) : insight.direction === "narrow" ? (
                 <>
-                  <TrendingDown className="h-3 w-3 text-amber-700" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
+                    <TrendingDown className="h-3 w-3" />
+                    Se achica
+                  </span>
                   <span className="text-stone-700">
-                    <strong>{runner?.shortName}</strong> recorta{" "}
-                    <strong className="font-mono tabular-nums">{formatVotes(Math.abs(insight.deltaVotes))} votos</strong>
-                    {Math.abs(insight.deltaPp) >= 0.01 && (
-                      <span className="font-mono tabular-nums">{" "}({insight.deltaPp.toFixed(2)} pp)</span>
-                    )}
-                    <span className="text-stone-500">
-                      {" "}en los últimos {insight.sinceMin} min
-                      {Math.abs(insight.actasDelta) >= 0.05 && ` · +${insight.actasDelta.toFixed(1)} pts actas`}
-                    </span>
+                    <strong>{runner?.shortName}</strong> recortó{" "}
+                    <strong className="font-mono tabular-nums">{formatVotes(Math.abs(insight.deltaVotes))} votos</strong>{" "}
+                    en los últimos {insight.sinceMin} min
                   </span>
                 </>
               ) : (
                 <>
-                  <Minus className="h-3 w-3 text-stone-400" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-stone-200 text-stone-700 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
+                    <Minus className="h-3 w-3" />
+                    Sin cambios
+                  </span>
                   <span className="text-stone-500">
-                    Diferencia estable
-                    {Math.abs(insight.actasDelta) >= 0.05 && ` · +${insight.actasDelta.toFixed(1)} pts actas en los últimos ${insight.sinceMin} min`}
+                    La diferencia se mantiene
                   </span>
                 </>
               )}
