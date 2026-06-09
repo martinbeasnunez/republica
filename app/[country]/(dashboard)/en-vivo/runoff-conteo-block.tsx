@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus, Share2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -156,6 +156,91 @@ export function RunoffConteoBlock() {
     return () => clearInterval(id);
   }, [fetchData]);
 
+  // ── Share handler ────────────────────────────────────────────────────────
+  // Generates the 1080×1920 story image with the current snapshot + insight
+  // and tries the native share sheet (Instagram/WhatsApp story, AirDrop, X).
+  // Falls back to opening the image in a new tab + copying the page URL on
+  // desktops / browsers without share-with-file support.
+  const [shareState, setShareState] = useState<"idle" | "sharing" | "shared" | "error">("idle");
+  const handleShare = useCallback(async () => {
+    if (shareState === "sharing") return;
+    setShareState("sharing");
+    try {
+      // Build the OG URL with current insight params so the image matches what
+      // the user sees on screen at this moment.
+      const params = new URLSearchParams();
+      const cur = snapshotForInsight.current;
+      const pen = snapshotPending.current;
+      if (cur && pen) {
+        const dir = pen.leaderSlug !== cur.leaderSlug
+          ? "flip"
+          : pen.voteGap > cur.voteGap + 49 ? "widen"
+            : pen.voteGap < cur.voteGap - 49 ? "narrow"
+              : "flat";
+        params.set("dir", dir);
+        params.set("dv", String(Math.round(pen.voteGap - cur.voteGap)));
+        params.set("sm", String(Math.max(1, Math.round((pen.capturedAt - cur.capturedAt) / 60_000))));
+        const leaderName = pen.leaderSlug === "keiko-fujimori" ? "K. Fujimori" : "R. Sánchez";
+        const runnerName = pen.runnerSlug === "keiko-fujimori" ? "K. Fujimori" : "R. Sánchez";
+        params.set("lead", leaderName);
+        params.set("run", runnerName);
+      }
+      const imgUrl = `/api/og/conteo-story?${params.toString()}&t=${Date.now()}`;
+      const pageUrl = typeof window !== "undefined" ? `${window.location.origin}/pe` : "https://www.condorlatam.com/pe";
+      const text = "Sigo el balotaje Perú 2026 en vivo con CONDOR AI 🇵🇪 — conteo ONPE y momentum cada 5 min.";
+
+      // Try native share with the image file (Instagram/WhatsApp stories, AirDrop)
+      if (typeof navigator !== "undefined" && "share" in navigator) {
+        try {
+          const res = await fetch(imgUrl, { cache: "no-store" });
+          if (res.ok) {
+            const blob = await res.blob();
+            const file = new File([blob], "balotaje-peru-2026.png", { type: "image/png" });
+            // canShare check: some browsers reject files in `share()` silently.
+            const canShareFile = typeof navigator.canShare === "function"
+              ? navigator.canShare({ files: [file] })
+              : true;
+            if (canShareFile) {
+              await navigator.share({
+                title: "Balotaje Perú 2026 — conteo en vivo",
+                text,
+                url: pageUrl,
+                files: [file],
+              });
+              setShareState("shared");
+              setTimeout(() => setShareState("idle"), 2500);
+              return;
+            }
+          }
+        } catch {
+          /* fall through to URL-only share */
+        }
+        try {
+          await navigator.share({
+            title: "Balotaje Perú 2026 — conteo en vivo",
+            text,
+            url: pageUrl,
+          });
+          setShareState("shared");
+          setTimeout(() => setShareState("idle"), 2500);
+          return;
+        } catch {
+          /* user canceled — keep idle */
+        }
+      }
+
+      // Desktop / no-share fallback: open the image in a new tab and copy
+      // the page URL to the clipboard so the user can paste it manually.
+      window.open(imgUrl, "_blank", "noopener");
+      try { await navigator.clipboard.writeText(pageUrl); } catch { /* ignore */ }
+      setShareState("shared");
+      setTimeout(() => setShareState("idle"), 2500);
+    } catch {
+      setShareState("error");
+      setTimeout(() => setShareState("idle"), 2500);
+    }
+  }, [shareState]);
+
   if (!data) {
     return (
       <div className="rounded-2xl border border-stone-200 bg-white px-5 py-6 text-center text-sm text-stone-500">
@@ -248,14 +333,34 @@ export function RunoffConteoBlock() {
             </span>
           )}
         </div>
-        <button
-          onClick={fetchData}
-          disabled={loading}
-          className="flex items-center gap-1 text-[10px] text-stone-500 hover:text-stone-700 font-medium disabled:opacity-50"
-        >
-          <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
-          {Math.round(Math.max(0, Date.now() - lastFetch) / 1000) < 5 ? "Actualizado" : "Actualizar"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleShare}
+            disabled={shareState === "sharing"}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest transition-all",
+              "bg-stone-900 text-white hover:bg-stone-700 disabled:opacity-50",
+            )}
+            aria-label="Compartir conteo como imagen"
+          >
+            {shareState === "sharing" ? (
+              <RefreshCw className="h-3 w-3 animate-spin" />
+            ) : shareState === "shared" ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <Share2 className="h-3 w-3" />
+            )}
+            {shareState === "shared" ? "Listo" : shareState === "sharing" ? "Generando" : "Compartir"}
+          </button>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-1 text-[10px] text-stone-500 hover:text-stone-700 font-medium disabled:opacity-50"
+          >
+            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
+            {Math.round(Math.max(0, Date.now() - lastFetch) / 1000) < 5 ? "Actualizado" : "Actualizar"}
+          </button>
+        </div>
       </div>
 
       {/* Actas progress (only when official + counted > 0) */}
