@@ -255,6 +255,10 @@ async function fetchLiveRSS(country: CountryCode): Promise<Array<{ title: string
     /resultados\s+onpe\s+al\s+[\d.,]+%.*y\s+conteo\s+oficial\s+de\s+votos\s+en\s+vivo/i,
     // Same shape from any source
     /en\s+\w+,?\s+el\s+conteo\s+oficial\s+de\s+la\s+segunda\s+vuelta\s+alcanza\s+el\s+[\d.,]+%\s+de\s+actas/i,
+    // National-level lazy headline: "Resultados ONPE al 95% muestran que la elección sigue ajustada"
+    /resultados\s+onpe\s+al\s+[\d.,]+%\s+muestran\s+que\s+la\s+elecci[oó]n\s+(entre\s+\w+\s+\w+\s+y\s+\w+\s+\w+\s+)?sigue\s+(ajustada|re[ñn]ida)/i,
+    // Same shape with "indica"
+    /resultados\s+onpe\s+al\s+[\d.,]+%\s+(indican|indica)\s+que\s+la\s+(elecci[oó]n|carrera|contienda)\s+(presidencial\s+)?(entre\s+\w+\s+\w+\s+y\s+\w+\s+\w+\s+)?sigue/i,
   ];
   const filtered = all.filter((i) => {
     if (country === "pe") {
@@ -783,7 +787,21 @@ export async function GET(request: Request) {
   const startsWithTime = /^\s*\d{1,2}[:.]?\d{0,2}\s*(a\.?\s?m\.?|p\.?\s?m\.?)?\b/i.test(summary);
   const hasHoraBogota = /hora\s+bogot[áa]|hora\s+colombiana/i.test(summary);
 
-  const failedValidation = ungroundedNames.length > 0 || hasInventedQuote || hasLiteraryColor || startsWithTime || hasHoraBogota;
+  // PE-only: el "Resultados ONPE al X%…" template como apertura. Esos boletines
+  // automáticos los filtramos del RSS pero el modelo a veces los re-inventa por
+  // su cuenta. Si el ítem ABRE así (con o sin "muestran que… sigue ajustada"),
+  // o si TODOS los ítems del pulso son de esa forma, lo botamos.
+  const startsWithOnpePercent = isPE && /^\s*(elecciones\s+per[uú]\s+2026[:\s]+)?resultados\s+onpe\s+al\s+[\d.,]+%/i.test(summary);
+  // El template "muestran que la elección … sigue ajustada/reñida" en cualquier parte
+  const hasOnpeAjustadaTemplate = isPE && /resultados\s+onpe\s+al\s+[\d.,]+%\s+(muestran|indican?)\s+que\s+la\s+(elecci[oó]n|carrera|contienda)/i.test(summary);
+  // Pulso entero hecho de "ONPE al X% en [depto]" / "En [depto], conteo alcanza X%"
+  const items = summary.split(/\s+·\s+/).map((s) => s.trim()).filter(Boolean);
+  const allItemsRegional = isPE && items.length >= 1 && items.every((it) =>
+    /resultados\s+onpe\s+al\s+[\d.,]+%/i.test(it) ||
+    /en\s+\w+,?\s+el\s+conteo\s+oficial.*alcanza\s+el\s+[\d.,]+%/i.test(it),
+  );
+
+  const failedValidation = ungroundedNames.length > 0 || hasInventedQuote || hasLiteraryColor || startsWithTime || hasHoraBogota || startsWithOnpePercent || hasOnpeAjustadaTemplate || allItemsRegional;
 
   let fallbackUsed = false;
   if (failedValidation) {
@@ -798,6 +816,9 @@ export async function GET(request: Request) {
     if (hasLiteraryColor) retryLines.push(`- Frases vacías o muletillas: ya las usaste/están prohibidas`);
     if (startsWithTime) retryLines.push(`- Empezaste con la hora (la hora ya aparece como metadato)`);
     if (hasHoraBogota) retryLines.push(`- Mencionaste 'hora Bogotá' / 'hora colombiana' (prohibido)`);
+    if (startsWithOnpePercent) retryLines.push(`- Empezaste con "Resultados ONPE al X%…" — ese boletín es ruido auto-generado, NO es noticia. El % ya está visible en el bloque 'Conteo Oficial' arriba.`);
+    if (hasOnpeAjustadaTemplate) retryLines.push(`- Usaste la plantilla "Resultados ONPE al X% muestran que la elección sigue ajustada" — exactamente lo que tenés prohibido. Es relleno de máquina.`);
+    if (allItemsRegional) retryLines.push(`- TODOS tus ítems son sobre el % regional/nacional del conteo. Eso es lo que el lector YA VE arriba. Buscá otra cosa: declaración, mercado, fact-check, OEA, incidente, hito JNE.`);
     retryLines.push("");
     retryLines.push("REGENERÁ EL PULSO siguiendo TODAS las reglas anteriores Y estos extras:");
     retryLines.push("- NO empezar con la hora.");
@@ -819,20 +840,56 @@ export async function GET(request: Request) {
         ],
         temperature: 0.3,
         max_tokens: 220,
+        response_format: { type: "json_object" },
       });
-      const retrySummary = retry.choices[0]?.message?.content?.trim() || "";
+      const rawRetry = retry.choices[0]?.message?.content?.trim() || "";
+      let retrySummary = rawRetry;
+      try {
+        const outer = JSON.parse(rawRetry) as { summary?: unknown };
+        if (typeof outer.summary === "string") retrySummary = outer.summary.trim();
+      } catch { /* leave as-is */ }
+      retrySummary = unwrapNoise(retrySummary);
+
       if (retrySummary) {
-        // Quick re-validate name groundedness (the soft signals are easier to slip)
         const mentioned2 = protectedNames.filter((n) =>
           new RegExp(`\\b${n.replace(/\s+/g, "\\s+")}\\b`, "i").test(retrySummary),
         );
         const ungrounded2 = mentioned2.filter((n) => !headlinesText.includes(n));
-        if (ungrounded2.length === 0) {
+        // Re-run the boilerplate checks on the retry — if it ALSO fails, we
+        // fall through to the deterministic stub below.
+        const retryStartsOnpe = isPE && /^\s*(elecciones\s+per[uú]\s+2026[:\s]+)?resultados\s+onpe\s+al\s+[\d.,]+%/i.test(retrySummary);
+        const retryAjustada = isPE && /resultados\s+onpe\s+al\s+[\d.,]+%\s+(muestran|indican?)\s+que\s+la\s+(elecci[oó]n|carrera|contienda)/i.test(retrySummary);
+        const retryItems = retrySummary.split(/\s+·\s+/).map((s) => s.trim()).filter(Boolean);
+        const retryAllRegional = isPE && retryItems.length >= 1 && retryItems.every((it) =>
+          /resultados\s+onpe\s+al\s+[\d.,]+%/i.test(it) ||
+          /en\s+\w+,?\s+el\s+conteo\s+oficial.*alcanza\s+el\s+[\d.,]+%/i.test(it),
+        );
+        if (ungrounded2.length === 0 && !retryStartsOnpe && !retryAjustada && !retryAllRegional) {
           summary = retrySummary;
+        } else if (isPE) {
+          // Both attempts failed the boilerplate gate. Skip publishing — the
+          // user explicitly said "if it's going to start like that, omit".
+          summary = "";
         }
       }
     } catch {
       /* keep the original summary if retry fails */
+    }
+
+    // Deterministic suppression on PE: if after the retry the summary STILL
+    // matches the forbidden opening, drop it entirely. We'd rather have no
+    // new pulse than yet another boilerplate one — the contador on the home
+    // already shows the live %.
+    if (isPE) {
+      const stillStartsOnpe = /^\s*(elecciones\s+per[uú]\s+2026[:\s]+)?resultados\s+onpe\s+al\s+[\d.,]+%/i.test(summary);
+      const stillAjustada = /resultados\s+onpe\s+al\s+[\d.,]+%\s+(muestran|indican?)\s+que\s+la\s+(elecci[oó]n|carrera|contienda)/i.test(summary);
+      if (stillStartsOnpe || stillAjustada) {
+        return NextResponse.json({
+          ok: true,
+          skipped: "boilerplate-rejected",
+          rejectedSummary: summary,
+        });
+      }
     }
   }
 
