@@ -33,6 +33,7 @@ interface ApiResponse {
   actasPct: number | null;
   actasCounted: number | null;
   actasTotal: number | null;
+  totalVotesEmitted: number | null;
   candidates: ApiCandidate[];
   note?: string;
 }
@@ -258,28 +259,68 @@ export function RunoffConteoBlock() {
       </div>
 
       {/* Actas progress (only when official + counted > 0) */}
-      {data.actasPct != null && data.actasPct > 0 && (
-        <div className="px-5 py-3 bg-emerald-50/40 border-b border-emerald-100/60">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
-              Actas escrutadas
-            </span>
-            {data.actasCounted != null && data.actasTotal != null && (
-              <span className="text-[10px] font-mono text-emerald-700 tabular-nums">
-                {data.actasCounted.toLocaleString("es-PE")} / {data.actasTotal.toLocaleString("es-PE")}
+      {data.actasPct != null && data.actasPct > 0 && (() => {
+        const actasMissing = data.actasCounted != null && data.actasTotal != null
+          ? Math.max(0, data.actasTotal - data.actasCounted)
+          : null;
+        // Estimación honesta: votos promedio por acta * actas que faltan.
+        // Es una estimación, no un dato cerrado — las mesas no tienen tamaño
+        // uniforme (rural vs urbano vs exterior). Lo etiquetamos como "≈".
+        const estimatedRemainingVotes = (
+          actasMissing != null &&
+          data.totalVotesEmitted != null &&
+          data.actasCounted != null &&
+          data.actasCounted > 0
+        )
+          ? Math.round((data.totalVotesEmitted / data.actasCounted) * actasMissing)
+          : null;
+        return (
+          <div className="px-5 py-3 bg-emerald-50/40 border-b border-emerald-100/60">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                Actas escrutadas
               </span>
+              {data.actasCounted != null && data.actasTotal != null && (
+                <span className="text-[10px] font-mono text-emerald-700 tabular-nums">
+                  {data.actasCounted.toLocaleString("es-PE")} / {data.actasTotal.toLocaleString("es-PE")}
+                </span>
+              )}
+            </div>
+            <div className="h-2 rounded-full bg-emerald-100 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600"
+                initial={{ width: 0 }}
+                animate={{ width: `${data.actasPct}%` }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+              />
+            </div>
+            {/* Falta por contar — actas exactas + votos estimados.
+                "≈" marca la estimación; las actas son dato duro. */}
+            {actasMissing != null && actasMissing > 0 && (
+              <p className="mt-2 text-[11px] text-emerald-800/80">
+                Faltan{" "}
+                <strong className="font-mono tabular-nums text-emerald-900">
+                  {actasMissing.toLocaleString("es-PE")} actas
+                </strong>
+                {estimatedRemainingVotes != null && estimatedRemainingVotes > 0 && (
+                  <>
+                    {" "}—{" "}
+                    <strong className="font-mono tabular-nums text-emerald-900">
+                      ≈ {estimatedRemainingVotes.toLocaleString("es-PE")} votos
+                    </strong>{" "}
+                    <span className="text-emerald-700/70">por contar (estimado)</span>
+                  </>
+                )}
+              </p>
+            )}
+            {actasMissing === 0 && (
+              <p className="mt-2 text-[11px] font-bold text-emerald-900">
+                Cómputo al 100% — todas las actas escrutadas
+              </p>
             )}
           </div>
-          <div className="h-2 rounded-full bg-emerald-100 overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600"
-              initial={{ width: 0 }}
-              animate={{ width: `${data.actasPct}%` }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
-            />
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Diferencia hero strip — designed to be readable in 2 seconds by
           anyone, no electoral background required. Reads like a sentence:

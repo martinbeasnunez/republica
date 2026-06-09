@@ -52,6 +52,8 @@ interface ApiResponse {
   actasPct: number | null;
   actasCounted: number | null;
   actasTotal: number | null;
+  /** Total ballots emitted across all actas counted so far (sum of valid + blank + null). */
+  totalVotesEmitted: number | null;
   candidates: ApiCandidate[];
   note?: string;
 }
@@ -111,6 +113,7 @@ async function tryOnpeRunoff(origin: string): Promise<ApiResponse | null> {
       actasPct: typeof json.progress?.percentage === "number" ? json.progress.percentage : null,
       actasCounted: json.progress?.counted ?? null,
       actasTotal: json.progress?.total ?? null,
+      totalVotesEmitted: typeof json.progress?.totalVotesEmitted === "number" ? json.progress.totalVotesEmitted : null,
       candidates: matched.map((c) => ({
         slug: c.slug,
         name: c.name,
@@ -152,6 +155,7 @@ async function readManualBlock(): Promise<ApiResponse | null> {
       actasPct: typeof c.actasPct === "number" ? c.actasPct : null,
       actasCounted: typeof c.actasCounted === "number" ? c.actasCounted : null,
       actasTotal: typeof c.actasTotal === "number" ? c.actasTotal : null,
+      totalVotesEmitted: typeof c.totalVotesEmitted === "number" ? c.totalVotesEmitted : null,
       candidates: Array.isArray(c.candidates) ? c.candidates : [],
       note: c.note ?? row.subtitle,
     };
@@ -176,6 +180,7 @@ export async function GET(request: Request) {
     actasPct: null,
     actasCounted: null,
     actasTotal: null,
+    totalVotesEmitted: null,
     candidates: [
       { slug: "keiko-fujimori", name: "Keiko Fujimori", shortName: "K. Fujimori", party: "Fuerza Popular", partyColor: "#ff6600", percentage: null, votes: null },
       { slug: "roberto-sanchez", name: "Roberto Sánchez", shortName: "R. Sánchez", party: "Juntos por el Perú", partyColor: "#7c3aed", percentage: null, votes: null },
