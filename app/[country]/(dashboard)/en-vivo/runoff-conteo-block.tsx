@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, RefreshCw, ExternalLink, Hourglass } from "lucide-react";
+import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -64,10 +64,35 @@ const SOURCE_BADGE: Record<ApiResponse["sourceType"], { label: string; tint: str
   quick_count:{ label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
 };
 
+/**
+ * Track previous snapshots so we can compute insights: how the gap moved,
+ * who gained / lost votes, since when. We keep only the LAST snapshot that
+ * is meaningfully old (≥45s gap) and meaningfully different (actasPct moved)
+ * so the insight reflects real movement, not a poll cache hit.
+ */
+interface InsightSnapshot {
+  capturedAt: number;        // epoch ms when stored
+  actasPct: number | null;
+  leaderSlug: string;
+  leaderVotes: number;
+  leaderPct: number;
+  runnerSlug: string;
+  runnerVotes: number;
+  runnerPct: number;
+  voteGap: number;
+  ppGap: number;
+}
+
 export function RunoffConteoBlock() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastFetch, setLastFetch] = useState(0);
+  // Two snapshots: the most recent one we surfaced as "previous" for deltas
+  // (snapshotForInsight) and the absolute last seen (snapshotPending) which
+  // we promote once actas/votes have moved enough to be a real comparison.
+  const snapshotForInsight = useRef<InsightSnapshot | null>(null);
+  const snapshotPending = useRef<InsightSnapshot | null>(null);
+  const [, force] = useState(0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -77,6 +102,46 @@ export function RunoffConteoBlock() {
       const json: ApiResponse = await res.json();
       setData(json);
       setLastFetch(Date.now());
+
+      // Build a snapshot we can diff against later.
+      const candSorted = [...json.candidates].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
+      const a = candSorted[0];
+      const b = candSorted[1];
+      if (a?.votes != null && b?.votes != null && a.slug && b.slug) {
+        const newSnap: InsightSnapshot = {
+          capturedAt: Date.now(),
+          actasPct: json.actasPct ?? null,
+          leaderSlug: a.slug,
+          leaderVotes: a.votes,
+          leaderPct: a.percentage ?? 0,
+          runnerSlug: b.slug,
+          runnerVotes: b.votes,
+          runnerPct: b.percentage ?? 0,
+          voteGap: a.votes - b.votes,
+          ppGap: (a.percentage ?? 0) - (b.percentage ?? 0),
+        };
+        if (!snapshotForInsight.current) {
+          // First load — nothing to compare yet; seed the pending bucket.
+          snapshotForInsight.current = newSnap;
+          snapshotPending.current = newSnap;
+        } else {
+          // Promote pending → forInsight when actas has moved ≥0.05% OR
+          // ≥45s have passed since the last surfaced snapshot. This keeps
+          // the insight talking about REAL movement.
+          const prev = snapshotForInsight.current;
+          const ageMs = newSnap.capturedAt - prev.capturedAt;
+          const actasMoved = newSnap.actasPct != null && prev.actasPct != null
+            && Math.abs(newSnap.actasPct - prev.actasPct) >= 0.05;
+          const votesMoved = Math.abs(newSnap.voteGap - prev.voteGap) >= 50;
+          if (ageMs >= 45_000 && (actasMoved || votesMoved)) {
+            snapshotForInsight.current = snapshotPending.current ?? prev;
+          }
+          snapshotPending.current = newSnap;
+        }
+        // Force a re-render so the insight ticks even when data ref equality
+        // would otherwise suppress it.
+        force((x) => x + 1);
+      }
     } catch {
       /* swallow — keep previous data */
     } finally {
@@ -110,6 +175,53 @@ export function RunoffConteoBlock() {
     ? leader.votes - runner.votes
     : null;
   const tightRace = delta != null && delta < 2.5;
+
+  /**
+   * Insight = movement vs the last surfaced snapshot. We answer:
+   *   "in the last N min, did the gap widen or narrow, and by how much?"
+   * Returns null when there isn't a meaningful previous snapshot yet.
+   */
+  type Insight = {
+    direction: "widen" | "narrow" | "flat" | "flip";
+    leaderName: string;
+    deltaVotes: number;
+    deltaPp: number;
+    sinceMin: number;
+    actasDelta: number;
+  };
+  function computeInsight(): Insight | null {
+    const prev = snapshotForInsight.current;
+    if (!prev || !leader || !runner || leader.votes == null || runner.votes == null) return null;
+    const curGap = leader.votes - runner.votes;
+    const prevSameLeader = prev.leaderSlug === leader.slug;
+    const sinceMin = Math.max(1, Math.round((Date.now() - prev.capturedAt) / 60_000));
+    const actasDelta = (data?.actasPct ?? 0) - (prev.actasPct ?? 0);
+    if (!prevSameLeader) {
+      // Lead flipped between snapshots — huge headline.
+      return {
+        direction: "flip",
+        leaderName: leader.shortName || leader.name,
+        deltaVotes: curGap,
+        deltaPp: (leader.percentage ?? 0) - (runner.percentage ?? 0),
+        sinceMin,
+        actasDelta,
+      };
+    }
+    const gapDelta = curGap - prev.voteGap;
+    const ppDelta = ((leader.percentage ?? 0) - (runner.percentage ?? 0)) - prev.ppGap;
+    if (Math.abs(gapDelta) < 50 && Math.abs(ppDelta) < 0.01) {
+      return { direction: "flat", leaderName: leader.shortName || leader.name, deltaVotes: 0, deltaPp: 0, sinceMin, actasDelta };
+    }
+    return {
+      direction: gapDelta > 0 ? "widen" : "narrow",
+      leaderName: leader.shortName || leader.name,
+      deltaVotes: gapDelta,
+      deltaPp: ppDelta,
+      sinceMin,
+      actasDelta,
+    };
+  }
+  const insight = computeInsight();
 
   return (
     <motion.div
@@ -176,42 +288,99 @@ export function RunoffConteoBlock() {
       {hasNumbers && voteDelta != null && delta != null && (
         <div
           className={cn(
-            "px-5 py-3 border-b flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1",
+            "px-5 py-3 border-b space-y-1.5",
             tightRace
               ? "bg-amber-50/60 border-amber-100/60"
               : "bg-stone-50 border-stone-100",
           )}
         >
-          <div className="flex items-baseline gap-2">
-            <span
-              className={cn(
-                "text-[10px] font-black uppercase tracking-[0.18em]",
-                tightRace ? "text-amber-800" : "text-stone-500",
-              )}
-            >
-              Diferencia
-            </span>
-            <span className="text-[11px] text-stone-600">
-              <strong className="text-stone-900">{leader?.shortName}</strong>
-              {" vs "}
-              <strong className="text-stone-900">{runner?.shortName}</strong>
-            </span>
-          </div>
-          <div className="flex items-baseline gap-2 font-mono tabular-nums">
-            <span className="text-xl sm:text-2xl font-black text-stone-900">
-              {formatVotes(voteDelta)}
-            </span>
-            <span className="text-[11px] text-stone-500">votos</span>
-            <span className="text-stone-300">·</span>
-            <span className="text-sm font-bold text-stone-700">
-              {delta.toFixed(1)} pp
-            </span>
-            {tightRace && (
-              <span className="text-[9px] font-black uppercase tracking-widest bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded ml-1">
-                Margen de error
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <div className="flex items-baseline gap-2">
+              <span
+                className={cn(
+                  "text-[10px] font-black uppercase tracking-[0.18em]",
+                  tightRace ? "text-amber-800" : "text-stone-500",
+                )}
+              >
+                Diferencia
               </span>
-            )}
+              <span className="text-[11px] text-stone-600">
+                <strong className="text-stone-900">{leader?.shortName}</strong>
+                {" vs "}
+                <strong className="text-stone-900">{runner?.shortName}</strong>
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2 font-mono tabular-nums">
+              <span className="text-xl sm:text-2xl font-black text-stone-900">
+                {formatVotes(voteDelta)}
+              </span>
+              <span className="text-[11px] text-stone-500">votos</span>
+              <span className="text-stone-300">·</span>
+              <span className="text-sm font-bold text-stone-700">
+                {delta.toFixed(1)} pp
+              </span>
+              {tightRace && (
+                <span className="text-[9px] font-black uppercase tracking-widest bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded ml-1">
+                  Margen de error
+                </span>
+              )}
+            </div>
           </div>
+
+          {/* Insight line: movement vs the last surfaced snapshot. */}
+          {insight && (
+            <div className="flex items-center gap-1.5 text-[11px]">
+              {insight.direction === "flip" ? (
+                <>
+                  <TrendingUp className="h-3 w-3 text-emerald-600" />
+                  <span className="font-bold text-emerald-700">
+                    Vuelco: {insight.leaderName} pasa al liderato
+                  </span>
+                  <span className="text-stone-500">
+                    {" "}· en los últimos {insight.sinceMin} min
+                  </span>
+                </>
+              ) : insight.direction === "widen" ? (
+                <>
+                  <TrendingUp className="h-3 w-3 text-stone-700" />
+                  <span className="text-stone-700">
+                    <strong>{insight.leaderName}</strong> amplía{" "}
+                    <strong className="font-mono tabular-nums">+{formatVotes(insight.deltaVotes)} votos</strong>
+                    {Math.abs(insight.deltaPp) >= 0.01 && (
+                      <span className="font-mono tabular-nums">{" "}({insight.deltaPp >= 0 ? "+" : ""}{insight.deltaPp.toFixed(2)} pp)</span>
+                    )}
+                    <span className="text-stone-500">
+                      {" "}en los últimos {insight.sinceMin} min
+                      {Math.abs(insight.actasDelta) >= 0.05 && ` · +${insight.actasDelta.toFixed(1)} pts actas`}
+                    </span>
+                  </span>
+                </>
+              ) : insight.direction === "narrow" ? (
+                <>
+                  <TrendingDown className="h-3 w-3 text-amber-700" />
+                  <span className="text-stone-700">
+                    <strong>{runner?.shortName}</strong> recorta{" "}
+                    <strong className="font-mono tabular-nums">{formatVotes(Math.abs(insight.deltaVotes))} votos</strong>
+                    {Math.abs(insight.deltaPp) >= 0.01 && (
+                      <span className="font-mono tabular-nums">{" "}({insight.deltaPp.toFixed(2)} pp)</span>
+                    )}
+                    <span className="text-stone-500">
+                      {" "}en los últimos {insight.sinceMin} min
+                      {Math.abs(insight.actasDelta) >= 0.05 && ` · +${insight.actasDelta.toFixed(1)} pts actas`}
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Minus className="h-3 w-3 text-stone-400" />
+                  <span className="text-stone-500">
+                    Diferencia estable
+                    {Math.abs(insight.actasDelta) >= 0.05 && ` · +${insight.actasDelta.toFixed(1)} pts actas en los últimos ${insight.sinceMin} min`}
+                  </span>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 

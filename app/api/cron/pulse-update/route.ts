@@ -638,6 +638,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "invalid country" }, { status: 400 });
   }
   const country = countryParam;
+  const isPE = country === "pe";
   const phase = detectPhase(country);
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !OPENAI_KEY) {
