@@ -211,7 +211,7 @@ export async function GET(request: NextRequest) {
               {limaTime}
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "rgba(255,255,255,0.85)", textTransform: "capitalize", letterSpacing: 1 }}>
+          <div style={{ display: "flex", fontSize: 22, color: "rgba(255,255,255,0.85)", letterSpacing: 1 }}>
             {limaDate} · hora Lima
           </div>
         </div>
@@ -356,8 +356,11 @@ export async function GET(request: NextRequest) {
                 <div style={{ display: "flex", fontSize: 24, fontWeight: 900, color: c!.partyColor ?? "#888", letterSpacing: 2, textTransform: "uppercase" }}>
                   {c!.party}
                 </div>
-                <div style={{ display: "flex", fontSize: 68, fontWeight: 900, color: "#0a0a0a", lineHeight: 1 }}>
-                  {c!.shortName || c!.name}
+                {/* Use surname-only inside the card so it fits one line at 72pt
+                    without wrapping. Initial + name was wrapping K. Fujimori
+                    onto two lines and compressing the % column. */}
+                <div style={{ display: "flex", fontSize: 72, fontWeight: 900, color: "#0a0a0a", lineHeight: 1 }}>
+                  {(c!.shortName || c!.name).replace(/^[A-Z]\.\s+/, "")}
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
