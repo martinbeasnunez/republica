@@ -240,8 +240,33 @@ async function fetchLiveRSS(country: CountryCode): Promise<Array<{ title: string
   };
 
   const all = (await Promise.all(sources.map(fetchOne))).flat();
+
+  // ── Drop boletines automáticos regionales que ahogan la señal ──────────
+  // El Comercio publica una entrada por DEPARTAMENTO cada 5 min con la
+  // plantilla "Elecciones Perú 2026: Resultados ONPE al X% de la segunda
+  // vuelta de [Depto]…". Con 25 departamentos eso son 25 titulares idénticos
+  // cada ciclo — el modelo se anclaba ahí y armaba pulsos repitiendo regiones.
+  // Filtramos antes de que el modelo los vea, pero solo en PE (esta función
+  // se llama con country=pe en su versión peruana).
+  const NOISE_PATTERNS_PE: RegExp[] = [
+    // El Comercio bulletin per department
+    /elecciones\s+per[uú]\s+2026[:\s].*resultados\s+onpe\s+al\s+[\d.,]+%\s+de\s+la\s+segunda\s+vuelta\s+de\s+\w+/i,
+    // Variant: "...conteo oficial de votos en vivo" tail
+    /resultados\s+onpe\s+al\s+[\d.,]+%.*y\s+conteo\s+oficial\s+de\s+votos\s+en\s+vivo/i,
+    // Same shape from any source
+    /en\s+\w+,?\s+el\s+conteo\s+oficial\s+de\s+la\s+segunda\s+vuelta\s+alcanza\s+el\s+[\d.,]+%\s+de\s+actas/i,
+  ];
+  const filtered = all.filter((i) => {
+    if (country === "pe") {
+      for (const re of NOISE_PATTERNS_PE) {
+        if (re.test(i.title)) return false;
+      }
+    }
+    return true;
+  });
+
   // Sort newest first; only items with a parseable date
-  return all
+  return filtered
     .filter((i) => Number.isFinite(i.pubDate))
     .sort((a, b) => b.pubDate - a.pubDate);
 }
