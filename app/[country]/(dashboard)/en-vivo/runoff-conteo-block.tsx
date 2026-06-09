@@ -319,16 +319,22 @@ export function RunoffConteoBlock() {
       transition={{ duration: 0.4 }}
       className={cn("rounded-2xl border-2 overflow-hidden bg-gradient-to-br", badge.tint, badge.ring)}
     >
-      {/* Header — pill + actions. Source label ("ONPE") and "X% actas" used
-          to live here too, but they were redundant (pill already names ONPE,
-          and actas % is the headline of the Actas progress block right
-          below) — removed so the row fits one line on mobile. */}
+      {/* Header — pill (with actas %) + actions. The actas % is a key trust
+          signal so it lives INSIDE the pill: "ONPE EN VIVO · 96.0%". The
+          earlier separate `{data.source}` subtitle was redundant (pill
+          already names ONPE) and removed. */}
       <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-stone-200/60 bg-white/60 backdrop-blur">
         <div className="flex items-center gap-2 min-w-0">
           <BarChart3 className="h-4 w-4 text-stone-700 shrink-0" />
           <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-white whitespace-nowrap", badge.pillBg)}>
             <span className="h-1 w-1 rounded-full bg-white pulse-dot" />
             {badge.label}
+            {data.actasPct != null && (
+              <>
+                <span className="opacity-60">·</span>
+                <span className="font-mono tabular-nums tracking-normal">{data.actasPct.toFixed(1)}%</span>
+              </>
+            )}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
