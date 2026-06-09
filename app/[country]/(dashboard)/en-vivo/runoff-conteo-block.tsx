@@ -58,11 +58,14 @@ function formatTime(iso: string): string {
 // Source-aware badges. We only ever surface ONPE-official data or an
 // "esperando ONPE" placeholder — no exit polls, no quick counts. Other
 // sourceType values map to the placeholder treatment.
+// Pill copy is intentionally short ("ONPE EN VIVO") so the header fits one
+// line on mobile alongside the Compartir + Actualizado buttons. The longer
+// "CONTEO OFICIAL ONPE" wrapped to two lines on iPhone widths.
 const SOURCE_BADGE: Record<ApiResponse["sourceType"], { label: string; tint: string; ring: string; pillBg: string }> = {
-  official:   { label: "CONTEO OFICIAL ONPE", tint: "from-emerald-50 to-white",  ring: "border-emerald-600/30",  pillBg: "bg-emerald-600" },
-  waiting:    { label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
-  exit_poll:  { label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
-  quick_count:{ label: "ESPERANDO ONPE",       tint: "from-stone-100 to-white",  ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
+  official:   { label: "ONPE EN VIVO",   tint: "from-emerald-50 to-white",  ring: "border-emerald-600/30",  pillBg: "bg-emerald-600" },
+  waiting:    { label: "ESPERANDO ONPE", tint: "from-stone-100 to-white",   ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
+  exit_poll:  { label: "ESPERANDO ONPE", tint: "from-stone-100 to-white",   ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
+  quick_count:{ label: "ESPERANDO ONPE", tint: "from-stone-100 to-white",   ring: "border-stone-300/60",   pillBg: "bg-stone-600" },
 };
 
 /**
@@ -316,24 +319,19 @@ export function RunoffConteoBlock() {
       transition={{ duration: 0.4 }}
       className={cn("rounded-2xl border-2 overflow-hidden bg-gradient-to-br", badge.tint, badge.ring)}
     >
-      {/* Header — source + actas */}
-      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-stone-200/60 bg-white/60 backdrop-blur">
-        <div className="flex items-center gap-2 flex-wrap">
-          <BarChart3 className="h-5 w-5 text-stone-700" />
-          <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-[0.2em] text-white", badge.pillBg)}>
+      {/* Header — pill + actions. Source label ("ONPE") and "X% actas" used
+          to live here too, but they were redundant (pill already names ONPE,
+          and actas % is the headline of the Actas progress block right
+          below) — removed so the row fits one line on mobile. */}
+      <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-stone-200/60 bg-white/60 backdrop-blur">
+        <div className="flex items-center gap-2 min-w-0">
+          <BarChart3 className="h-4 w-4 text-stone-700 shrink-0" />
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-white whitespace-nowrap", badge.pillBg)}>
             <span className="h-1 w-1 rounded-full bg-white pulse-dot" />
             {badge.label}
           </span>
-          <span className="text-[11px] font-bold text-stone-700">
-            {data.source}
-          </span>
-          {data.actasPct != null && (
-            <span className="text-[10px] font-mono text-stone-600 bg-stone-100 px-2 py-0.5 rounded-full">
-              {data.actasPct.toFixed(1)}% actas
-            </span>
-          )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleShare}
             disabled={shareState === "sharing"}
@@ -356,9 +354,14 @@ export function RunoffConteoBlock() {
             onClick={fetchData}
             disabled={loading}
             className="flex items-center gap-1 text-[10px] text-stone-500 hover:text-stone-700 font-medium disabled:opacity-50"
+            aria-label={Math.round(Math.max(0, Date.now() - lastFetch) / 1000) < 5 ? "Actualizado hace segundos" : "Actualizar"}
           >
             <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
-            {Math.round(Math.max(0, Date.now() - lastFetch) / 1000) < 5 ? "Actualizado" : "Actualizar"}
+            {/* Hide label on the tightest screens — the share button is the
+                priority action; refresh is auto-polled every 60s anyway. */}
+            <span className="hidden sm:inline">
+              {Math.round(Math.max(0, Date.now() - lastFetch) / 1000) < 5 ? "Actualizado" : "Actualizar"}
+            </span>
           </button>
         </div>
       </div>
