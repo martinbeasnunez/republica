@@ -2,20 +2,18 @@ import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
 // =============================================================================
-// CONDOR — Story image for the live runoff count
+// CONDOR — Story image for the live runoff count (v2: más Perú, más love)
 // =============================================================================
 // 1080×1920 vertical PNG, suitable for Instagram/WhatsApp stories. Fetches the
 // current `/api/runoff-conteo` snapshot at request time so each share is a
 // fresh capture of the moment.
 //
-// Surface area on the image:
-//   - Top red ribbon: EN VIVO · Balotaje Perú 2026 · time stamp
-//   - Hero vote gap number ("23,595 votos los separan a…")
-//   - Tightness pill (Empate técnico / Diferencia ajustada / …)
-//   - Live momentum pill (SE ACHICA / SE AMPLÍA / SIN CAMBIOS / CAMBIO DE LÍDER)
-//   - Two candidate cards stacked, with portraits, party color, %, votes
-//   - Actas progress bar + "Faltan X actas, ≈ Y votos por contar (estimado)"
-//   - Bottom CTA: condorlatam.com/pe
+// Design intent (per user feedback):
+//   - "letra más grande" — hero number ~280pt, everything bumped one tier
+//   - "más colores peruanos" — rojo bandera (#D91023) as top + bottom bands,
+//     evoking the vertical rojo-blanco-rojo of the Peruvian flag
+//   - "más diseño, más amor" — bigger portraits, cleaner cards, hierarchy
+//   - "más compartible" — @condorlatam handle, date stamp, prominent CTA
 // =============================================================================
 
 export const runtime = "edge";
@@ -23,6 +21,12 @@ export const contentType = "image/png";
 
 const W = 1080;
 const H = 1920;
+
+// Rojo bandera Perú. Slightly punchier than the standard #D91023 so it pops
+// on small previews (WhatsApp thumbnails compress hard).
+const ROJO_BANDERA = "#D91023";
+const ROJO_OSCURO = "#8B0F1A";
+const BLANCO_CALIDO = "#FAFAF9";
 
 interface ApiCandidate {
   slug?: string;
@@ -48,6 +52,14 @@ interface ApiResponse {
 
 function fmt(n: number | null | undefined): string {
   if (n == null) return "—";
+  return n.toLocaleString("es-PE");
+}
+
+// Format a vote count compactly for tight rows: 798,042 → 798K
+function fmtCompact(n: number | null | undefined): string {
+  if (n == null) return "—";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return Math.round(n / 1_000) + "K";
   return n.toLocaleString("es-PE");
 }
 
@@ -97,10 +109,18 @@ export async function GET(request: NextRequest) {
   const insightLeader = sp.get("lead") || leader?.shortName || "";
   const insightRunner = sp.get("run") || runner?.shortName || "";
 
-  // Lima hour for the timestamp
+  // Lima hour + date for the timestamp ribbon (gives shareable context: "this
+  // image is from XX:XX on Domingo 7 jun" — not just a percent floating in
+  // time).
   const limaTime = new Date().toLocaleTimeString("es-PE", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "America/Lima",
+  });
+  const limaDate = new Date().toLocaleDateString("es-PE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
     timeZone: "America/Lima",
   });
 
@@ -126,17 +146,17 @@ export async function GET(request: NextRequest) {
     momentumSentence = `Ahora va arriba ${insightLeader}`;
   } else if (insightDir === "widen" && insightDeltaVotes !== 0) {
     momentumPill = { label: "Se amplía", bg: "#FEE2E2", fg: "#9F1239" };
-    momentumSentence = `${insightLeader} sumó +${fmt(insightDeltaVotes)} votos en ${insightSince} min`;
+    momentumSentence = `${insightLeader} sumó +${fmt(insightDeltaVotes)} en ${insightSince} min`;
   } else if (insightDir === "narrow" && insightDeltaVotes !== 0) {
     momentumPill = { label: "Se achica", bg: "#D1FAE5", fg: "#065F46" };
-    momentumSentence = `${insightRunner} recortó ${fmt(Math.abs(insightDeltaVotes))} votos en ${insightSince} min`;
+    momentumSentence = `${insightRunner} recortó ${fmt(Math.abs(insightDeltaVotes))} en ${insightSince} min`;
   } else if (insightDir === "flat") {
     momentumPill = { label: "Sin cambios", bg: "#E7E5E4", fg: "#44403C" };
     momentumSentence = "La distancia no se mueve";
   }
 
-  // Build the hero "votos separan a X de Y" as separate flex children
-  // because Satori does NOT handle inline <strong> inside <span> correctly.
+  // Build the hero "votos separan a X de Y" — each candidate name is a
+  // separate flex child so Satori spaces them correctly.
   const finalist1 = leader?.shortName ?? "—";
   const finalist2 = runner?.shortName ?? "—";
 
@@ -148,40 +168,51 @@ export async function GET(request: NextRequest) {
           height: H,
           display: "flex",
           flexDirection: "column",
-          background: "#FAFAF9",
+          background: BLANCO_CALIDO,
           fontFamily: "system-ui, -apple-system, sans-serif",
+          position: "relative",
         }}
       >
-        {/* ── Top ribbon ─────────────────────────────────────────────────── */}
+        {/* ── Vertical rojo bandera stripes (decorative, evoke flag) ──────── */}
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 14, background: ROJO_BANDERA, display: "flex" }} />
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 14, background: ROJO_BANDERA, display: "flex" }} />
+
+        {/* ── Top rojo bandera band ─────────────────────────────────────── */}
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "44px 56px",
-            background: "linear-gradient(135deg, #1c1917 0%, #7f1d1d 60%, #1c1917 100%)",
+            flexDirection: "column",
+            padding: "44px 70px 36px",
+            background: `linear-gradient(135deg, ${ROJO_OSCURO} 0%, ${ROJO_BANDERA} 50%, ${ROJO_OSCURO} 100%)`,
             color: "white",
             width: "100%",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                background: "#dc2626",
-                padding: "10px 22px",
-                borderRadius: 999,
-              }}
-            >
-              <div style={{ display: "flex", width: 14, height: 14, borderRadius: 999, background: "white" }} />
-              <div style={{ display: "flex", fontSize: 24, fontWeight: 900, letterSpacing: 4, color: "white" }}>EN VIVO</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  background: "white",
+                  padding: "12px 26px",
+                  borderRadius: 999,
+                }}
+              >
+                <div style={{ display: "flex", width: 16, height: 16, borderRadius: 999, background: ROJO_BANDERA }} />
+                <div style={{ display: "flex", fontSize: 30, fontWeight: 900, letterSpacing: 5, color: ROJO_BANDERA }}>EN VIVO</div>
+              </div>
+              <div style={{ display: "flex", fontSize: 34, fontWeight: 800, color: "white", letterSpacing: 1 }}>
+                Balotaje Perú 2026
+              </div>
             </div>
-            <div style={{ display: "flex", fontSize: 26, fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>Balotaje Perú 2026</div>
+            <div style={{ display: "flex", fontSize: 28, fontFamily: "monospace", color: "white", fontWeight: 700 }}>
+              {limaTime}
+            </div>
           </div>
-          <div style={{ display: "flex", fontSize: 22, fontFamily: "monospace", color: "rgba(255,255,255,0.7)" }}>
-            {limaTime} Lima
+          <div style={{ display: "flex", fontSize: 22, color: "rgba(255,255,255,0.85)", textTransform: "capitalize", letterSpacing: 1 }}>
+            {limaDate} · hora Lima
           </div>
         </div>
 
@@ -190,56 +221,66 @@ export async function GET(request: NextRequest) {
           style={{
             display: "flex",
             flexDirection: "column",
-            paddingTop: 56,
-            paddingLeft: 64,
-            paddingRight: 64,
+            paddingTop: 60,
+            paddingLeft: 72,
+            paddingRight: 72,
             paddingBottom: 0,
           }}
         >
           {/* "DIFERENCIA AHORA" eyebrow */}
-          <div style={{ display: "flex", fontSize: 28, color: "#78716c", fontWeight: 700, letterSpacing: 4, textTransform: "uppercase", marginBottom: 18 }}>
-            Diferencia ahora
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              marginBottom: 22,
+            }}
+          >
+            <div style={{ display: "flex", width: 12, height: 12, borderRadius: 999, background: ROJO_BANDERA }} />
+            <div style={{ display: "flex", fontSize: 32, color: ROJO_BANDERA, fontWeight: 900, letterSpacing: 6, textTransform: "uppercase" }}>
+              Diferencia ahora
+            </div>
           </div>
 
           {/* Big vote count + "votos" */}
           {hasNumbers && voteGap != null && (
-            <div style={{ display: "flex", alignItems: "baseline", marginBottom: 14 }}>
-              <div style={{ display: "flex", fontSize: 200, fontWeight: 900, color: "#1c1917", lineHeight: 0.9, fontFamily: "monospace", letterSpacing: -6 }}>
+            <div style={{ display: "flex", alignItems: "baseline", marginBottom: 18 }}>
+              <div style={{ display: "flex", fontSize: 280, fontWeight: 900, color: "#0a0a0a", lineHeight: 0.85, fontFamily: "monospace", letterSpacing: -10 }}>
                 {fmt(voteGap)}
               </div>
-              <div style={{ display: "flex", fontSize: 42, fontWeight: 700, color: "#57534e", marginLeft: 24 }}>votos</div>
+              <div style={{ display: "flex", fontSize: 56, fontWeight: 800, color: "#57534e", marginLeft: 28 }}>votos</div>
             </div>
           )}
 
-          {/* "los separan a X de Y" — single line broken into 3 spans */}
+          {/* "los separan a X de Y" — each name as separate flex child */}
           {hasNumbers && (
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", marginBottom: 28, gap: 12 }}>
-              <div style={{ display: "flex", fontSize: 36, color: "#44403c" }}>los separan a</div>
-              <div style={{ display: "flex", fontSize: 40, color: "#1c1917", fontWeight: 800 }}>{finalist1}</div>
-              <div style={{ display: "flex", fontSize: 36, color: "#44403c" }}>de</div>
-              <div style={{ display: "flex", fontSize: 40, color: "#1c1917", fontWeight: 800 }}>{finalist2}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", marginBottom: 32, gap: 14 }}>
+              <div style={{ display: "flex", fontSize: 44, color: "#44403c", fontWeight: 500 }}>los separan a</div>
+              <div style={{ display: "flex", fontSize: 52, color: ROJO_BANDERA, fontWeight: 900 }}>{finalist1}</div>
+              <div style={{ display: "flex", fontSize: 44, color: "#44403c", fontWeight: 500 }}>de</div>
+              <div style={{ display: "flex", fontSize: 52, color: ROJO_BANDERA, fontWeight: 900 }}>{finalist2}</div>
             </div>
           )}
 
           {/* Tightness pill row */}
           {hasNumbers && ppGap != null && (
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 18 }}>
               <div
                 style={{
                   display: "flex",
-                  fontSize: 26,
+                  fontSize: 30,
                   fontWeight: 900,
                   background: tight.bg,
                   color: tight.fg,
-                  padding: "14px 28px",
+                  padding: "16px 32px",
                   borderRadius: 999,
-                  letterSpacing: 2,
+                  letterSpacing: 3,
                   textTransform: "uppercase",
                 }}
               >
                 {tight.label}
               </div>
-              <div style={{ display: "flex", fontSize: 28, color: "#78716c", fontFamily: "monospace", marginLeft: 18 }}>
+              <div style={{ display: "flex", fontSize: 32, color: "#1c1917", fontFamily: "monospace", fontWeight: 800 }}>
                 {ppGap < 0.1 ? "<0.1" : ppGap.toFixed(1)}% de diferencia
               </div>
             </div>
@@ -247,87 +288,87 @@ export async function GET(request: NextRequest) {
 
           {/* Momentum row */}
           {hasNumbers && momentumPill && (
-            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
               <div
                 style={{
                   display: "flex",
-                  fontSize: 22,
+                  fontSize: 26,
                   fontWeight: 900,
                   background: momentumPill.bg,
                   color: momentumPill.fg,
-                  padding: "12px 24px",
+                  padding: "14px 28px",
                   borderRadius: 999,
-                  letterSpacing: 2,
+                  letterSpacing: 3,
                   textTransform: "uppercase",
                 }}
               >
                 {momentumPill.label}
               </div>
-              <div style={{ display: "flex", fontSize: 24, color: "#44403c", fontWeight: 500, marginLeft: 16 }}>
+              <div style={{ display: "flex", fontSize: 28, color: "#44403c", fontWeight: 600 }}>
                 {momentumSentence}
               </div>
             </div>
           )}
 
           {!hasNumbers && (
-            <div style={{ display: "flex", fontSize: 60, fontWeight: 900, color: "#1c1917", lineHeight: 1.1 }}>
+            <div style={{ display: "flex", fontSize: 72, fontWeight: 900, color: ROJO_BANDERA, lineHeight: 1.1 }}>
               Esperando datos de ONPE
             </div>
           )}
         </div>
 
         {/* ── Candidate cards ───────────────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", padding: "48px 64px 0", gap: 20, width: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", padding: "52px 72px 0", gap: 22, width: "100%" }}>
           {[leader, runner].filter(Boolean).map((c) => (
             <div
               key={c!.slug ?? c!.name}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 28,
-                padding: "26px 32px",
+                gap: 32,
+                padding: "30px 36px",
                 background: "white",
-                borderRadius: 24,
-                border: `4px solid ${c!.partyColor ?? "#888"}`,
+                borderRadius: 28,
+                border: `5px solid ${c!.partyColor ?? "#888"}`,
               }}
             >
               {c!.slug && FINALIST_PHOTO[c!.slug] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={FINALIST_PHOTO[c!.slug]}
-                  width={140}
-                  height={140}
-                  style={{ borderRadius: 18, objectFit: "cover" }}
+                  width={170}
+                  height={170}
+                  style={{ borderRadius: 22, objectFit: "cover" }}
                   alt={c!.name}
                 />
               ) : (
                 <div
                   style={{
                     display: "flex",
-                    width: 140,
-                    height: 140,
-                    borderRadius: 18,
+                    width: 170,
+                    height: 170,
+                    borderRadius: 22,
                     background: (c!.partyColor ?? "#888") + "33",
                   }}
                 />
               )}
               <div style={{ display: "flex", flexDirection: "column", flex: 1, gap: 6 }}>
-                <div style={{ display: "flex", fontSize: 20, fontWeight: 900, color: c!.partyColor ?? "#888", letterSpacing: 2, textTransform: "uppercase" }}>
+                <div style={{ display: "flex", fontSize: 24, fontWeight: 900, color: c!.partyColor ?? "#888", letterSpacing: 2, textTransform: "uppercase" }}>
                   {c!.party}
                 </div>
-                <div style={{ display: "flex", fontSize: 52, fontWeight: 900, color: "#1c1917", lineHeight: 1 }}>
+                <div style={{ display: "flex", fontSize: 68, fontWeight: 900, color: "#0a0a0a", lineHeight: 1 }}>
                   {c!.shortName || c!.name}
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                 <div style={{ display: "flex", alignItems: "baseline" }}>
-                  <div style={{ display: "flex", fontSize: 108, fontWeight: 900, color: c!.partyColor ?? "#1c1917", fontFamily: "monospace", lineHeight: 1, letterSpacing: -2 }}>
+                  <div style={{ display: "flex", fontSize: 140, fontWeight: 900, color: c!.partyColor ?? "#0a0a0a", fontFamily: "monospace", lineHeight: 1, letterSpacing: -4 }}>
                     {c!.percentage != null ? c!.percentage.toFixed(1) : "—"}
                   </div>
-                  <div style={{ display: "flex", fontSize: 40, color: "#a8a29e", fontWeight: 800, marginLeft: 4 }}>%</div>
+                  <div style={{ display: "flex", fontSize: 52, color: "#a8a29e", fontWeight: 800, marginLeft: 6 }}>%</div>
                 </div>
                 {c!.votes != null && (
-                  <div style={{ display: "flex", fontSize: 22, color: "#78716c", fontFamily: "monospace", marginTop: 6 }}>
+                  <div style={{ display: "flex", fontSize: 26, color: "#57534e", fontFamily: "monospace", fontWeight: 700, marginTop: 4 }}>
                     {fmt(c!.votes)} votos
                   </div>
                 )}
@@ -338,12 +379,12 @@ export async function GET(request: NextRequest) {
 
         {/* ── Actas progress + faltan ───────────────────────────────────── */}
         {data?.actasPct != null && data.actasPct > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", padding: "40px 64px 0", gap: 16, width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "column", padding: "44px 72px 0", gap: 18, width: "100%" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <div style={{ display: "flex", fontSize: 22, fontWeight: 900, color: "#065F46", letterSpacing: 2, textTransform: "uppercase" }}>
-                Actas escrutadas
+              <div style={{ display: "flex", fontSize: 26, fontWeight: 900, color: "#065F46", letterSpacing: 3, textTransform: "uppercase" }}>
+                Actas escrutadas · {data.actasPct.toFixed(1)}%
               </div>
-              <div style={{ display: "flex", fontSize: 22, color: "#047857", fontFamily: "monospace" }}>
+              <div style={{ display: "flex", fontSize: 28, color: "#047857", fontFamily: "monospace", fontWeight: 800 }}>
                 {fmt(data.actasCounted)} / {fmt(data.actasTotal)}
               </div>
             </div>
@@ -351,7 +392,7 @@ export async function GET(request: NextRequest) {
               style={{
                 display: "flex",
                 width: "100%",
-                height: 20,
+                height: 26,
                 borderRadius: 999,
                 background: "#D1FAE5",
                 overflow: "hidden",
@@ -366,16 +407,18 @@ export async function GET(request: NextRequest) {
                 }}
               />
             </div>
-            {/* Faltan row — single sentence so spaces render correctly */}
+            {/* Faltan row — single sentence so spaces render correctly. Use
+                "~" instead of "≈" because Satori's font fallback can render
+                the math approx glyph as a tofu box on some platforms. */}
             {actasMissing != null && actasMissing > 0 && (
-              <div style={{ display: "flex", fontSize: 24, color: "#065F46" }}>
+              <div style={{ display: "flex", fontSize: 28, color: "#065F46", fontWeight: 600 }}>
                 {estRemainingVotes != null && estRemainingVotes > 0
-                  ? `Faltan ${fmt(actasMissing)} actas — ≈ ${fmt(estRemainingVotes)} votos por contar (estimado)`
+                  ? `Faltan ${fmt(actasMissing)} actas — ~${fmtCompact(estRemainingVotes)} votos por contar`
                   : `Faltan ${fmt(actasMissing)} actas por escrutar`}
               </div>
             )}
             {actasMissing === 0 && (
-              <div style={{ display: "flex", fontSize: 24, color: "#065F46", fontWeight: 800 }}>
+              <div style={{ display: "flex", fontSize: 28, color: "#065F46", fontWeight: 800 }}>
                 Cómputo al 100% — todas las actas escrutadas
               </div>
             )}
@@ -385,25 +428,30 @@ export async function GET(request: NextRequest) {
         {/* ── Spacer ────────────────────────────────────────────────────── */}
         <div style={{ flex: 1, display: "flex" }} />
 
-        {/* ── Footer CTA ────────────────────────────────────────────────── */}
+        {/* ── Footer rojo bandera CTA ───────────────────────────────────── */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            padding: "44px 64px 64px",
-            background: "linear-gradient(180deg, transparent 0%, #1c1917 60%)",
+            padding: "52px 72px 64px",
+            background: `linear-gradient(180deg, transparent 0%, ${ROJO_BANDERA} 40%, ${ROJO_OSCURO} 100%)`,
             width: "100%",
           }}
         >
-          <div style={{ display: "flex", fontSize: 28, color: "#a8a29e", letterSpacing: 5, textTransform: "uppercase", fontWeight: 700, marginBottom: 12 }}>
-            Cobertura completa
+          <div style={{ display: "flex", fontSize: 26, color: "rgba(255,255,255,0.85)", letterSpacing: 6, textTransform: "uppercase", fontWeight: 800, marginBottom: 16 }}>
+            Cobertura completa con IA
           </div>
-          <div style={{ display: "flex", fontSize: 64, fontWeight: 900, color: "white", letterSpacing: -1 }}>
+          <div style={{ display: "flex", fontSize: 86, fontWeight: 900, color: "white", letterSpacing: -2, lineHeight: 1 }}>
             condorlatam.com/pe
           </div>
-          <div style={{ display: "flex", fontSize: 22, color: "#a8a29e", marginTop: 14 }}>
-            Conteo en vivo · análisis · verificación con IA
+          <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 22 }}>
+            <div style={{ display: "flex", fontSize: 24, color: "white", fontWeight: 800, background: "rgba(0,0,0,0.25)", padding: "8px 20px", borderRadius: 999 }}>
+              @condorlatam
+            </div>
+            <div style={{ display: "flex", fontSize: 24, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>
+              Conteo · análisis · verificación
+            </div>
           </div>
         </div>
       </div>
