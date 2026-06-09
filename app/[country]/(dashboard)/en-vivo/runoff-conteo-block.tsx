@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus, Share2, Check } from "lucide-react";
+import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus, Share2, Check, X, Download, Copy, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -178,88 +178,137 @@ export function RunoffConteoBlock() {
 
   // ── Share handler ────────────────────────────────────────────────────────
   // Generates the 1080×1920 story image with the current snapshot + insight
-  // and tries the native share sheet (Instagram/WhatsApp story, AirDrop, X).
-  // Falls back to opening the image in a new tab + copying the page URL on
-  // desktops / browsers without share-with-file support.
+  // and opens an IN-PAGE modal with the preview + action buttons. We no
+  // longer pop new tabs as a fallback — the user explicitly didn't want that.
   const [shareState, setShareState] = useState<"idle" | "sharing" | "shared" | "error">("idle");
+  const [shareModal, setShareModal] = useState<{
+    open: boolean;
+    imageBlobUrl: string | null;
+    imageBlob: Blob | null;
+    pageUrl: string;
+    text: string;
+  }>({ open: false, imageBlobUrl: null, imageBlob: null, pageUrl: "", text: "" });
+
+  // Build the OG URL with current insight params so the generated image
+  // matches what the user sees on screen at this moment.
+  const buildOgUrl = useCallback((): string => {
+    const params = new URLSearchParams();
+    const cur = snapshotForInsight.current;
+    const pen = snapshotPending.current;
+    if (cur && pen) {
+      const dir = pen.leaderSlug !== cur.leaderSlug
+        ? "flip"
+        : pen.voteGap > cur.voteGap + 49 ? "widen"
+          : pen.voteGap < cur.voteGap - 49 ? "narrow"
+            : "flat";
+      params.set("dir", dir);
+      params.set("dv", String(Math.round(pen.voteGap - cur.voteGap)));
+      params.set("sm", String(Math.max(1, Math.round((pen.capturedAt - cur.capturedAt) / 60_000))));
+      const leaderName = pen.leaderSlug === "keiko-fujimori" ? "K. Fujimori" : "R. Sánchez";
+      const runnerName = pen.runnerSlug === "keiko-fujimori" ? "K. Fujimori" : "R. Sánchez";
+      params.set("lead", leaderName);
+      params.set("run", runnerName);
+    }
+    return `/api/og/conteo-story?${params.toString()}&t=${Date.now()}`;
+  }, []);
+
   const handleShare = useCallback(async () => {
     if (shareState === "sharing") return;
     setShareState("sharing");
     try {
-      // Build the OG URL with current insight params so the image matches what
-      // the user sees on screen at this moment.
-      const params = new URLSearchParams();
-      const cur = snapshotForInsight.current;
-      const pen = snapshotPending.current;
-      if (cur && pen) {
-        const dir = pen.leaderSlug !== cur.leaderSlug
-          ? "flip"
-          : pen.voteGap > cur.voteGap + 49 ? "widen"
-            : pen.voteGap < cur.voteGap - 49 ? "narrow"
-              : "flat";
-        params.set("dir", dir);
-        params.set("dv", String(Math.round(pen.voteGap - cur.voteGap)));
-        params.set("sm", String(Math.max(1, Math.round((pen.capturedAt - cur.capturedAt) / 60_000))));
-        const leaderName = pen.leaderSlug === "keiko-fujimori" ? "K. Fujimori" : "R. Sánchez";
-        const runnerName = pen.runnerSlug === "keiko-fujimori" ? "K. Fujimori" : "R. Sánchez";
-        params.set("lead", leaderName);
-        params.set("run", runnerName);
-      }
-      const imgUrl = `/api/og/conteo-story?${params.toString()}&t=${Date.now()}`;
+      const imgUrl = buildOgUrl();
       const pageUrl = typeof window !== "undefined" ? `${window.location.origin}/pe` : "https://www.condorlatam.com/pe";
       const text = "Sigo el balotaje Perú 2026 en vivo con CONDOR AI 🇵🇪 — conteo ONPE y momentum cada 5 min.";
 
-      // Try native share with the image file (Instagram/WhatsApp stories, AirDrop)
-      if (typeof navigator !== "undefined" && "share" in navigator) {
-        try {
-          const res = await fetch(imgUrl, { cache: "no-store" });
-          if (res.ok) {
-            const blob = await res.blob();
-            const file = new File([blob], "balotaje-peru-2026.png", { type: "image/png" });
-            // canShare check: some browsers reject files in `share()` silently.
-            const canShareFile = typeof navigator.canShare === "function"
-              ? navigator.canShare({ files: [file] })
-              : true;
-            if (canShareFile) {
-              await navigator.share({
-                title: "Balotaje Perú 2026 — conteo en vivo",
-                text,
-                url: pageUrl,
-                files: [file],
-              });
-              setShareState("shared");
-              setTimeout(() => setShareState("idle"), 2500);
-              return;
-            }
-          }
-        } catch {
-          /* fall through to URL-only share */
-        }
-        try {
-          await navigator.share({
-            title: "Balotaje Perú 2026 — conteo en vivo",
-            text,
-            url: pageUrl,
-          });
-          setShareState("shared");
-          setTimeout(() => setShareState("idle"), 2500);
-          return;
-        } catch {
-          /* user canceled — keep idle */
-        }
-      }
+      // Fetch the image FIRST so the modal opens with a real preview, not
+      // a "loading…" state. ~150-300ms on edge.
+      const res = await fetch(imgUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error("og-fetch-failed");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
 
-      // Desktop / no-share fallback: open the image in a new tab and copy
-      // the page URL to the clipboard so the user can paste it manually.
-      window.open(imgUrl, "_blank", "noopener");
-      try { await navigator.clipboard.writeText(pageUrl); } catch { /* ignore */ }
-      setShareState("shared");
-      setTimeout(() => setShareState("idle"), 2500);
+      setShareModal({ open: true, imageBlobUrl: blobUrl, imageBlob: blob, pageUrl, text });
+      setShareState("idle");
     } catch {
       setShareState("error");
       setTimeout(() => setShareState("idle"), 2500);
     }
-  }, [shareState]);
+  }, [shareState, buildOgUrl]);
+
+  const closeShareModal = useCallback(() => {
+    setShareModal((prev) => {
+      if (prev.imageBlobUrl) URL.revokeObjectURL(prev.imageBlobUrl);
+      return { open: false, imageBlobUrl: null, imageBlob: null, pageUrl: "", text: "" };
+    });
+  }, []);
+
+  // Action: download the PNG to the user's device.
+  const downloadImage = useCallback(() => {
+    if (!shareModal.imageBlobUrl) return;
+    const a = document.createElement("a");
+    a.href = shareModal.imageBlobUrl;
+    a.download = `balotaje-peru-2026-${Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [shareModal.imageBlobUrl]);
+
+  // Action: copy the image to clipboard as a PNG so the user can paste it
+  // straight into WhatsApp Web, Instagram DMs, X, etc.
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+  const copyImage = useCallback(async () => {
+    if (!shareModal.imageBlob) return;
+    try {
+      // ClipboardItem requires HTTPS + recent browsers. Falls back to URL
+      // copy if image clipboard isn't supported.
+      if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": shareModal.imageBlob })]);
+        setCopyState("copied");
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareModal.pageUrl);
+        setCopyState("copied");
+      } else {
+        throw new Error("no-clipboard");
+      }
+      setTimeout(() => setCopyState("idle"), 2200);
+    } catch {
+      setCopyState("error");
+      setTimeout(() => setCopyState("idle"), 2200);
+    }
+  }, [shareModal.imageBlob, shareModal.pageUrl]);
+
+  // Action: native share sheet (mobile only). Tries to attach the image,
+  // falls back to URL-only share if the OS rejects files.
+  const nativeShare = useCallback(async () => {
+    if (typeof navigator === "undefined" || !("share" in navigator)) return;
+    try {
+      if (shareModal.imageBlob) {
+        const file = new File([shareModal.imageBlob], "balotaje-peru-2026.png", { type: "image/png" });
+        const canShareFile = typeof navigator.canShare === "function"
+          ? navigator.canShare({ files: [file] })
+          : true;
+        if (canShareFile) {
+          await navigator.share({
+            title: "Balotaje Perú 2026 — conteo en vivo",
+            text: shareModal.text,
+            url: shareModal.pageUrl,
+            files: [file],
+          });
+          return;
+        }
+      }
+      await navigator.share({
+        title: "Balotaje Perú 2026 — conteo en vivo",
+        text: shareModal.text,
+        url: shareModal.pageUrl,
+      });
+    } catch {
+      /* user cancelled or unsupported — ignore */
+    }
+  }, [shareModal]);
+
+  const hasNativeShare = typeof window !== "undefined" && "share" in navigator;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareModal.text}\n${shareModal.pageUrl}`)}`;
 
   if (!data) {
     return (
@@ -712,6 +761,101 @@ export function RunoffConteoBlock() {
           </div>
         )}
       </div>
+      {/* ── Share modal — in-page preview + actions (no new tab) ─────── */}
+      {shareModal.open && shareModal.imageBlobUrl && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-6"
+          onClick={closeShareModal}
+        >
+          <div
+            className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeShareModal}
+              aria-label="Cerrar"
+              className="absolute top-3 right-3 z-10 rounded-full bg-white/90 hover:bg-white p-1.5 text-stone-700 shadow-md transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Preview — scrollable if image is taller than viewport */}
+            <div className="flex-1 overflow-y-auto bg-stone-100 p-4 flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={shareModal.imageBlobUrl}
+                alt="Conteo Perú 2026 — preview para compartir"
+                className="w-full max-w-[320px] h-auto rounded-lg shadow-lg"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="border-t border-stone-200 bg-white p-4 space-y-2.5">
+              <div className="text-center mb-1">
+                <div className="text-[11px] font-bold text-stone-500 uppercase tracking-widest">Compartir el conteo</div>
+                <div className="text-[10px] text-stone-400 mt-0.5">Imagen lista, elige cómo compartir</div>
+              </div>
+
+              {/* Primary: WhatsApp — green, full width */}
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white font-bold text-sm py-3 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                WhatsApp
+              </a>
+
+              {/* Secondary row: native share / copy / download */}
+              <div className="grid grid-cols-3 gap-2">
+                {hasNativeShare && (
+                  <button
+                    type="button"
+                    onClick={nativeShare}
+                    className="flex flex-col items-center justify-center gap-1 rounded-xl bg-stone-900 hover:bg-stone-700 text-white text-[10px] font-bold py-2.5 transition-colors"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Más apps
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={copyImage}
+                  className={cn(
+                    "flex flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold py-2.5 transition-colors",
+                    copyState === "copied"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : copyState === "error"
+                        ? "bg-rose-100 text-rose-700"
+                        : "bg-stone-100 hover:bg-stone-200 text-stone-700",
+                  )}
+                >
+                  {copyState === "copied" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copyState === "copied" ? "Copiado" : copyState === "error" ? "Error" : "Copiar imagen"}
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadImage}
+                  className="flex flex-col items-center justify-center gap-1 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-[10px] font-bold py-2.5 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeShareModal}
+                className="w-full text-[11px] text-stone-400 hover:text-stone-600 font-mono pt-1"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
