@@ -96,6 +96,13 @@ export function RunoffConteoBlock() {
   // we promote once actas/votes have moved enough to be a real comparison.
   const snapshotForInsight = useRef<InsightSnapshot | null>(null);
   const snapshotPending = useRef<InsightSnapshot | null>(null);
+  // Rolling history of every UNIQUE snapshot this session has seen — used to
+  // compute a longer-window "tendencia" so the UI doesn't forget that the
+  // previous cycle moved a lot when this cycle happens to be flat. ONPE
+  // refreshes every ~5 min and we poll every 60s, so we dedupe on voteGap +
+  // actasPct before pushing. Capped at 40 entries (~3 h of distinct frames)
+  // — plenty to compute "últimos 15 min" and survive long sessions.
+  const snapshotHistory = useRef<InsightSnapshot[]>([]);
   const [, force] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -124,6 +131,16 @@ export function RunoffConteoBlock() {
           voteGap: a.votes - b.votes,
           ppGap: (a.percentage ?? 0) - (b.percentage ?? 0),
         };
+        // Push to history if this is a NEW snapshot (different voteGap or
+        // actasPct from the last entry). ONPE refreshes ~5min and we poll
+        // 60s; without this dedup, history would be 95% identical frames.
+        const lastHistory = snapshotHistory.current[snapshotHistory.current.length - 1];
+        if (!lastHistory || lastHistory.voteGap !== newSnap.voteGap || lastHistory.actasPct !== newSnap.actasPct) {
+          snapshotHistory.current.push(newSnap);
+          if (snapshotHistory.current.length > 40) {
+            snapshotHistory.current = snapshotHistory.current.slice(-40);
+          }
+        }
         if (!snapshotForInsight.current) {
           // First load — nothing to compare yet; seed the pending bucket.
           snapshotForInsight.current = newSnap;
@@ -311,6 +328,61 @@ export function RunoffConteoBlock() {
     };
   }
   const insight = computeInsight();
+
+  // ── Window insight (rolling history) ─────────────────────────────────────
+  // The live `insight` above is a point-in-time delta (current vs the last
+  // promoted snapshot, ~5-10 min ago). When ONPE freezes for a cycle, that
+  // insight collapses to "SIN CAMBIOS" and the recent +1500-vote swing
+  // disappears from the UI. The window insight reaches back ~15 min so the
+  // recent past stays visible: "Últimos 15 min: K. Fujimori sumó +1,200".
+  type WindowInsight = {
+    kind: "widen" | "narrow" | "flip";
+    leaderName: string;
+    runnerName: string;
+    deltaVotes: number;
+    sinceMin: number;
+  };
+  function computeWindowInsight(targetMinutes: number): WindowInsight | null {
+    const history = snapshotHistory.current;
+    if (history.length < 2 || !leader || !runner || leader.votes == null || runner.votes == null) return null;
+    // Find the snapshot closest to (but not after) targetMinutes ago.
+    const targetTs = Date.now() - targetMinutes * 60_000;
+    let anchor: InsightSnapshot | null = null;
+    for (const s of history) {
+      if (s.capturedAt <= targetTs) {
+        if (!anchor || s.capturedAt > anchor.capturedAt) anchor = s;
+      }
+    }
+    // If session is younger than the target window, fall back to oldest
+    // available — the subtitle just shows the actual age.
+    if (!anchor) anchor = history[0];
+    const sinceMin = Math.round((Date.now() - anchor.capturedAt) / 60_000);
+    // Don't bother showing if the window is too short to be meaningful — the
+    // 5-min live pill already covers that range.
+    if (sinceMin < 8) return null;
+    if (anchor.leaderSlug !== leader.slug) {
+      return {
+        kind: "flip",
+        leaderName: leader.shortName || leader.name,
+        runnerName: runner.shortName || runner.name,
+        deltaVotes: 0,
+        sinceMin,
+      };
+    }
+    const curGap = leader.votes - runner.votes;
+    const gapDelta = curGap - anchor.voteGap;
+    // Only surface when movement is meaningful (≥500 votes) — otherwise the
+    // window is just noise and we let the live pill speak alone.
+    if (Math.abs(gapDelta) < 500) return null;
+    return {
+      kind: gapDelta > 0 ? "widen" : "narrow",
+      leaderName: leader.shortName || leader.name,
+      runnerName: runner.shortName || runner.name,
+      deltaVotes: gapDelta,
+      sinceMin,
+    };
+  }
+  const windowInsight = computeWindowInsight(15);
 
   return (
     <motion.div
@@ -524,10 +596,38 @@ export function RunoffConteoBlock() {
                       Sin cambios
                     </span>
                     <span className="text-stone-500">
-                      La distancia no se mueve
+                      en este ciclo
                     </span>
                   </>
                 )}
+              </div>
+            )}
+
+            {/* Window trend — surfaces the recent past so a "SIN CAMBIOS"
+                live cycle doesn't erase the +1,500 swing that just happened.
+                Only renders when the 15-min window has meaningful movement
+                (≥500 votes). Slightly de-emphasized so the live pill stays
+                the primary read. */}
+            {windowInsight && (
+              <div className="mt-1.5 flex items-start gap-1.5 text-[10.5px] text-stone-500 leading-snug">
+                <span className="font-semibold text-stone-600 shrink-0">
+                  Últimos {windowInsight.sinceMin} min:
+                </span>
+                <span>
+                  {windowInsight.kind === "flip" ? (
+                    <>el líder cambió en este lapso (hoy va <strong className="text-stone-800">{windowInsight.leaderName}</strong>)</>
+                  ) : windowInsight.kind === "widen" ? (
+                    <>
+                      <strong className="text-rose-700">{windowInsight.leaderName}</strong> sumó{" "}
+                      <strong className="font-mono tabular-nums text-rose-700">+{formatVotes(windowInsight.deltaVotes)}</strong> votos
+                    </>
+                  ) : (
+                    <>
+                      <strong className="text-emerald-700">{windowInsight.runnerName}</strong> recortó{" "}
+                      <strong className="font-mono tabular-nums text-emerald-700">{formatVotes(Math.abs(windowInsight.deltaVotes))}</strong> votos
+                    </>
+                  )}
+                </span>
               </div>
             )}
           </div>
