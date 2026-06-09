@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus, Share2, Check, X, Download, Copy, MessageCircle } from "lucide-react";
+import { BarChart3, RefreshCw, ExternalLink, Hourglass, TrendingUp, TrendingDown, Minus, Share2, Check, X, Download, Copy, MessageCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -474,9 +474,10 @@ export function RunoffConteoBlock() {
     // available — the subtitle just shows the actual age.
     if (!anchor) anchor = history[0];
     const sinceMin = Math.round((Date.now() - anchor.capturedAt) / 60_000);
-    // Don't bother showing if the window is too short to be meaningful — the
-    // 5-min live pill already covers that range.
-    if (sinceMin < 8) return null;
+    // Show as soon as we have ≥3 min of session history — covers ~1 ONPE
+    // refresh cycle. Earlier we gated at 8 min which meant users rarely
+    // saw it on a fresh visit.
+    if (sinceMin < 3) return null;
     if (anchor.leaderSlug !== leader.slug) {
       return {
         kind: "flip",
@@ -488,9 +489,10 @@ export function RunoffConteoBlock() {
     }
     const curGap = leader.votes - runner.votes;
     const gapDelta = curGap - anchor.voteGap;
-    // Only surface when movement is meaningful (≥500 votes) — otherwise the
-    // window is just noise and we let the live pill speak alone.
-    if (Math.abs(gapDelta) < 500) return null;
+    // Threshold lowered 500 → 150 votes. Anything below 150 is rounding
+    // noise from late-arriving rural/exterior actas; anything above is
+    // a real swing the user wants to see persist between live cycles.
+    if (Math.abs(gapDelta) < 150) return null;
     return {
       kind: gapDelta > 0 ? "widen" : "narrow",
       leaderName: leader.shortName || leader.name,
@@ -726,13 +728,12 @@ export function RunoffConteoBlock() {
                 (≥500 votes). Slightly de-emphasized so the live pill stays
                 the primary read. */}
             {windowInsight && (
-              <div className="mt-1.5 flex items-start gap-1.5 text-[10.5px] text-stone-500 leading-snug">
-                <span className="font-semibold text-stone-600 shrink-0">
-                  Últimos {windowInsight.sinceMin} min:
-                </span>
+              <div className="mt-2 inline-flex items-start gap-2 text-[11px] text-stone-600 leading-snug bg-stone-100/70 rounded-md px-2.5 py-1.5">
+                <Clock className="h-3 w-3 mt-0.5 text-stone-500 shrink-0" />
                 <span>
+                  <span className="font-bold text-stone-700">Últimos {windowInsight.sinceMin} min:</span>{" "}
                   {windowInsight.kind === "flip" ? (
-                    <>el líder cambió en este lapso (hoy va <strong className="text-stone-800">{windowInsight.leaderName}</strong>)</>
+                    <>el líder cambió (ahora va <strong className="text-stone-900">{windowInsight.leaderName}</strong>)</>
                   ) : windowInsight.kind === "widen" ? (
                     <>
                       <strong className="text-rose-700">{windowInsight.leaderName}</strong> sumó{" "}
