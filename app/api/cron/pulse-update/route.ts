@@ -518,7 +518,10 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
     }
     if (isPE) {
       lines.push("");
-      lines.push("⚡ INSTRUCCIÓN ABSOLUTA PARA EL PULSO: la SUPERESTRELLA de este pulso son ESTOS números del conteo oficial. Empezá por el número o el delta concreto. PROHIBIDO empezar diciendo 'ONPE ha comenzado a publicar' o 'el conteo avanza' o 'los ciudadanos esperan' — esas frases ya las dijiste antes y son ruido. Empezá por: '52.7% Fujimori vs 47.3% Sánchez con X% actas' o 'Sánchez recortó Y pp en la última hora' o 'Fujimori amplía a Z%, su mayor margen de la noche'. Si los titulares mencionan un evento adicional concreto (declaración, incidente, reacción), úsalo de cierre. Pero EL NÚMERO MANDA.");
+      lines.push("⚡ CÓMO USAR ESTOS NÚMEROS EN EL PULSO:");
+      lines.push("- Estos números YA APARECEN como bloque visual arriba en la home (el lector los ve constantemente). NO los repitas como ítem por sí solos.");
+      lines.push("- Sí podés referenciarlos como CONTEXTO de otro hecho: 'Con 95% de actas y diferencia <0.3 pp, los bonos peruanos retroceden...' o 'A 30 mil votos de diferencia, Fujimori anuncia que esperará el escrutinio del JEE...'");
+      lines.push("- Si el cambio vs hace 5 min es ≥0.3pp O hubo flip de líder O cerró 100% un departamento clave, ESO sí amerita un ítem propio. De lo contrario, prioriza otra noticia.");
     }
   }
 
@@ -540,11 +543,14 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
     lines.push("");
     lines.push("🚫 PLANTILLAS PROHIBIDAS (si tu primer borrador empieza así, BORRALO y empezá de nuevo):");
     lines.push('- "La ONPE ha comenzado a publicar..." / "Empezó el conteo en X..."');
+    lines.push('- "Resultados ONPE al X% de la segunda vuelta en [departamento] muestran casi el cierre total..."');
+    lines.push('- "En [departamento], el conteo oficial de la segunda vuelta alcanza el X% de actas procesadas..."');
+    lines.push('- Cualquier variante de "ONPE al X% en [departamento]" — el conteo regional sale auto-publicado en El Comercio cada 5 min, son boletines de máquina, NO son tu pulso.');
     lines.push('- "Keiko Fujimori y Roberto Sánchez compiten en una ajustada/reñida segunda vuelta..."');
     lines.push('- "Mientras el escrutinio avanza, los ciudadanos esperan conocer quién será..."');
     lines.push('- "Los peruanos / colombianos esperan el desenlace..."');
     lines.push('- "La contienda electoral se intensifica..."');
-    lines.push("Esas son MULETILLAS de live-blog perezoso. El lector ya sabe que hay balotaje, que los candidatos compiten y que el escrutinio avanza. NO LO REPITAS. Andá directo al dato nuevo: el % concreto, el delta, la región específica que ya cerró, la declaración exacta de un candidato.");
+    lines.push("Esas son MULETILLAS de live-blog perezoso. El lector YA TIENE arriba el contador oficial. Tu pulso debe ser lo que el contador NO muestra: declaraciones, mercados, OEA, incidentes, reacciones, fact-checks, hitos del JNE/ONPE.");
   }
 
   // ── DIRECTIVA FINAL ──────────────────────────────────────────────────────
@@ -556,8 +562,27 @@ function buildPrompt(snap: Snapshot, prev: Previous | null, recentPulses: Previo
   } else if (snap.phase === "election-day") {
     if (snap.preconteo && isPE) {
       lines.push(
-        "ESCRIBE el pulso AHORA. POST-CIERRE EN BALOTAJE PE. FORMATO: 2 o 3 ítems separados por ` · ` (50–80 palabras total). Ítem 1 SIEMPRE: estado del conteo ONPE (% actas y dos cifras) — ej: 'Con 35% de actas, Fujimori sostiene 52.7% sobre 47.3% de Sánchez (ONPE)' o 'Sánchez recortó 0.4 pp en la última hora; ahora 47.3% con 38% actas (ONPE)'. Ítem 2: la noticia más fresca de los titulares en vivo, citando el medio entre paréntesis. Ítem 3 (si existe otro desarrollo distinto): reacción, incidente, declaración. NO ítems redundantes. Sin signos de exclamación. Sin muletillas.",
+        "ESCRIBE el pulso AHORA. POST-CIERRE EN BALOTAJE PE. FORMATO: 2 o 3 ítems separados por ` · ` (50–80 palabras total).",
       );
+      lines.push("");
+      lines.push("REGLA CRÍTICA SOBRE EL CONTEO ONPE:");
+      lines.push("- El total nacional ya aparece en el bloque 'Conteo Oficial' de la home. NO lo repitas como ítem.");
+      lines.push("- Los porcentajes por departamento (Arequipa 99%, Moquegua 99%, Tacna 98%, etc.) son RUIDO — son boletines automáticos de El Comercio. NO los conviertas en ítems del pulso. NO digas 'ONPE al X% en [departamento]'.");
+      lines.push("- SÍ es ítem válido del conteo solo si: (a) hubo cambio de líder, (b) cerró al 100% un departamento clave (Lima, Arequipa, La Libertad), (c) movimiento >0.3pp en el total nacional en los últimos 10 min vs hace 5 min. Si no se cumple ninguna, NO menciones %.");
+      lines.push("");
+      lines.push("¿QUÉ DEBERÍA SER CADA ÍTEM ENTONCES? Lo que el lector NO ve en el contador:");
+      lines.push("- Declaraciones de Fujimori, Sánchez, sus equipos, Boluarte, voceros de partido (con cita o paráfrasis del titular)");
+      lines.push("- Reacciones internacionales: OEA, observadores, embajadas");
+      lines.push("- Mercado: BVL, sol, bonos peruanos");
+      lines.push("- Incidentes: irregularidades en mesas, denuncias, tachas");
+      lines.push("- Movimientos: marchas, concentraciones, vigilias afuera de los locales");
+      lines.push("- Personajes: Castillo, Humala, líderes religiosos, gremios opinando");
+      lines.push("- Fact-checks: bulos circulando en redes y su verdict");
+      lines.push("- Hitos del JNE/ONPE: cómputo distrital terminado, transmisión a JEE, primera proclama");
+      lines.push("");
+      lines.push("Cada ítem cita su medio entre paréntesis al final. NO uses el mismo medio 2 veces en el mismo pulso si tenés alternativa.");
+      lines.push("");
+      lines.push("Si después de filtrar el ruido SOLO tenés titulares de % regionales del conteo, hacé UN solo ítem con la diferencia nacional actual en votos absolutos + delta vs hace 5 min y cerrá ahí. NO inflés con regional fluff.");
     } else {
       lines.push("ESCRIBE el pulso AHORA (≤ 55 palabras): cambios en el preconteo + declaraciones, en un párrafo, sin signos de exclamación.");
     }
