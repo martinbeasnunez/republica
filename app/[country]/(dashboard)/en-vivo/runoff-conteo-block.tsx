@@ -281,106 +281,103 @@ export function RunoffConteoBlock() {
         </div>
       )}
 
-      {/* Live delta strip — leader gap in absolute votes + percentage points.
-          The user asked for the vote-count gap to be visible so they don't have
-          to do the subtraction in their head. Bold numbers, mono digits, clear
-          "tight race" treatment when the lead is inside the MoE band. */}
-      {hasNumbers && voteDelta != null && delta != null && (
-        <div
-          className={cn(
-            "px-5 py-3 border-b space-y-1.5",
-            tightRace
-              ? "bg-amber-50/60 border-amber-100/60"
-              : "bg-stone-50 border-stone-100",
-          )}
-        >
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <div className="flex items-baseline gap-2">
-              <span
-                className={cn(
-                  "text-[10px] font-black uppercase tracking-[0.18em]",
-                  tightRace ? "text-amber-800" : "text-stone-500",
-                )}
-              >
-                Diferencia
-              </span>
-              <span className="text-[11px] text-stone-600">
-                <strong className="text-stone-900">{leader?.shortName}</strong>
-                {" vs "}
-                <strong className="text-stone-900">{runner?.shortName}</strong>
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2 font-mono tabular-nums">
-              <span className="text-xl sm:text-2xl font-black text-stone-900">
+      {/* Diferencia hero strip — designed to be readable in 2 seconds by
+          anyone, no electoral background required. Reads like a sentence:
+          "X,XXX votos los separan · Empate técnico · La distancia se cierra".
+          The vote count is the headline, not buried on the side. */}
+      {hasNumbers && voteDelta != null && delta != null && leader && runner && (() => {
+        // Pick a plain-language tag for how tight the race is.
+        const raceTag = delta < 0.5
+          ? { label: "Prácticamente empate", className: "bg-amber-100 text-amber-900 border-amber-200" }
+          : delta < 2.5
+            ? { label: "Empate técnico", className: "bg-amber-100 text-amber-900 border-amber-200" }
+            : delta < 5
+              ? { label: "Diferencia ajustada", className: "bg-stone-200 text-stone-800 border-stone-300" }
+              : { label: "Diferencia clara", className: "bg-stone-200 text-stone-800 border-stone-300" };
+
+        return (
+          <div
+            className={cn(
+              "px-5 py-4 border-b",
+              tightRace ? "bg-amber-50/70 border-amber-100" : "bg-stone-50 border-stone-100",
+            )}
+          >
+            {/* HERO: big number + sentence */}
+            <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
+              <span className="text-3xl sm:text-4xl font-black text-stone-900 font-mono tabular-nums leading-none">
                 {formatVotes(voteDelta)}
               </span>
-              <span className="text-[11px] text-stone-500">votos</span>
-              <span className="text-stone-300">·</span>
-              <span className="text-sm font-bold text-stone-700">
-                {delta.toFixed(1)} pp
+              <span className="text-sm sm:text-base text-stone-700 leading-tight">
+                votos separan a{" "}
+                <strong className="text-stone-900">{leader.shortName}</strong>{" "}
+                de{" "}
+                <strong className="text-stone-900">{runner.shortName}</strong>
               </span>
-              {tightRace && (
-                <span className="text-[9px] font-black uppercase tracking-widest bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded ml-1">
-                  Margen de error
-                </span>
-              )}
             </div>
-          </div>
 
-          {/* Insight line: SIMPLE direction first, details after.
-              Reads at a glance: "se achica" / "se amplía" / "estable" / "vuelco".
-              No technical pp deltas in the lede — just the human-feeling gist. */}
-          {insight && (
-            <div className="flex items-center gap-2 text-[11px] flex-wrap">
-              {insight.direction === "flip" ? (
-                <>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
-                    <TrendingUp className="h-3 w-3" />
-                    Cambio de líder
-                  </span>
-                  <span className="text-stone-700">
-                    Ahora lidera <strong>{insight.leaderName}</strong> · en los últimos {insight.sinceMin} min
-                  </span>
-                </>
-              ) : insight.direction === "widen" ? (
-                <>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
-                    <TrendingUp className="h-3 w-3" />
-                    Se amplía
-                  </span>
-                  <span className="text-stone-700">
-                    <strong>{insight.leaderName}</strong> sumó{" "}
-                    <strong className="font-mono tabular-nums">+{formatVotes(insight.deltaVotes)} votos</strong>{" "}
-                    en los últimos {insight.sinceMin} min
-                  </span>
-                </>
-              ) : insight.direction === "narrow" ? (
-                <>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
-                    <TrendingDown className="h-3 w-3" />
-                    Se achica
-                  </span>
-                  <span className="text-stone-700">
-                    <strong>{runner?.shortName}</strong> recortó{" "}
-                    <strong className="font-mono tabular-nums">{formatVotes(Math.abs(insight.deltaVotes))} votos</strong>{" "}
-                    en los últimos {insight.sinceMin} min
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-stone-200 text-stone-700 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest">
-                    <Minus className="h-3 w-3" />
-                    Sin cambios
-                  </span>
-                  <span className="text-stone-500">
-                    La diferencia se mantiene
-                  </span>
-                </>
-              )}
+            {/* Tag line: how tight is the race in plain words */}
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em]", raceTag.className)}>
+                {raceTag.label}
+              </span>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {delta < 0.1 ? "<0.1" : delta.toFixed(1)}% de diferencia
+              </span>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Live movement: SE ACHICA / SE AMPLÍA / SIN CAMBIOS / CAMBIO DE LÍDER */}
+            {insight && (
+              <div className="flex items-center gap-2 text-[11px] mt-2 flex-wrap">
+                {insight.direction === "flip" ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 text-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em]">
+                      <TrendingUp className="h-3 w-3" />
+                      Cambió el líder
+                    </span>
+                    <span className="text-stone-700">
+                      Ahora va arriba <strong>{insight.leaderName}</strong>
+                    </span>
+                  </>
+                ) : insight.direction === "widen" ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em]">
+                      <TrendingUp className="h-3 w-3" />
+                      Se amplía
+                    </span>
+                    <span className="text-stone-700">
+                      <strong>{insight.leaderName}</strong> sumó{" "}
+                      <strong className="font-mono tabular-nums">+{formatVotes(insight.deltaVotes)} votos</strong>{" "}
+                      en {insight.sinceMin} min
+                    </span>
+                  </>
+                ) : insight.direction === "narrow" ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em]">
+                      <TrendingDown className="h-3 w-3" />
+                      Se achica
+                    </span>
+                    <span className="text-stone-700">
+                      <strong>{runner.shortName}</strong> recortó{" "}
+                      <strong className="font-mono tabular-nums">{formatVotes(Math.abs(insight.deltaVotes))} votos</strong>{" "}
+                      en {insight.sinceMin} min
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-stone-200 text-stone-700 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em]">
+                      <Minus className="h-3 w-3" />
+                      Sin cambios
+                    </span>
+                    <span className="text-stone-500">
+                      La distancia no se mueve
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Candidates rows — plain divs, no per-row Framer animations.
           Earlier we had a stagger animation here; it froze on slow mobile
