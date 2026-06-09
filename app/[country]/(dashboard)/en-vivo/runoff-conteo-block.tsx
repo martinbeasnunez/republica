@@ -106,6 +106,9 @@ export function RunoffConteoBlock() {
   const delta = leader?.percentage != null && runner?.percentage != null
     ? leader.percentage - runner.percentage
     : null;
+  const voteDelta = leader?.votes != null && runner?.votes != null
+    ? leader.votes - runner.votes
+    : null;
   const tightRace = delta != null && delta < 2.5;
 
   return (
@@ -162,6 +165,52 @@ export function RunoffConteoBlock() {
               animate={{ width: `${data.actasPct}%` }}
               transition={{ duration: 1.2, ease: "easeOut" }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Live delta strip — leader gap in absolute votes + percentage points.
+          The user asked for the vote-count gap to be visible so they don't have
+          to do the subtraction in their head. Bold numbers, mono digits, clear
+          "tight race" treatment when the lead is inside the MoE band. */}
+      {hasNumbers && voteDelta != null && delta != null && (
+        <div
+          className={cn(
+            "px-5 py-3 border-b flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1",
+            tightRace
+              ? "bg-amber-50/60 border-amber-100/60"
+              : "bg-stone-50 border-stone-100",
+          )}
+        >
+          <div className="flex items-baseline gap-2">
+            <span
+              className={cn(
+                "text-[10px] font-black uppercase tracking-[0.18em]",
+                tightRace ? "text-amber-800" : "text-stone-500",
+              )}
+            >
+              Diferencia
+            </span>
+            <span className="text-[11px] text-stone-600">
+              <strong className="text-stone-900">{leader?.shortName}</strong>
+              {" vs "}
+              <strong className="text-stone-900">{runner?.shortName}</strong>
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2 font-mono tabular-nums">
+            <span className="text-xl sm:text-2xl font-black text-stone-900">
+              {formatVotes(voteDelta)}
+            </span>
+            <span className="text-[11px] text-stone-500">votos</span>
+            <span className="text-stone-300">·</span>
+            <span className="text-sm font-bold text-stone-700">
+              {delta.toFixed(1)} pp
+            </span>
+            {tightRace && (
+              <span className="text-[9px] font-black uppercase tracking-widest bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded ml-1">
+                Margen de error
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -228,36 +277,19 @@ export function RunoffConteoBlock() {
             </span>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            {delta != null && (
-              <p className="text-[11px] text-stone-600">
-                {tightRace ? (
-                  <>
-                    <strong className="text-stone-900">{leader?.shortName}</strong> lidera por solo{" "}
-                    <strong className="text-stone-900">{delta.toFixed(1)} pp</strong> · diferencia dentro del margen de error.
-                  </>
-                ) : (
-                  <>
-                    <strong className="text-stone-900">{leader?.shortName}</strong> lidera por{" "}
-                    <strong className="text-stone-900">{delta.toFixed(1)} pp</strong>.
-                  </>
-                )}
-              </p>
+          <div className="flex items-center justify-end gap-3 text-[10px] text-stone-500 font-mono">
+            <span>Captura: {formatTime(data.capturedAt)} (Lima)</span>
+            {data.isOfficial && (
+              <a
+                href="https://resultadosegundavuelta.onpe.gob.pe/main/resumen"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-stone-700 underline"
+              >
+                <ExternalLink className="h-2.5 w-2.5" />
+                Ver ONPE
+              </a>
             )}
-            <div className="flex items-center gap-3 text-[10px] text-stone-500 font-mono">
-              <span>Captura: {formatTime(data.capturedAt)} (Lima)</span>
-              {data.isOfficial && (
-                <a
-                  href="https://resultadosegundavuelta.onpe.gob.pe/main/resumen"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 hover:text-stone-700 underline"
-                >
-                  <ExternalLink className="h-2.5 w-2.5" />
-                  Ver ONPE
-                </a>
-              )}
-            </div>
           </div>
         )}
       </div>
