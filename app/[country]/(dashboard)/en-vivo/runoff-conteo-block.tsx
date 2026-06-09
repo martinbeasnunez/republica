@@ -307,8 +307,76 @@ export function RunoffConteoBlock() {
     }
   }, [shareModal]);
 
+  // Action: WhatsApp — smart per-platform. WhatsApp doesn't accept image
+  // attachments via URL (wa.me only supports text), so the ONLY way to
+  // ship the image + text together is:
+  //   1) Mobile: navigator.share with file — OS sheet lets user pick
+  //      WhatsApp and the image attaches.
+  //   2) Desktop: copy image to clipboard + open WhatsApp Web — user
+  //      pastes the image into the chat with Ctrl+V.
+  // We coach the desktop user via a toast on the WhatsApp button itself.
+  const [waState, setWaState] = useState<"idle" | "preparing" | "copied" | "opened">("idle");
+  const shareToWhatsApp = useCallback(async () => {
+    if (!shareModal.imageBlob) return;
+    setWaState("preparing");
+
+    // ── Mobile path ── try native share with file first. Most likely
+    // outcome: iOS/Android share sheet shows WhatsApp, user picks it,
+    // image lands in the WhatsApp chat composer with text.
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        const file = new File([shareModal.imageBlob], "balotaje-peru-2026.png", { type: "image/png" });
+        const canShareFile = typeof navigator.canShare === "function"
+          ? navigator.canShare({ files: [file] })
+          : true;
+        if (canShareFile) {
+          await navigator.share({
+            title: "Balotaje Perú 2026 — conteo en vivo",
+            text: `${shareModal.text}\n${shareModal.pageUrl}`,
+            files: [file],
+          });
+          setWaState("idle");
+          return;
+        }
+      } catch {
+        // user cancelled or share failed — fall through to desktop flow
+        setWaState("idle");
+        return;
+      }
+    }
+
+    // ── Desktop path ── copy the image to clipboard so the user can
+    // paste it directly into the WhatsApp Web chat (Ctrl+V / Cmd+V).
+    // Then open WhatsApp Web in a new tab with the text pre-loaded so
+    // they pick a contact and just paste.
+    let copiedImage = false;
+    try {
+      if (typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": shareModal.imageBlob })]);
+        copiedImage = true;
+      }
+    } catch {
+      /* clipboard write blocked — fall back to URL-only WhatsApp */
+    }
+    if (copiedImage) {
+      setWaState("copied");
+      // Open WhatsApp Web after a brief delay so the user reads the toast
+      // ("imagen copiada — pégala con Cmd+V") before the tab swaps.
+      setTimeout(() => {
+        window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(`${shareModal.text}\n${shareModal.pageUrl}`)}`, "_blank", "noopener");
+        setWaState("opened");
+        setTimeout(() => setWaState("idle"), 3500);
+      }, 900);
+    } else {
+      // Last resort: just open wa.me with text — user shares the link, no
+      // image. Better than nothing.
+      window.open(`https://wa.me/?text=${encodeURIComponent(`${shareModal.text}\n${shareModal.pageUrl}`)}`, "_blank", "noopener");
+      setWaState("opened");
+      setTimeout(() => setWaState("idle"), 2500);
+    }
+  }, [shareModal]);
+
   const hasNativeShare = typeof window !== "undefined" && "share" in navigator;
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareModal.text}\n${shareModal.pageUrl}`)}`;
 
   if (!data) {
     return (
@@ -797,16 +865,50 @@ export function RunoffConteoBlock() {
                 <div className="text-[10px] text-stone-400 mt-0.5">Imagen lista, elige cómo compartir</div>
               </div>
 
-              {/* Primary: WhatsApp — green, full width */}
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-[#25D366] hover:bg-[#1DA851] text-white font-bold text-sm py-3 transition-colors"
+              {/* Primary: WhatsApp — green, full width. Mobile → native
+                  share with file (image attaches). Desktop → copy image to
+                  clipboard + open WhatsApp Web (user pastes with Cmd+V).
+                  State-driven copy coaches the user through the desktop
+                  paste step. */}
+              <button
+                type="button"
+                onClick={shareToWhatsApp}
+                disabled={waState === "preparing"}
+                className={cn(
+                  "flex items-center justify-center gap-2 w-full rounded-xl text-white font-bold text-sm py-3 transition-colors disabled:opacity-60",
+                  waState === "copied"
+                    ? "bg-emerald-600"
+                    : "bg-[#25D366] hover:bg-[#1DA851]",
+                )}
               >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
-              </a>
+                {waState === "preparing" ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Preparando…
+                  </>
+                ) : waState === "copied" ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Imagen copiada · abriendo WhatsApp
+                  </>
+                ) : waState === "opened" ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Pega con Cmd/Ctrl + V en el chat
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="h-4 w-4" />
+                    Compartir por WhatsApp
+                  </>
+                )}
+              </button>
+              {/* Tiny coach line shown only on the desktop path */}
+              {waState === "opened" && (
+                <div className="text-[10px] text-emerald-700 text-center font-medium">
+                  La imagen ya está en tu portapapeles — pégala en el chat de WhatsApp.
+                </div>
+              )}
 
               {/* Secondary row: native share / copy / download */}
               <div className="grid grid-cols-3 gap-2">
