@@ -736,7 +736,7 @@ export function RunoffConteoBlock() {
                       Se achica
                     </span>
                     <span className="text-stone-700">
-                      <strong>{runner.shortName}</strong> recortó{" "}
+                      <strong>{runner.shortName}</strong> se acercó{" "}
                       <strong className="font-mono tabular-nums">{formatVotes(Math.abs(insight.deltaVotes))} votos</strong>{" "}
                       en {insight.sinceMin} min
                     </span>
@@ -774,7 +774,7 @@ export function RunoffConteoBlock() {
                     </>
                   ) : (
                     <>
-                      <strong className="text-emerald-700">{windowInsight.runnerName}</strong> recortó{" "}
+                      <strong className="text-emerald-700">{windowInsight.runnerName}</strong> se acercó{" "}
                       <strong className="font-mono tabular-nums text-emerald-700">{formatVotes(Math.abs(windowInsight.deltaVotes))}</strong> votos
                     </>
                   )}

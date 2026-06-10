@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
     momentumSentence = `${insightLeader} sumó +${fmt(insightDeltaVotes)} en ${insightSince} min`;
   } else if (insightDir === "narrow" && insightDeltaVotes !== 0) {
     momentumPill = { label: "Se achica", bg: "#D1FAE5", fg: "#065F46" };
-    momentumSentence = `${insightRunner} recortó ${fmt(Math.abs(insightDeltaVotes))} en ${insightSince} min`;
+    momentumSentence = `${insightRunner} se acercó ${fmt(Math.abs(insightDeltaVotes))} votos en ${insightSince} min`;
   } else if (insightDir === "flat") {
     momentumPill = { label: "Sin cambios", bg: "#E7E5E4", fg: "#44403C" };
     momentumSentence = "La distancia no se mueve";
