@@ -27,10 +27,6 @@
     {
       "path": "/api/cron/pulse-update?country=co",
       "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/pulse-update?country=pe",
-      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -91,8 +91,10 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // API routes: never cache
-        source: "/api/:path*",
+        // Admin API: never cache (other /api routes set their own Cache-Control;
+        // a blanket no-store here used to override the CDN cache on hot polled
+        // endpoints like /api/pulse, forcing every 30s poll to hit origin).
+        source: "/api/admin/:path*",
         headers: [
           {
             key: "Cache-Control",

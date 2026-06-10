@@ -73,6 +73,34 @@ function detectPhase(country: CountryCode): "pre" | "election-day" | "post" {
   return "pre";
 }
 
+// ── Election-window guard ────────────────────────────────────────────────────
+// The pulse feed is live election coverage — it only makes sense around the
+// jornada. Outside that window every 5-min cron tick still called gpt-4o 24/7,
+// burning Fluid CPU (Vercel) + OpenAI $ for a feed nobody is watching. Gate the
+// cron to víspera → +2 days post for EITHER round so it self-activates on the
+// next election date and goes quiet in between.
+const WINDOW_DAYS_BEFORE = 1;
+const WINDOW_DAYS_AFTER = 2;
+
+// Whole-day diff (b - a) between two YYYY-MM-DD strings, calendar days.
+function dayDiff(a: string, b: string): number {
+  const [ay, am, ad] = a.split("-").map(Number);
+  const [by, bm, bd] = b.split("-").map(Number);
+  const ams = Date.UTC(ay, am - 1, ad);
+  const bms = Date.UTC(by, bm - 1, bd);
+  return Math.round((bms - ams) / 86_400_000);
+}
+
+function isWithinElectionWindow(country: CountryCode): boolean {
+  const cfg = COUNTRIES[country];
+  const todayLocal = new Date().toLocaleDateString("en-CA", { timeZone: cfg.timezone });
+  const dates = [cfg.electionDate, cfg.electionDateSecondRound].filter(Boolean) as string[];
+  return dates.some((d) => {
+    const diff = dayDiff(d, todayLocal); // >0 after election, <0 before
+    return diff >= -WINDOW_DAYS_BEFORE && diff <= WINDOW_DAYS_AFTER;
+  });
+}
+
 // ── Snapshot builders ───────────────────────────────────────────────────────
 async function fetchPreconteo(): Promise<Snapshot["preconteo"]> {
   try {
@@ -640,6 +668,13 @@ export async function GET(request: Request) {
   const country = countryParam;
   const isPE = country === "pe";
   const phase = detectPhase(country);
+
+  // Out of the election window? Skip before touching Supabase/OpenAI so the
+  // 5-min cron costs ~nothing between rounds. Pass ?force=1 to override.
+  const force = searchParams.get("force") === "1";
+  if (!force && !isWithinElectionWindow(country)) {
+    return NextResponse.json({ skipped: "out-of-window", country, phase });
+  }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY || !OPENAI_KEY) {
     return NextResponse.json({ error: "missing env vars" }, { status: 500 });
