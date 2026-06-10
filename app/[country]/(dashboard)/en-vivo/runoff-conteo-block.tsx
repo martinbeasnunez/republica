@@ -102,8 +102,30 @@ export function RunoffConteoBlock() {
   // refreshes every ~5 min and we poll every 60s, so we dedupe on voteGap +
   // actasPct before pushing. Capped at 40 entries (~3 h of distinct frames)
   // — plenty to compute "últimos 15 min" and survive long sessions.
+  //
+  // PERSISTED to localStorage so the history survives page reloads. Without
+  // this, every refresh would reset the buffer and the user wouldn't see
+  // "Últimos N min" until they'd been on the page for 3+ min on this load.
+  const HISTORY_KEY = "condor:runoff-snapshots:pe";
+  const HISTORY_MAX_AGE_MS = 3 * 60 * 60 * 1000; // 3h — drop anything older
   const snapshotHistory = useRef<InsightSnapshot[]>([]);
   const [, force] = useState(0);
+
+  // Hydrate from localStorage on mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(HISTORY_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as InsightSnapshot[];
+      if (!Array.isArray(parsed)) return;
+      const cutoff = Date.now() - HISTORY_MAX_AGE_MS;
+      snapshotHistory.current = parsed.filter((s) => s && typeof s.capturedAt === "number" && s.capturedAt >= cutoff);
+      // Don't force a re-render here — fetchData will trigger one once data lands.
+    } catch {
+      /* ignore parse errors — start fresh */
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -139,6 +161,16 @@ export function RunoffConteoBlock() {
           snapshotHistory.current.push(newSnap);
           if (snapshotHistory.current.length > 40) {
             snapshotHistory.current = snapshotHistory.current.slice(-40);
+          }
+          // Persist so reloads keep the window-trend signal.
+          if (typeof window !== "undefined") {
+            try {
+              const cutoff = Date.now() - HISTORY_MAX_AGE_MS;
+              const trimmed = snapshotHistory.current.filter((s) => s.capturedAt >= cutoff);
+              window.localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+            } catch {
+              /* quota exceeded or storage disabled — non-fatal */
+            }
           }
         }
         if (!snapshotForInsight.current) {
@@ -473,11 +505,12 @@ export function RunoffConteoBlock() {
     // If session is younger than the target window, fall back to oldest
     // available — the subtitle just shows the actual age.
     if (!anchor) anchor = history[0];
-    const sinceMin = Math.round((Date.now() - anchor.capturedAt) / 60_000);
-    // Show as soon as we have ≥3 min of session history — covers ~1 ONPE
-    // refresh cycle. Earlier we gated at 8 min which meant users rarely
-    // saw it on a fresh visit.
-    if (sinceMin < 3) return null;
+    const sinceSec = Math.round((Date.now() - anchor.capturedAt) / 1_000);
+    const sinceMin = Math.max(1, Math.round(sinceSec / 60));
+    // Show as soon as we have any meaningful gap between two snapshots.
+    // 90s is the floor (≥2 polls so we're past the initial poll noise).
+    // Earlier 3-min floor meant first-time visitors saw nothing for ages.
+    if (sinceSec < 90) return null;
     if (anchor.leaderSlug !== leader.slug) {
       return {
         kind: "flip",
@@ -489,10 +522,10 @@ export function RunoffConteoBlock() {
     }
     const curGap = leader.votes - runner.votes;
     const gapDelta = curGap - anchor.voteGap;
-    // Threshold lowered 500 → 150 votes. Anything below 150 is rounding
-    // noise from late-arriving rural/exterior actas; anything above is
-    // a real swing the user wants to see persist between live cycles.
-    if (Math.abs(gapDelta) < 150) return null;
+    // Threshold lowered to 50 votes — any real ONPE actas batch moves the
+    // gap by more than that. Below 50 is genuine noise (single late acta).
+    // We want the user to ALWAYS see "Últimos N min" once there's data.
+    if (Math.abs(gapDelta) < 50) return null;
     return {
       kind: gapDelta > 0 ? "widen" : "narrow",
       leaderName: leader.shortName || leader.name,
