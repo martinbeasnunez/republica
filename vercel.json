@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "latam": false
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/scrape-news?country=pe",
