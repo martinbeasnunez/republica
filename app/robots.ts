@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/admin/", "/api/cron/", "/api/setup/"],
+        disallow: ["/admin/", "/api/admin/", "/api/setup/"],
       },
     ],
     sitemap: "https://condorlatam.com/sitemap.xml",
